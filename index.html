@@ -155,7 +155,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
@@ -169,7 +169,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">延迟绑定机制</a>
+            <a href="/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/" class="post-title-link" itemprop="url">格式化字符串漏洞</a>
         </h2>
 
         <div class="post-meta">
@@ -178,9 +178,8 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-03-20 15:14:18 / 修改时间：15:14:20" itemprop="dateCreated datePublished" datetime="2025-03-20T15:14:18+08:00">2025-03-20</time>
+              <time title="创建时间：2025-03-21 19:11:18" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -208,6 +207,126 @@
 
       
           
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">延迟绑定机制</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-20 15:14:18" itemprop="dateCreated datePublished" datetime="2025-03-20T15:14:18+08:00">2025-03-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-21 19:09:30" itemprop="dateModified" datetime="2025-03-21T19:09:30+08:00">2025-03-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="何为延迟绑定"><a href="#何为延迟绑定" class="headerlink" title="何为延迟绑定"></a>何为延迟绑定</h1><p>延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题</p>
+<p>延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明</p>
+<h1 id="plt和got的狗血恋情"><a href="#plt和got的狗血恋情" class="headerlink" title="plt和got的狗血恋情"></a>plt和got的狗血恋情</h1><h2 id="plt表和got表是什么"><a href="#plt表和got表是什么" class="headerlink" title="plt表和got表是什么"></a>plt表和got表是什么</h2><p>got表和plt表都是程序调用外部函数时，定位该函数需要使用到的表。</p>
+<h3 id="got"><a href="#got" class="headerlink" title="got"></a>got</h3><p>got表(Global Offset Table)是全局偏移量表，这是链接器在执行链接时需要填充的部分，保存了所有外部符号的地址信息。</p>
+<p>got表分为以下四个部分</p>
+<ul>
+<li><strong>GOT[0]</strong> 是.dynamic段的装载地址，.dynamic段包含了动态链接器用来绑定过程地址的信息，比如符号的位置和重定位信息;</li>
+<li><strong>GOT[1]</strong> 是动态链接器的标识<code>link_map</code>的地址;</li>
+<li><strong>GOT[2]</strong> 包含动态链接器的延迟绑定代码<code>_dl_runtime_resolve</code>的入口点，用于得到真正的函数地址，回写到对应的got表中;</li>
+<li><strong>GOT[3]</strong> 从此开始就是函数的地址。</li>
+</ul>
+<p><img src="/../images/LazyBinding/6.png" alt="6"></p>
+<h3 id="plt"><a href="#plt" class="headerlink" title="plt"></a>plt</h3><p>plt表(Procedure Linkage Table)是程序链接表.位于代码段.plt节的PLT是一个数组，每个条目占16个字节。</p>
+<ul>
+<li>**PLT[0]**用于跳转到动态链接器</li>
+<li>**PLT[1]**用于调用系统启动函数__libc_start_main()，我们熟悉的main()函数就是在这里面调用的</li>
+<li>**PLT[2]**开始就是被调用的各个函数条目。</li>
+</ul>
+<h2 id="延迟绑定过程"><a href="#延迟绑定过程" class="headerlink" title="延迟绑定过程"></a>延迟绑定过程</h2><p><img src="/../images/LazyBinding/7.png" alt="7"></p>
+<p>这里先放一张流程图作为参考↑</p>
+<p><strong>现在以printf函数为例探究plt和got这俩小情侣是如何操作的</strong></p>
+<p>这里直接查看到printf第一次被调用时plt表里的内容</p>
+<p><img src="/../images/LazyBinding/0.png" alt="0"></p>
+<p>可以看到跳进plt表中后又跳进了0x404000地址,那我们继续跟进</p>
+<p><img src="/../images/LazyBinding/1.png" alt="1"></p>
+<p>这个地址中储存的地址其实就是我们plt表上的地址,所以这里又跳回来了</p>
+<p><img src="/../images/LazyBinding/8.png" alt="8"></p>
+<p>由图这里调回来后执行prepare resolver,推测是和将真实地址解析到got表相关的函数</p>
+<p>那么程序接着执行跳转到0x401020位置,我们继续跟进看看这对小情侣到底要干嘛</p>
+<p><img src="/../images/LazyBinding/2.png" alt="2"></p>
+<p>这里执行了一系列代码</p>
+<p><img src="/../images/LazyBinding/3.png" alt="3"></p>
+<p><img src="/../images/LazyBinding/4.png" alt="4"></p>
+<p>看不懂,但根据流程图应该是与解析地址有关的函数</p>
+<p>那么执行完这一段代码后再来看看我们printf的got表地址</p>
+<p><img src="/../images/LazyBinding/5.png" alt="5"></p>
+<p>A,您猜怎么着,确实got表的内容变了,根据实践,这就是printf的真实地址</p>
+<p>那么延迟绑定就到此结束了</p>
+<p><img src="/../images/LazyBinding/9.png" alt="9"></p>
+<p>之后函数再call printf函数时就可以直接通过got表跳转到真实地址了</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章:"></a>参考文章:</h1><p><a target="_blank" rel="noopener" href="https://yjy123123.github.io/2021/12/06/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/">延迟绑定过程分析</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.xuenixiang.com/thread-3185-1-1.html">elf文件的延迟绑定机制和plt，got表之间的调用</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/yiyeguzhou100/article/details/85036774">使用反汇编理解动态库函数调用方式GOT&#x2F;PLT</a></p>
+
       
     </div>
 
@@ -730,7 +849,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
