@@ -20,13 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="article">
+  <meta name="description" content="何为格式化字符串漏洞1234567#include&lt;stdio.h&gt;int main()&#123;&#96;	char buf[16];	gets(buf,0x400);	printf(buf);	return 0;&#125;  形如上述代码的程序一般具有格式化字符串漏洞,试想如果往buf里输入%p等格式化字符串时会发生什么 那么细心的师傅们可能就会说了:你这后面也没跟第二个参数啊,这能运">
+<meta property="og:type" content="article">
 <meta property="og:title" content="格式化字符串漏洞">
 <meta property="og:url" content="http://example.com/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="Welcome!">
+<meta property="og:description" content="何为格式化字符串漏洞1234567#include&lt;stdio.h&gt;int main()&#123;&#96;	char buf[16];	gets(buf,0x400);	printf(buf);	return 0;&#125;  形如上述代码的程序一般具有格式化字符串漏洞,试想如果往buf里输入%p等格式化字符串时会发生什么 那么细心的师傅们可能就会说了:你这后面也没跟第二个参数啊,这能运">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-21T11:11:18.148Z">
-<meta property="article:modified_time" content="2025-03-21T11:11:18.258Z">
+<meta property="article:modified_time" content="2025-03-21T12:00:20.314Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
 
@@ -180,8 +182,9 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2025-03-21 19:11:18" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
+              <time title="创建时间：2025-03-21 19:11:18 / 修改时间：20:00:20" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -208,7 +211,113 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <h1 id="何为格式化字符串漏洞"><a href="#何为格式化字符串漏洞" class="headerlink" title="何为格式化字符串漏洞"></a>何为格式化字符串漏洞</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">`	<span class="type">char</span> buf[<span class="number">16</span>];</span><br><span class="line">	gets(buf,<span class="number">0x400</span>);</span><br><span class="line">	<span class="built_in">printf</span>(buf);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>形如上述代码的程序一般具有格式化字符串漏洞,试想如果往buf里输入%p等格式化字符串时会发生什么</p>
+<p>那么细心的师傅们可能就会说了:<strong>你这后面也没跟第二个参数啊,这能运行吗?</strong></p>
+<p>答案是肯定的,并且打印出的地址就是栈上的地址,这就是格式化字符串最简单的用法:<strong>泄露栈地址</strong></p>
+<p>那么还有什么别的用途吗,且听我继续分析</p>
+<h1 id="格式化字符串函数介绍"><a href="#格式化字符串函数介绍" class="headerlink" title="格式化字符串函数介绍"></a>格式化字符串函数介绍</h1><p>在开始之前,我们先来介绍一下格式化字符串函数</p>
+<h2 id="格式化字符串函数"><a href="#格式化字符串函数" class="headerlink" title="格式化字符串函数"></a>格式化字符串函数</h2><p>常见的有格式化字符串函数有</p>
+<ul>
+<li>输入<ul>
+<li>scanf</li>
+</ul>
+</li>
+<li>输出</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">函数</th>
+<th align="center">基本介绍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">printf</td>
+<td align="center">输出到 stdout</td>
+</tr>
+<tr>
+<td align="center">fprintf</td>
+<td align="center">输出到指定 FILE 流</td>
+</tr>
+<tr>
+<td align="center">vprintf</td>
+<td align="center">根据参数列表格式化输出到 stdout</td>
+</tr>
+<tr>
+<td align="center">vfprintf</td>
+<td align="center">根据参数列表格式化输出到指定 FILE 流</td>
+</tr>
+<tr>
+<td align="center">sprintf</td>
+<td align="center">输出到字符串</td>
+</tr>
+<tr>
+<td align="center">snprintf</td>
+<td align="center">输出指定字节数到字符串</td>
+</tr>
+<tr>
+<td align="center">vsprintf</td>
+<td align="center">根据参数列表格式化输出到字符串</td>
+</tr>
+<tr>
+<td align="center">vsnprintf</td>
+<td align="center">根据参数列表格式化输出指定字节到字符串</td>
+</tr>
+<tr>
+<td align="center">setproctitle</td>
+<td align="center">设置 argv</td>
+</tr>
+<tr>
+<td align="center">syslog</td>
+<td align="center">输出日志</td>
+</tr>
+<tr>
+<td align="center">err, verr, warn, vwarn 等</td>
+<td align="center">。。。</td>
+</tr>
+</tbody></table>
+<h2 id="格式化字符串"><a href="#格式化字符串" class="headerlink" title="格式化字符串"></a>格式化字符串</h2><p>其基本格式如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%[parameter][flags][field width][.precision][length]type</span><br></pre></td></tr></table></figure>
+
+<p>每一种 pattern 的含义请具体参考维基百科的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2">格式化字符串</a> 。以下几个 pattern 中的对应选择需要重点关注</p>
+<ul>
+<li>parameter<ul>
+<li>n$，获取格式化字符串中的指定参数</li>
+</ul>
+</li>
+<li>flag</li>
+<li>field width<ul>
+<li>输出的最小宽度</li>
+</ul>
+</li>
+<li>precision<ul>
+<li>输出的最大长度</li>
+</ul>
+</li>
+<li>length，输出的长度<ul>
+<li>hh，输出一个字节</li>
+<li>h，输出一个双字节</li>
+</ul>
+</li>
+<li>type<ul>
+<li>d&#x2F;i，有符号整数</li>
+<li>u，无符号整数</li>
+<li>x&#x2F;X，16 进制 unsigned int 。x 使用小写字母；X 使用大写字母。如果指定了精度，则输出的数字不足时在左侧补 0。默认精度为 1。精度为 0 且值为 0，则输出为空。</li>
+<li>o，8 进制 unsigned int 。如果指定了精度，则输出的数字不足时在左侧补 0。默认精度为 1。精度为 0 且值为 0，则输出为空。</li>
+<li>s，如果没有用 l 标志，输出 null 结尾字符串直到精度规定的上限；如果没有指定精度，则输出所有字节。如果用了 l 标志，则对应函数参数指向 wchar_t 型的数组，输出时把每个宽字符转化为多字节字符，相当于调用 wcrtomb 函数。</li>
+<li>c，如果没有用 l 标志，把 int 参数转为 unsigned char 型输出；如果用了 l 标志，把 wint_t 参数转为包含两个元素的 wchart_t 数组，其中第一个元素包含要输出的字符，第二个元素为 null 宽字符。</li>
+<li>p， void * 型，输出对应变量的值。printf(“%p”,a) 用地址的格式打印变量 a 的值，printf(“%p”, &amp;a) 打印变量 a 所在的地址。</li>
+<li>n，不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。</li>
+<li>%， ‘<code>%</code>‘字面值，不接受任何 flags, width。</li>
+</ul>
+</li>
+</ul>
+<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><p>即对应要输出的变量</p>
+<h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>那么基础打牢,开始实践吧</p>
+<h2 id="泄露栈内存"><a href="#泄露栈内存" class="headerlink" title="泄露栈内存"></a>泄露栈内存</h2><p>上文已经介绍过用%p泄露出栈的地址,那么如何泄露栈变量的值和</p>
+
     </div>
 
     
@@ -285,6 +394,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BA%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E"><span class="nav-number">1.</span> <span class="nav-text">何为格式化字符串漏洞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">格式化字符串函数介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0"><span class="nav-number">2.1.</span> <span class="nav-text">格式化字符串函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">2.2.</span> <span class="nav-text">格式化字符串</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">参数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">如何利用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%84%E9%9C%B2%E6%A0%88%E5%86%85%E5%AD%98"><span class="nav-number">3.1.</span> <span class="nav-text">泄露栈内存</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
