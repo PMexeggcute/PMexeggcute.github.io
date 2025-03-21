@@ -180,7 +180,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2025-03-21 19:11:18 / 修改时间：20:00:20" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
+              <time title="创建时间：2025-03-21 19:11:18 / 修改时间：21:03:23" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -312,7 +312,36 @@
 </ul>
 <h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><p>即对应要输出的变量</p>
 <h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>那么基础打牢,开始实践吧</p>
-<h2 id="泄露栈内存"><a href="#泄露栈内存" class="headerlink" title="泄露栈内存"></a>泄露栈内存</h2><p>上文已经介绍过用%p泄露出栈的地址,那么如何泄露栈变量的值和</p>
+<h2 id="泄露内存"><a href="#泄露内存" class="headerlink" title="泄露内存"></a>泄露内存</h2><p>上文已经介绍过用%p泄露出栈的地址,那么如何泄露栈变量的值和对应字符串呢</p>
+<p>要做到这些只需要将%p换成%x和%s即可</p>
+<p>可能又有师傅要问了:<strong>auv,你这个就只能泄露当前地址吗,这个格式化字符串就是逊啦</strong></p>
+<p>那么一看这位师傅就没好好看基础部分啊,<del>来人,抓起来拷打</del></p>
+<p>我们可以用%k$s这种形式的格式化字符串来获取偏移量为<strong>k</strong>的地址的数据,所以只要知道指定内存地址相对于参数位置的偏移就可以打印任意地址的数据了</p>
+<h2 id="覆盖内存"><a href="#覆盖内存" class="headerlink" title="覆盖内存"></a>覆盖内存</h2><p>这里需要用到一个非常特别的字符串%n</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%n,不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。</span><br></pre></td></tr></table></figure>
+
+<p>这使得我们可以通过精妙的构造来向指定地址写入任意的值</p>
+<p>那么有的师傅(<del>没错,又是我们那位师傅</del>)又要说了:<strong>uva,你这精妙的构造一般人想的出来吗,真当人人都能用观察法解出高考压轴题吗</strong></p>
+<p>没错,这位师傅又错了,咱们可以使用pwntools中fmtstr中的神器<strong>fmtstr_payload</strong></p>
+<p>使用方法入下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmtstr_payload(offset,&#123;原始地址:目标地址&#125;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="关于偏移"><a href="#关于偏移" class="headerlink" title="关于偏移"></a>关于偏移</h3><p>这里主要说一下64位与32位程序的差异,64位程序是用寄存器传参,所以在计算偏移的时候要把寄存器数量考虑上,而32位程序就没这个顾虑了</p>
+<h2 id="大小数字覆盖问题"><a href="#大小数字覆盖问题" class="headerlink" title="大小数字覆盖问题"></a>大小数字覆盖问题</h2><h3 id="覆盖小数字"><a href="#覆盖小数字" class="headerlink" title="覆盖小数字"></a>覆盖小数字</h3><p>针对要写入的值小于偏移的值的情况,我们可以换一种方法来构造</p>
+<p>我们可以将格式化字符串放在我们构造的数据的中间,将地址放在后面</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload = &#x27;aa%8$naa&#x27; + p32(a_addr)</span><br></pre></td></tr></table></figure>
+
+<p>就像这样</p>
+<h3 id="覆盖大数字"><a href="#覆盖大数字" class="headerlink" title="覆盖大数字"></a>覆盖大数字</h3><p>我们需要用到一下两个标志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hh 对于整数类型，printf期待一个从char提升的int尺寸的整型参数。</span><br><span class="line">h  对于整数类型，printf期待一个从short提升的int尺寸的整型参数。</span><br></pre></td></tr></table></figure>
+
+<p>我们可以将一个大数字进行分解,就像这样</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0x0804A028 \x78</span><br><span class="line">0x0804A029 \x56</span><br><span class="line">0x0804A02a \x34</span><br><span class="line">0x0804A02b \x12</span><br></pre></td></tr></table></figure>
+
+<p>然后通过如下这种方法构造payload进行覆盖</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p32(0x0804A028)+p32(0x0804A029)+p32(0x0804A02a)+p32(0x0804A02b)+pad1+&#x27;%6$n&#x27;+pad2+&#x27;%7$n&#x27;+pad3+&#x27;%8$n&#x27;+pad4+&#x27;%9$n&#x27;</span><br></pre></td></tr></table></figure>
+
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章:"></a>参考文章:</h1><p><a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/fmtstr/fmtstr-exploit/#_14">ctf-wiki</a></p>
 
       
     </div>
