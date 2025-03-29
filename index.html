@@ -155,6 +155,290 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/27/%E4%BC%AA%E9%9A%8F%E6%9C%BA%E6%95%B0%E7%BB%95%E8%BF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/27/%E4%BC%AA%E9%9A%8F%E6%9C%BA%E6%95%B0%E7%BB%95%E8%BF%87/" class="post-title-link" itemprop="url">伪随机数绕过</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-03-27 17:45:31 / 修改时间：20:29:57" itemprop="dateCreated datePublished" datetime="2025-03-27T17:45:31+08:00">2025-03-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="随机数生成原理"><a href="#随机数生成原理" class="headerlink" title="随机数生成原理"></a>随机数生成原理</h1><h2 id="rand"><a href="#rand" class="headerlink" title="rand()"></a>rand()</h2><p>C 库函数 <strong>int rand(void)</strong> 返回一个范围在 0 到 <em>RAND_MAX</em> 之间的伪随机数。</p>
+<p>RAND_MAX 是一个常量，它的默认值在不同的实现中会有所不同，但是值至少是 32767。</p>
+<h2 id="srand"><a href="#srand" class="headerlink" title="srand()"></a>srand()</h2><p>C 库函数 <strong>void srand(unsigned int seed)</strong> 播种由函数 <strong>rand</strong> 使用的随机数发生器。</p>
+<p><code>void srand(unsigned int seed)</code></p>
+<p>参数<strong>seed</strong>是一个整形值,用于伪随机数生成算法播种。</p>
+<h1 id="伪随机数绕过方法"><a href="#伪随机数绕过方法" class="headerlink" title="伪随机数绕过方法"></a>伪随机数绕过方法</h1><h2 id="修改seed"><a href="#修改seed" class="headerlink" title="修改seed"></a>修改seed</h2><p>有时随机数的种子<strong>seed</strong>会在栈上,可以通过栈溢出等方法对齐进行覆盖为已知值,再通过这个已知值获取对应的随机数序列</p>
+<h2 id="利用ctypes撞库"><a href="#利用ctypes撞库" class="headerlink" title="利用ctypes撞库"></a>利用ctypes撞库</h2><p>ctypes是Python内建的用于调用动态链接库函数的功能模块，通过调用该模块以及利用与题目相同的libc文件，来达到一个与题目中随机数生成方式相同的效果，实现撞库，这种方式下如果提前覆盖了指定种子，是更容易达成，如果直接设置时间种子撞库，可能存在时间对不上的情况，需要多测试几次。</p>
+<p>使用方法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> ctype <span class="keyword">import</span> *</span><br><span class="line">libc=cdll.LoadLibrary(<span class="string">&quot;libc.so.6&quot;</span>) </span><br><span class="line">a=[]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">50</span>):</span><br><span class="line">    a.append(libc.rand())</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/27/exit_hook/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/27/exit_hook/" class="post-title-link" itemprop="url">exit_hook</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-27 13:53:12" itemprop="dateCreated datePublished" datetime="2025-03-27T13:53:12+08:00">2025-03-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-29 13:20:01" itemprop="dateModified" datetime="2025-03-29T13:20:01+08:00">2025-03-29</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="何为exit-hook"><a href="#何为exit-hook" class="headerlink" title="何为exit_hook"></a>何为exit_hook</h1><p>hook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的</p>
+<h2 id="hook-rtld-lock-un-lock-recursive"><a href="#hook-rtld-lock-un-lock-recursive" class="headerlink" title="hook _rtld_lock(un)lock_recursive"></a>hook _<em>rtld_lock</em>(un)lock_recursive</h2><p>由fini_array这篇文章知道了<code>exit)()</code>在执行时会先调用<code>__run_exit_handlers</code>,而在这个函数中又会调用<code>_dl_fini</code></p>
+<p><code>_dl_fini</code>函数源码如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#ifdef SHARED</span><br><span class="line">  int do_audit = 0;</span><br><span class="line"> again:</span><br><span class="line">#endif</span><br><span class="line">  for (Lmid_t ns = GL(dl_nns) - 1; ns &gt;= 0; --ns)</span><br><span class="line">    &#123;</span><br><span class="line">      __rtld_lock_lock_recursive (GL(dl_load_lock));</span><br><span class="line">      unsigned int nloaded = GL(dl_ns)[ns]._ns_nloaded;</span><br><span class="line">      if (nloaded == 0</span><br><span class="line">#ifdef SHARED</span><br><span class="line">      || GL(dl_ns)[ns]._ns_loaded-&gt;l_auditing != do_audit</span><br><span class="line">#endif</span><br><span class="line">      )</span><br><span class="line">    __rtld_lock_unlock_recursive (GL(dl_load_lock));</span><br></pre></td></tr></table></figure>
+
+<h2 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">__rtld_lock_lock_recursive (GL(dl_load_lock));</span><br><span class="line">__rtld_lock_unlock_recursive (GL(dl_load_lock));</span><br></pre></td></tr></table></figure>
+
+<p><code>__rtld_lock_lock_recursive()</code>的定义:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># define __rtld_lock_lock_recursive(NAME) \</span><br><span class="line">  GL(dl_rtld_lock_recursive) (&amp;(NAME).mutex)</span><br></pre></td></tr></table></figure>
+
+<p>宏<code>GL</code>的定义：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># if IS_IN (rtld)</span><br><span class="line">#  define GL(name) _rtld_local._##name</span><br><span class="line"># else</span><br><span class="line">#  define GL(name) _rtld_global._##name</span><br><span class="line"># endif</span><br></pre></td></tr></table></figure>
+
+<p>而<code>_rtld_global</code>是一个结构体,我们可以在pwndbg中用<code>p _rtld_global</code>来查看</p>
+<p>结构体太长,这里我们这看结构体中作为上面俩函数的参数的部分</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">_dl_load_lock = &#123;</span><br><span class="line">    mutex = &#123;</span><br><span class="line">      __data = &#123;</span><br><span class="line">        __lock = 0,</span><br><span class="line">        __count = 0,</span><br><span class="line">        __owner = 0,</span><br><span class="line">        __nusers = 0,</span><br><span class="line">        __kind = 1,</span><br><span class="line">        __spins = 0,</span><br><span class="line">        __elision = 0,</span><br><span class="line">        __list = &#123;</span><br><span class="line">          __prev = 0x0,</span><br><span class="line">          __next = 0x0</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      __size = &#x27;\000&#x27; &lt;repeats 16 times&gt;, &quot;\001&quot;, &#x27;\000&#x27; &lt;repeats 22 times&gt;,</span><br><span class="line">      __align = 0</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure>
+
+<p><strong>函数的参数即为 <code>_rtld_global._dl_load_lock.mutex.__size</code>的地址</strong></p>
+<h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>既然我们已经知道了关键函数及其参数的位置,那么我们<strong>直接将关键函数改为one_gadget来get shell</strong>,也可以<strong>将关键函数改为<code>system</code>,再把参数地址改为<code>/bin/sh\x00</code>地址</strong>来get shell</p>
+<h1 id="如何寻找偏移"><a href="#如何寻找偏移" class="headerlink" title="如何寻找偏移"></a>如何寻找偏移</h1><p><code>_rtld_global</code>结构位于<code>ld.so</code>中 ( <code>ld.sym[&#39;_rtld_global&#39;]</code> )，而<code>libc_base</code>与<code>ld_base</code>又有固定的差值,所以我们可以通过libc的基址来推出函数及其参数的地址</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libc2.23下偏移为0×5f0040，两个hook的偏移为3848和3850</span><br><span class="line"></span><br><span class="line">libc2.27下偏移为0×61b060，两个hook的偏移为3840和3848</span><br></pre></td></tr></table></figure>
+
+<h1 id="hook-libc-atexit"><a href="#hook-libc-atexit" class="headerlink" title="hook __libc_atexit"></a>hook __libc_atexit</h1><p>exit.c源码如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">__run_exit_handlers (int status, struct exit_function_list **listp,</span><br><span class="line">             bool run_list_atexit, bool run_dtors)</span><br><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">if (run_list_atexit)</span><br><span class="line">    RUN_HOOK (__libc_atexit, ());</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>而在我们调用<code>__run_exit_handlers</code>这个函数时，参数<code>run_list_atexit</code>传进去的值就为真：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void exit (int status)</span><br><span class="line">&#123;</span><br><span class="line">  __run_exit_handlers (status, &amp;__exit_funcs, true, true);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因此，可以直接改<code>__libc_atexit</code>的值为<code>one_gadget</code>，在执行<code>exit</code>函数（从<code>main</code>函数退出时也调用了<code>exit()</code>）时，就能直接<code>getshell</code>了。<br>这个<code>__libc_atexit</code>有一个极大的优点，就是它在<code>libc</code>而非<code>ld</code>中，随远程环境的改变，不会有变化。缺点就是，它是无参调用的<code>hook</code>，传不了<code>/bin/sh</code>的参数，<code>one_gadget</code>不一定都能打通。</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-272098.htm">pwn总结</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/pwnfeifei/p/15759130.html">exit hook </a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/576942474">宸极实验室——『CTF』从两道题目学习 exit_hook</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/25/fini_array/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/25/fini_array/" class="post-title-link" itemprop="url">fini_array</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-25 21:07:50" itemprop="dateCreated datePublished" datetime="2025-03-25T21:07:50+08:00">2025-03-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-27 15:25:36" itemprop="dateModified" datetime="2025-03-27T15:25:36+08:00">2025-03-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><img src="/../images/fini_array/0.png" alt="0"></p>
+<h1 id="什么是fini-array"><a href="#什么是fini-array" class="headerlink" title="什么是fini_array"></a>什么是fini_array</h1><p>fini_array被<code>__libc_csu_fini</code>调用的函数的指针数组.一般可以在ida中用<code>shift+f7</code>找到</p>
+<p>一般来讲这个数组有两个数据,但也有特例(只有一个数据)</p>
+<p><img src="/../images/fini_array/2.png" alt="2"></p>
+<p><img src="/../images/fini_array/3.png" alt="3"></p>
+<h1 id="fini-array能干嘛"><a href="#fini-array能干嘛" class="headerlink" title="fini_array能干嘛"></a>fini_array能干嘛</h1><p>由图0可知,exit在执行时会调用这个指针,具体在<code>exit--&gt;__run_exit_handlers--&gt;_dl_fini--&gt;_dl_cal_fini</code>里(下图是已经将fini_array的数据改为了main函数的地址)</p>
+<p><img src="/../images/fini_array/1.png" alt="1"></p>
+<p><img src="/../images/fini_array/4.png" alt="4"></p>
+<h1 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h1><h2 id="实现多次执行main"><a href="#实现多次执行main" class="headerlink" title="实现多次执行main"></a>实现多次执行main</h2><p>先来看静态链接的<code>__libc_csu_fini</code>函数代码(动态链接并没有这些指令)</p>
+<p><img src="/../images/fini_array/5.png" alt="5"></p>
+<p>由图可知,<code>__libc_csu_fini</code>在执行fini_array时先执行的fini_array[1],再执行的fini_array[0]</p>
+<p>我们可以fini_array改为main函数来实现多次利用程序中漏洞的机会</p>
+<p>也可以将fini_array[1]改为函数A,将fini_array[0]改为<code>__libc_csu_fini </code>以实现死循环</p>
+<h2 id="构造栈迁移"><a href="#构造栈迁移" class="headerlink" title="构造栈迁移"></a>构造栈迁移</h2><p>通过上图还可以发现在0x968位置将一个地址赋给了ebp,这个地址就是我们的fini_array的地址</p>
+<p>利用这一点我们可以先构造死循环利用程序的漏洞在指定位置写入ROP链,然后再通过将<code>fini_array</code>改为<code>leave;ret;</code>实现栈迁移执行布置好的ROP链</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/system/226003.html">详解64位静态编译程序的fini_array劫持及ROP攻击</a></p>
+<p><a target="_blank" rel="noopener" href="https://wiki.mrskye.cn/Pwn/stackoverflow/fini_array%E5%8A%AB%E6%8C%81/fini_array%E5%8A%AB%E6%8C%81/#_7">劫持 64 位 fini_array 进行 ROP 攻击</a></p>
+<p><a target="_blank" rel="noopener" href="https://xuanxuanblingbling.github.io/ctf/pwn/2019/09/06/317/">和媳妇一起学Pwn 之 3x17</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -984,7 +1268,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
