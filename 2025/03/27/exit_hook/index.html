@@ -28,7 +28,7 @@
 <meta property="og:description" content="何为exit_hookhook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的 hook _rtld_lock(un)lock_recursive由fini_array这篇文章知道了exit)()在执行时会先调用__run_exit_handlers,而在这个函数中又会调用_dl_fini _dl_fini函数源码如下: 1234567891011121314#ifde">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-27T05:53:12.918Z">
-<meta property="article:modified_time" content="2025-03-29T05:20:01.084Z">
+<meta property="article:modified_time" content="2025-03-29T08:59:39.502Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
 
@@ -190,7 +190,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-29 13:20:01" itemprop="dateModified" datetime="2025-03-29T13:20:01+08:00">2025-03-29</time>
+                <time title="修改时间：2025-03-29 16:59:39" itemprop="dateModified" datetime="2025-03-29T16:59:39+08:00">2025-03-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,6 +238,9 @@
 <h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>既然我们已经知道了关键函数及其参数的位置,那么我们<strong>直接将关键函数改为one_gadget来get shell</strong>,也可以<strong>将关键函数改为<code>system</code>,再把参数地址改为<code>/bin/sh\x00</code>地址</strong>来get shell</p>
 <h1 id="如何寻找偏移"><a href="#如何寻找偏移" class="headerlink" title="如何寻找偏移"></a>如何寻找偏移</h1><p><code>_rtld_global</code>结构位于<code>ld.so</code>中 ( <code>ld.sym[&#39;_rtld_global&#39;]</code> )，而<code>libc_base</code>与<code>ld_base</code>又有固定的差值,所以我们可以通过libc的基址来推出函数及其参数的地址</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libc2.23下偏移为0×5f0040，两个hook的偏移为3848和3850</span><br><span class="line"></span><br><span class="line">libc2.27下偏移为0×61b060，两个hook的偏移为3840和3848</span><br></pre></td></tr></table></figure>
+
+<p>由于这个函数对于libc_base的偏移是固定的,故可以使用<code>p &amp;_rtld_global._dl_rtld_lock_recursive</code>来查看函数地址,再减去libc_base得到偏移</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; p &amp;_rtld_global._dl_rtld_lock_recursive</span><br><span class="line">$4 = (void (**)(void *)) 0x7f1c260a8f60 &lt;_rtld_global+3840&gt;</span><br></pre></td></tr></table></figure>
 
 <h1 id="hook-libc-atexit"><a href="#hook-libc-atexit" class="headerlink" title="hook __libc_atexit"></a>hook __libc_atexit</h1><p>exit.c源码如下:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">__run_exit_handlers (int status, struct exit_function_list **listp,</span><br><span class="line">             bool run_list_atexit, bool run_dtors)</span><br><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">if (run_list_atexit)</span><br><span class="line">    RUN_HOOK (__libc_atexit, ());</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
