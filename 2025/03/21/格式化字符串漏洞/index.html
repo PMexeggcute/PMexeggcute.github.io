@@ -28,7 +28,7 @@
 <meta property="og:description" content="何为格式化字符串漏洞1234567#include&lt;stdio.h&gt;int main()&#123;&#96;	char buf[16];	gets(buf,0x400);	printf(buf);	return 0;&#125;  形如上述代码的程序一般具有格式化字符串漏洞,试想如果往buf里输入%p等格式化字符串时会发生什么 那么细心的师傅们可能就会说了:你这后面也没跟第二个参数啊,这能运">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-21T11:11:18.148Z">
-<meta property="article:modified_time" content="2025-03-21T13:03:23.144Z">
+<meta property="article:modified_time" content="2025-04-22T06:43:00.975Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
 
@@ -182,10 +182,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-03-21 19:11:18 / 修改时间：21:03:23" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
+              <time title="创建时间：2025-03-21 19:11:18" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-22 14:43:00" itemprop="dateModified" datetime="2025-04-22T14:43:00+08:00">2025-04-22</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -299,6 +305,7 @@
 <li>length，输出的长度<ul>
 <li>hh，输出一个字节</li>
 <li>h，输出一个双字节</li>
+<li>ll, 输出一个八字节</li>
 </ul>
 </li>
 <li>type<ul>
@@ -318,15 +325,12 @@
 <h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>那么基础打牢,开始实践吧</p>
 <h2 id="泄露内存"><a href="#泄露内存" class="headerlink" title="泄露内存"></a>泄露内存</h2><p>上文已经介绍过用%p泄露出栈的地址,那么如何泄露栈变量的值和对应字符串呢</p>
 <p>要做到这些只需要将%p换成%x和%s即可</p>
-<p>可能又有师傅要问了:<strong>auv,你这个就只能泄露当前地址吗,这个格式化字符串就是逊啦</strong></p>
-<p>那么一看这位师傅就没好好看基础部分啊,<del>来人,抓起来拷打</del></p>
 <p>我们可以用%k$s这种形式的格式化字符串来获取偏移量为<strong>k</strong>的地址的数据,所以只要知道指定内存地址相对于参数位置的偏移就可以打印任意地址的数据了</p>
 <h2 id="覆盖内存"><a href="#覆盖内存" class="headerlink" title="覆盖内存"></a>覆盖内存</h2><p>这里需要用到一个非常特别的字符串%n</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%n,不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。</span><br></pre></td></tr></table></figure>
 
 <p>这使得我们可以通过精妙的构造来向指定地址写入任意的值</p>
-<p>那么有的师傅(<del>没错,又是我们那位师傅</del>)又要说了:<strong>uva,你这精妙的构造一般人想的出来吗,真当人人都能用观察法解出高考压轴题吗</strong></p>
-<p>没错,这位师傅又错了,咱们可以使用pwntools中fmtstr中的神器<strong>fmtstr_payload</strong></p>
+<p>可以使用pwntools中fmtstr中的神器<strong>fmtstr_payload</strong></p>
 <p>使用方法入下</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmtstr_payload(offset,&#123;原始地址:目标地址&#125;)</span><br></pre></td></tr></table></figure>
 
@@ -442,7 +446,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

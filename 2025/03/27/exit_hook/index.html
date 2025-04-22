@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="何为exit_hookhook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的 hook _rtld_lock(un)lock_recursive由fini_array这篇文章知道了exit)()在执行时会先调用__run_exit_handlers,而在这个函数中又会调用_dl_fini _dl_fini函数源码如下: 1234567891011121314#ifde">
+  <meta name="description" content="何为exit_hookhook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的 hook rtld_lock_(un)lock_recursive由fini_array这篇文章知道了exit)()在执行时会先调用__run_exit_handlers,而在这个函数中又会调用_dl_fini _dl_fini函数源码如下: 1234567891011121314#ifde">
 <meta property="og:type" content="article">
 <meta property="og:title" content="exit_hook">
 <meta property="og:url" content="http://example.com/2025/03/27/exit_hook/index.html">
 <meta property="og:site_name" content="Welcome!">
-<meta property="og:description" content="何为exit_hookhook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的 hook _rtld_lock(un)lock_recursive由fini_array这篇文章知道了exit)()在执行时会先调用__run_exit_handlers,而在这个函数中又会调用_dl_fini _dl_fini函数源码如下: 1234567891011121314#ifde">
+<meta property="og:description" content="何为exit_hookhook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的 hook rtld_lock_(un)lock_recursive由fini_array这篇文章知道了exit)()在执行时会先调用__run_exit_handlers,而在这个函数中又会调用_dl_fini _dl_fini函数源码如下: 1234567891011121314#ifde">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-27T05:53:12.918Z">
-<meta property="article:modified_time" content="2025-03-29T08:59:39.502Z">
+<meta property="article:modified_time" content="2025-04-06T12:42:36.854Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
 
@@ -190,7 +190,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-29 16:59:39" itemprop="dateModified" datetime="2025-03-29T16:59:39+08:00">2025-03-29</time>
+                <time title="修改时间：2025-04-06 20:42:36" itemprop="dateModified" datetime="2025-04-06T20:42:36+08:00">2025-04-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -218,7 +218,7 @@
 
       
         <h1 id="何为exit-hook"><a href="#何为exit-hook" class="headerlink" title="何为exit_hook"></a>何为exit_hook</h1><p>hook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的</p>
-<h2 id="hook-rtld-lock-un-lock-recursive"><a href="#hook-rtld-lock-un-lock-recursive" class="headerlink" title="hook _rtld_lock(un)lock_recursive"></a>hook _<em>rtld_lock</em>(un)lock_recursive</h2><p>由fini_array这篇文章知道了<code>exit)()</code>在执行时会先调用<code>__run_exit_handlers</code>,而在这个函数中又会调用<code>_dl_fini</code></p>
+<h2 id="hook-rtld-lock-un-lock-recursive"><a href="#hook-rtld-lock-un-lock-recursive" class="headerlink" title="hook rtld_lock_(un)lock_recursive"></a>hook rtld_lock_(un)lock_recursive</h2><p>由fini_array这篇文章知道了<code>exit)()</code>在执行时会先调用<code>__run_exit_handlers</code>,而在这个函数中又会调用<code>_dl_fini</code></p>
 <p><code>_dl_fini</code>函数源码如下:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#ifdef SHARED</span><br><span class="line">  int do_audit = 0;</span><br><span class="line"> again:</span><br><span class="line">#endif</span><br><span class="line">  for (Lmid_t ns = GL(dl_nns) - 1; ns &gt;= 0; --ns)</span><br><span class="line">    &#123;</span><br><span class="line">      __rtld_lock_lock_recursive (GL(dl_load_lock));</span><br><span class="line">      unsigned int nloaded = GL(dl_ns)[ns]._ns_nloaded;</span><br><span class="line">      if (nloaded == 0</span><br><span class="line">#ifdef SHARED</span><br><span class="line">      || GL(dl_ns)[ns]._ns_loaded-&gt;l_auditing != do_audit</span><br><span class="line">#endif</span><br><span class="line">      )</span><br><span class="line">    __rtld_lock_unlock_recursive (GL(dl_load_lock));</span><br></pre></td></tr></table></figure>
 
@@ -332,7 +332,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BAexit-hook"><span class="nav-number">1.</span> <span class="nav-text">何为exit_hook</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#hook-rtld-lock-un-lock-recursive"><span class="nav-number">1.1.</span> <span class="nav-text">hook _rtld_lock(un)lock_recursive</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.</span> <span class="nav-text">关键函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">如何利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AF%BB%E6%89%BE%E5%81%8F%E7%A7%BB"><span class="nav-number">3.</span> <span class="nav-text">如何寻找偏移</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hook-libc-atexit"><span class="nav-number">4.</span> <span class="nav-text">hook __libc_atexit</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">5.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BAexit-hook"><span class="nav-number">1.</span> <span class="nav-text">何为exit_hook</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#hook-rtld-lock-un-lock-recursive"><span class="nav-number">1.1.</span> <span class="nav-text">hook rtld_lock_(un)lock_recursive</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.</span> <span class="nav-text">关键函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">如何利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AF%BB%E6%89%BE%E5%81%8F%E7%A7%BB"><span class="nav-number">3.</span> <span class="nav-text">如何寻找偏移</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hook-libc-atexit"><span class="nav-number">4.</span> <span class="nav-text">hook __libc_atexit</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">5.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -348,7 +348,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
