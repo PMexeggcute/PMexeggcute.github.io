@@ -155,7 +155,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/21/%E4%BB%8Emalloc%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3plmalloc2/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
@@ -169,7 +169,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2025/04/21/%E4%BB%8Emalloc%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3plmalloc2/" class="post-title-link" itemprop="url">从malloc源码理解堆分配机制</a>
+            <a href="/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/" class="post-title-link" itemprop="url">将由字符串强制转换成的12-16字节数据转换为8字节数据</a>
         </h2>
 
         <div class="post-meta">
@@ -178,21 +178,9 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2025-04-21 22:08:10" itemprop="dateCreated datePublished" datetime="2025-04-21T22:08:10+08:00">2025-04-21</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
+              <time title="创建时间：2025-04-26 13:31:49 / 修改时间：15:30:47" itemprop="dateCreated datePublished" datetime="2025-04-26T13:31:49+08:00">2025-04-26</time>
             </span>
 
           
@@ -206,7 +194,27 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          
+          <p><em>因为又在这里栽跟头了所以写一篇博客来记录一下orz</em></p>
+<h1 id="题目通过printf泄露地址的情况"><a href="#题目通过printf泄露地址的情况" class="headerlink" title="题目通过printf泄露地址的情况"></a>题目通过printf泄露地址的情况</h1><p>例如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">	<span class="type">int</span> a;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%p&quot;</span>,&amp;a);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/0.png" alt="0"></p>
+<p>可以看到输出的数据是0xe也就是14个字节</p>
+<p>我们都知道一个64位程序的地址最多也就8个字节,为什么这个地址是14个字节呢?</p>
+<p>原因是printf在输出的时候是将这个6个字节的地址转换成的字符串再加上0x进行输出的</p>
+<p>知道原因过后我们的目标就很明确了:<strong>将这个14个字节的字符串转换为6个字节的数据</strong></p>
+<p>首先是要对获取到的数据进行处理:</p>
+<p>我们需要用到python中的<code>decode()</code>方法将字节数据转换为字符串再使用<code>lstrip(&#39;0x&#39;)</code>去掉字符串左边的‘0x’</p>
+<p>再使用<code>bytes.fromhex()</code>方法将十六进制字符串转换为字节数据</p>
+<p>但是还没完,我们知道在大部分机器上数据是以小端序的顺序储存的,也就是我们要把我们得到的字节再进行反序操作</p>
+<p>即使用<code>[::-1]</code></p>
+<p>完整操作如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">raw_bytes = r(<span class="number">14</span>)<span class="comment">#接收数据</span></span><br><span class="line">hex_str = raw_bytes.decode().lstrip(<span class="string">&#x27;0x&#x27;</span>)<span class="comment">#.rstrip(&#x27;\x00&#x27;) 如果结尾有多的&#x27;\x00&#x27;还需要.rstrip(&#x27;\x00&#x27;)来进行去除</span></span><br><span class="line">hex_data = <span class="built_in">bytes</span>.fromhex(hex_str)  <span class="comment">#转换为字节</span></span><br><span class="line">reversed_bytes = hex_data[::-<span class="number">1</span>]  <span class="comment">#反序</span></span><br></pre></td></tr></table></figure>
+
+<p>然后就可以使用u64(reversed_bytes.ljust(8,b’\x00’))对其处理在写入payload中</p>
+<h1 id="puts的情况"><a href="#puts的情况" class="headerlink" title="puts的情况"></a>puts的情况</h1><p>构造ROP链来使puts函数泄露libc地址应该是最常见的情况了,puts函数也是输出的字符串,为什么就可以直接通过u64(p.recv(6).ljust(8,b’\x00’))来获得libc地址呢?</p>
+<p>在构造payload输出的时候虽然输出的是字符串,但这个字符串本质是直接根据字节数据通过诸如ascii转换而来的,也就是,输出的数据仍是原来的字节,而不是像printf那样输出的是将每四位数据对应的字符将这个字符作为一个单独的字节输出</p>
+
       
     </div>
 
@@ -256,7 +264,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-22 14:47:39" itemprop="dateModified" datetime="2025-04-22T14:47:39+08:00">2025-04-22</time>
+                <time title="修改时间：2025-04-24 18:54:06" itemprop="dateModified" datetime="2025-04-24T18:54:06+08:00">2025-04-24</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -285,11 +293,23 @@
       
           <h1 id="bins"><a href="#bins" class="headerlink" title="bins"></a>bins</h1><p><img src="/../images/heap/0.png" alt="0"></p>
 <h1 id="global-max-fast"><a href="#global-max-fast" class="headerlink" title="global_max_fast"></a>global_max_fast</h1><p><strong>glibc（GNU C Library）中动态内存分配器（ptmalloc2）</strong> 的一个关键全局变量，用于控制 <strong>fast bins（快速分配区）</strong> 的最大内存块大小。</p>
-<h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>32位下fast bin范围为16到64</p>
+<h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>单向链表</p>
+<p>32位下fast bin范围为16到64</p>
 <p>64位下fast bin范围为32到128</p>
+<p>从块分配器的角度来看，fastbin 中的块被视为已分配的块。它们仅在 malloc_consolidate 中批量与相邻对象合并。</p>
+<h2 id="double-free"><a href="#double-free" class="headerlink" title="double free"></a>double free</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">_int_free</span><br><span class="line">    -&gt; if ((size) &lt;= get_max_fast ())</span><br><span class="line">        -&gt; unsigned int idx = fastbin_index(size);</span><br><span class="line">        -&gt; fb = &amp;fastbin (av, idx);</span><br><span class="line">        -&gt; mchunkptr old = *fb, old2;</span><br><span class="line">        -&gt; if (old == p)</span><br><span class="line">            -&gt; malloc_printerr (&quot;double free or corruption (fasttop)&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>这里对double free漏洞的检查:</p>
+<p>获取fastbin链表中最后入链的old,然后判断即将释放的fastbin和old的指针是否相同</p>
 <h1 id="unsorted-bin"><a href="#unsorted-bin" class="headerlink" title="unsorted bin"></a>unsorted bin</h1><p>unsorted bins的bk和fd指向的是一个指针,而这个指针指向的是top chunk的地址,这个地址又储存在main_arena的0x58偏移处</p>
 <p>main_arena - 0x10即为__malloc_hook的,__malloc_hook又是调用malloc时会调用的指针,所以可以通过劫持__malloc_hook来劫持程序控制流</p>
 <p>然后通过fastbin attack将下一个堆块改为__malloc_hook - 0x23处,因为只有改为这处,视为堆块的此处的size位置才为正确的数据</p>
+<h1 id="binmap"><a href="#binmap" class="headerlink" title="binmap"></a>binmap</h1><h3 id="Binmap的底层结构"><a href="#Binmap的底层结构" class="headerlink" title="Binmap的底层结构"></a><strong>Binmap的底层结构</strong></h3><ol>
+<li><p><strong>物理存储</strong><br> <code>binmap</code>是<code>malloc_state</code>结构体中的一个数组（<code>unsigned int binmap[BINMAPSIZE]</code>），每个元素为32位无符号整数（<code>unsigned int</code>）。</p>
+<p> 总长度：固定为4个int(即128位，对应63个large bin的索引需求）</p>
+<p> 分组逻辑：每个int（32位）称为一个block,每个block负责管理32个连续的large bin状态</p>
+</li>
+</ol>
 <h1 id="计算main-arena"><a href="#计算main-arena" class="headerlink" title="计算main_arena"></a>计算main_arena</h1><ol>
 <li><p>通过上面的泄露unsorted_bin的fd指针</p>
 </li>
@@ -297,6 +317,15 @@
 <p> <strong>“比如把 <code>.so</code> 文件放到 IDA 中，找到 <code>malloc_trim</code> 函数，就可以获得偏移了。”</strong> -–ctfwiki</p>
 </li>
 </ol>
+<h1 id="tcache"><a href="#tcache" class="headerlink" title="tcache"></a>tcache</h1><p><em>glibc 2.26后</em></p>
+<p><strong>两个结构体</strong></p>
+<h2 id="tcache-dup"><a href="#tcache-dup" class="headerlink" title="tcache dup"></a>tcache dup</h2><p>仅限glibc2.26,可以直接对其进行double free</p>
+<h2 id="tcache-entry"><a href="#tcache-entry" class="headerlink" title="tcache_entry"></a>tcache_entry</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/* We overlay this structure on the user-data portion of a chunk when</span><br><span class="line">   the chunk is stored in the per-thread cache.  */</span><br><span class="line">typedef struct tcache_entry</span><br><span class="line">&#123;</span><br><span class="line">  struct tcache_entry *next;</span><br><span class="line">&#125; tcache_entry;</span><br></pre></td></tr></table></figure>
+
+<p>一个单向链表</p>
+<h2 id="tcache-perthread-struct"><a href="#tcache-perthread-struct" class="headerlink" title="tcache_perthread_struct"></a>tcache_perthread_struct</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/* There is one of these for each thread, which contains the</span><br><span class="line">   per-thread cache (hence &quot;tcache_perthread_struct&quot;).  Keeping</span><br><span class="line">   overall size low is mildly important.  Note that COUNTS and ENTRIES</span><br><span class="line">   are redundant (we could have just counted the linked list each</span><br><span class="line">   time), this is for performance reasons.  */</span><br><span class="line">typedef struct tcache_perthread_struct</span><br><span class="line">&#123;</span><br><span class="line">  char counts[TCACHE_MAX_BINS];</span><br><span class="line">  tcache_entry *entries[TCACHE_MAX_BINS];</span><br><span class="line">&#125; tcache_perthread_struct;</span><br><span class="line"></span><br><span class="line"># define TCACHE_MAX_BINS                64</span><br><span class="line"></span><br><span class="line">static __thread tcache_perthread_struct *tcache = NULL;</span><br></pre></td></tr></table></figure>
+
+<p>通过counts记录tcache_entry上空闲的chunk数目</p>
 
       
     </div>
@@ -1250,6 +1279,12 @@
           
         <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

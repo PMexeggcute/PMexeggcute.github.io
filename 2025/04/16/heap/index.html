@@ -20,17 +20,18 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="bins global_max_fastglibc（GNU C Library）中动态内存分配器（ptmalloc2） 的一个关键全局变量，用于控制 fast bins（快速分配区） 的最大内存块大小。 fast bin32位下fast bin范围为16到64 64位下fast bin范围为32到128 unsorted binunsorted bins的bk和fd指向的是一个指针,而这个指针指向">
+  <meta name="description" content="bins global_max_fastglibc（GNU C Library）中动态内存分配器（ptmalloc2） 的一个关键全局变量，用于控制 fast bins（快速分配区） 的最大内存块大小。 fast bin单向链表 32位下fast bin范围为16到64 64位下fast bin范围为32到128 从块分配器的角度来看，fastbin 中的块被视为已分配的块。它们仅在 malloc">
 <meta property="og:type" content="article">
 <meta property="og:title" content="heap">
 <meta property="og:url" content="http://example.com/2025/04/16/heap/index.html">
 <meta property="og:site_name" content="Welcome!">
-<meta property="og:description" content="bins global_max_fastglibc（GNU C Library）中动态内存分配器（ptmalloc2） 的一个关键全局变量，用于控制 fast bins（快速分配区） 的最大内存块大小。 fast bin32位下fast bin范围为16到64 64位下fast bin范围为32到128 unsorted binunsorted bins的bk和fd指向的是一个指针,而这个指针指向">
+<meta property="og:description" content="bins global_max_fastglibc（GNU C Library）中动态内存分配器（ptmalloc2） 的一个关键全局变量，用于控制 fast bins（快速分配区） 的最大内存块大小。 fast bin单向链表 32位下fast bin范围为16到64 64位下fast bin范围为32到128 从块分配器的角度来看，fastbin 中的块被视为已分配的块。它们仅在 malloc">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/heap/0.png">
 <meta property="article:published_time" content="2025-04-16T10:13:28.816Z">
-<meta property="article:modified_time" content="2025-04-22T06:47:39.586Z">
+<meta property="article:modified_time" content="2025-04-24T10:54:06.542Z">
 <meta property="article:author" content="Sn0r1ax">
+<meta property="article:tag" content="施工中">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/images/heap/0.png">
 
@@ -192,7 +193,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-22 14:47:39" itemprop="dateModified" datetime="2025-04-22T14:47:39+08:00">2025-04-22</time>
+                <time title="修改时间：2025-04-24 18:54:06" itemprop="dateModified" datetime="2025-04-24T18:54:06+08:00">2025-04-24</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -221,11 +222,23 @@
       
         <h1 id="bins"><a href="#bins" class="headerlink" title="bins"></a>bins</h1><p><img src="/../images/heap/0.png" alt="0"></p>
 <h1 id="global-max-fast"><a href="#global-max-fast" class="headerlink" title="global_max_fast"></a>global_max_fast</h1><p><strong>glibc（GNU C Library）中动态内存分配器（ptmalloc2）</strong> 的一个关键全局变量，用于控制 <strong>fast bins（快速分配区）</strong> 的最大内存块大小。</p>
-<h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>32位下fast bin范围为16到64</p>
+<h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>单向链表</p>
+<p>32位下fast bin范围为16到64</p>
 <p>64位下fast bin范围为32到128</p>
+<p>从块分配器的角度来看，fastbin 中的块被视为已分配的块。它们仅在 malloc_consolidate 中批量与相邻对象合并。</p>
+<h2 id="double-free"><a href="#double-free" class="headerlink" title="double free"></a>double free</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">_int_free</span><br><span class="line">    -&gt; if ((size) &lt;= get_max_fast ())</span><br><span class="line">        -&gt; unsigned int idx = fastbin_index(size);</span><br><span class="line">        -&gt; fb = &amp;fastbin (av, idx);</span><br><span class="line">        -&gt; mchunkptr old = *fb, old2;</span><br><span class="line">        -&gt; if (old == p)</span><br><span class="line">            -&gt; malloc_printerr (&quot;double free or corruption (fasttop)&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>这里对double free漏洞的检查:</p>
+<p>获取fastbin链表中最后入链的old,然后判断即将释放的fastbin和old的指针是否相同</p>
 <h1 id="unsorted-bin"><a href="#unsorted-bin" class="headerlink" title="unsorted bin"></a>unsorted bin</h1><p>unsorted bins的bk和fd指向的是一个指针,而这个指针指向的是top chunk的地址,这个地址又储存在main_arena的0x58偏移处</p>
 <p>main_arena - 0x10即为__malloc_hook的,__malloc_hook又是调用malloc时会调用的指针,所以可以通过劫持__malloc_hook来劫持程序控制流</p>
 <p>然后通过fastbin attack将下一个堆块改为__malloc_hook - 0x23处,因为只有改为这处,视为堆块的此处的size位置才为正确的数据</p>
+<h1 id="binmap"><a href="#binmap" class="headerlink" title="binmap"></a>binmap</h1><h3 id="Binmap的底层结构"><a href="#Binmap的底层结构" class="headerlink" title="Binmap的底层结构"></a><strong>Binmap的底层结构</strong></h3><ol>
+<li><p><strong>物理存储</strong><br> <code>binmap</code>是<code>malloc_state</code>结构体中的一个数组（<code>unsigned int binmap[BINMAPSIZE]</code>），每个元素为32位无符号整数（<code>unsigned int</code>）。</p>
+<p> 总长度：固定为4个int(即128位，对应63个large bin的索引需求）</p>
+<p> 分组逻辑：每个int（32位）称为一个block,每个block负责管理32个连续的large bin状态</p>
+</li>
+</ol>
 <h1 id="计算main-arena"><a href="#计算main-arena" class="headerlink" title="计算main_arena"></a>计算main_arena</h1><ol>
 <li><p>通过上面的泄露unsorted_bin的fd指针</p>
 </li>
@@ -233,6 +246,15 @@
 <p> <strong>“比如把 <code>.so</code> 文件放到 IDA 中，找到 <code>malloc_trim</code> 函数，就可以获得偏移了。”</strong> -–ctfwiki</p>
 </li>
 </ol>
+<h1 id="tcache"><a href="#tcache" class="headerlink" title="tcache"></a>tcache</h1><p><em>glibc 2.26后</em></p>
+<p><strong>两个结构体</strong></p>
+<h2 id="tcache-dup"><a href="#tcache-dup" class="headerlink" title="tcache dup"></a>tcache dup</h2><p>仅限glibc2.26,可以直接对其进行double free</p>
+<h2 id="tcache-entry"><a href="#tcache-entry" class="headerlink" title="tcache_entry"></a>tcache_entry</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/* We overlay this structure on the user-data portion of a chunk when</span><br><span class="line">   the chunk is stored in the per-thread cache.  */</span><br><span class="line">typedef struct tcache_entry</span><br><span class="line">&#123;</span><br><span class="line">  struct tcache_entry *next;</span><br><span class="line">&#125; tcache_entry;</span><br></pre></td></tr></table></figure>
+
+<p>一个单向链表</p>
+<h2 id="tcache-perthread-struct"><a href="#tcache-perthread-struct" class="headerlink" title="tcache_perthread_struct"></a>tcache_perthread_struct</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/* There is one of these for each thread, which contains the</span><br><span class="line">   per-thread cache (hence &quot;tcache_perthread_struct&quot;).  Keeping</span><br><span class="line">   overall size low is mildly important.  Note that COUNTS and ENTRIES</span><br><span class="line">   are redundant (we could have just counted the linked list each</span><br><span class="line">   time), this is for performance reasons.  */</span><br><span class="line">typedef struct tcache_perthread_struct</span><br><span class="line">&#123;</span><br><span class="line">  char counts[TCACHE_MAX_BINS];</span><br><span class="line">  tcache_entry *entries[TCACHE_MAX_BINS];</span><br><span class="line">&#125; tcache_perthread_struct;</span><br><span class="line"></span><br><span class="line"># define TCACHE_MAX_BINS                64</span><br><span class="line"></span><br><span class="line">static __thread tcache_perthread_struct *tcache = NULL;</span><br></pre></td></tr></table></figure>
+
+<p>通过counts记录tcache_entry上空闲的chunk数目</p>
 
     </div>
 
@@ -241,6 +263,9 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%96%BD%E5%B7%A5%E4%B8%AD/" rel="tag"># 施工中</a>
+          </div>
 
         
 
@@ -252,8 +277,8 @@
       <i class="fa fa-chevron-left"></i> hexo上传问题解决方法
     </a></div>
       <div class="post-nav-item">
-    <a href="/2025/04/21/%E4%BB%8Emalloc%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3plmalloc2/" rel="next" title="从malloc源码理解堆分配机制">
-      从malloc源码理解堆分配机制 <i class="fa fa-chevron-right"></i>
+    <a href="/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/" rel="next" title="将由字符串强制转换成的12-16字节数据转换为8字节数据">
+      将由字符串强制转换成的12-16字节数据转换为8字节数据 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -313,7 +338,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#bins"><span class="nav-number">1.</span> <span class="nav-text">bins</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#global-max-fast"><span class="nav-number">2.</span> <span class="nav-text">global_max_fast</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#fast-bin"><span class="nav-number">3.</span> <span class="nav-text">fast bin</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#unsorted-bin"><span class="nav-number">4.</span> <span class="nav-text">unsorted bin</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97main-arena"><span class="nav-number">5.</span> <span class="nav-text">计算main_arena</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#bins"><span class="nav-number">1.</span> <span class="nav-text">bins</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#global-max-fast"><span class="nav-number">2.</span> <span class="nav-text">global_max_fast</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#fast-bin"><span class="nav-number">3.</span> <span class="nav-text">fast bin</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#double-free"><span class="nav-number">3.1.</span> <span class="nav-text">double free</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#unsorted-bin"><span class="nav-number">4.</span> <span class="nav-text">unsorted bin</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#binmap"><span class="nav-number">5.</span> <span class="nav-text">binmap</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Binmap%E7%9A%84%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="nav-number">5.0.1.</span> <span class="nav-text">Binmap的底层结构</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97main-arena"><span class="nav-number">6.</span> <span class="nav-text">计算main_arena</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#tcache"><span class="nav-number">7.</span> <span class="nav-text">tcache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcache-dup"><span class="nav-number">7.1.</span> <span class="nav-text">tcache dup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcache-entry"><span class="nav-number">7.2.</span> <span class="nav-text">tcache_entry</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcache-perthread-struct"><span class="nav-number">7.3.</span> <span class="nav-text">tcache_perthread_struct</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -338,6 +363,12 @@
           
         <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>

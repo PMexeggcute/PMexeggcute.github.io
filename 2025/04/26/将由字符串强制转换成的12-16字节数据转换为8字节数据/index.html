@@ -20,21 +20,21 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="何为沙箱沙箱即限制程序只能调用指定函数来保证程序的安全性 何为orworw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种 那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag) 如何判断可以通过seccomp-tools来判断是否开启沙箱 seccomp-too">
+  <meta name="description" content="因为又在这里栽跟头了所以写一篇博客来记录一下orz 题目通过printf泄露地址的情况例如: 123456#include&lt;stdio.h&gt;int main()&#123;	int a;	printf(&quot;%p&quot;,&amp;a);	return 0;&#125;   可以看到输出的数据是0xe也就是14个字节 我们都知道一个64位程序的地址最多也就8个字节,为什么这个">
 <meta property="og:type" content="article">
-<meta property="og:title" content="初探sandbox(C沙盒逃逸)">
-<meta property="og:url" content="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/index.html">
+<meta property="og:title" content="将由字符串强制转换成的12-16字节数据转换为8字节数据">
+<meta property="og:url" content="http://example.com/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/index.html">
 <meta property="og:site_name" content="Welcome!">
-<meta property="og:description" content="何为沙箱沙箱即限制程序只能调用指定函数来保证程序的安全性 何为orworw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种 那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag) 如何判断可以通过seccomp-tools来判断是否开启沙箱 seccomp-too">
+<meta property="og:description" content="因为又在这里栽跟头了所以写一篇博客来记录一下orz 题目通过printf泄露地址的情况例如: 123456#include&lt;stdio.h&gt;int main()&#123;	int a;	printf(&quot;%p&quot;,&amp;a);	return 0;&#125;   可以看到输出的数据是0xe也就是14个字节 我们都知道一个64位程序的地址最多也就8个字节,为什么这个">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/orw/0.png">
-<meta property="article:published_time" content="2025-03-18T11:58:46.974Z">
-<meta property="article:modified_time" content="2025-03-20T07:13:00.247Z">
+<meta property="og:image" content="http://example.com/images/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/0.png">
+<meta property="article:published_time" content="2025-04-26T05:31:49.596Z">
+<meta property="article:modified_time" content="2025-04-26T07:30:47.983Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/orw/0.png">
+<meta name="twitter:image" content="http://example.com/images/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/0.png">
 
-<link rel="canonical" href="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/">
+<link rel="canonical" href="http://example.com/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/">
 
 
 <script id="page-configurations">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>初探sandbox(C沙盒逃逸) | Welcome!</title>
+  <title>将由字符串强制转换成的12-16字节数据转换为8字节数据 | Welcome!</title>
   
 
 
@@ -162,7 +162,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
@@ -175,7 +175,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          初探sandbox(C沙盒逃逸)
+          将由字符串强制转换成的12-16字节数据转换为8字节数据
         </h1>
 
         <div class="post-meta">
@@ -184,28 +184,9 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2025-03-18 19:58:46" itemprop="dateCreated datePublished" datetime="2025-03-18T19:58:46+08:00">2025-03-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-20 15:13:00" itemprop="dateModified" datetime="2025-03-20T15:13:00+08:00">2025-03-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
+              <time title="创建时间：2025-04-26 13:31:49 / 修改时间：15:30:47" itemprop="dateCreated datePublished" datetime="2025-04-26T13:31:49+08:00">2025-04-26</time>
             </span>
 
           
@@ -219,19 +200,26 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="何为沙箱"><a href="#何为沙箱" class="headerlink" title="何为沙箱"></a>何为沙箱</h1><p>沙箱即限制程序只能调用指定函数来保证程序的安全性</p>
-<h1 id="何为orw"><a href="#何为orw" class="headerlink" title="何为orw"></a>何为orw</h1><p>orw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种</p>
-<p>那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag)</p>
-<h1 id="如何判断"><a href="#如何判断" class="headerlink" title="如何判断"></a>如何判断</h1><p>可以通过seccomp-tools来判断是否开启沙箱</p>
-<p><code>seccomp-tools dump ./pwn</code></p>
-<p><img src="/../images/orw/0.png" alt="0"></p>
-<h1 id="如何绕过"><a href="#如何绕过" class="headerlink" title="如何绕过"></a>如何绕过</h1><h2 id="shellcode绕过"><a href="#shellcode绕过" class="headerlink" title="shellcode绕过"></a>shellcode绕过</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>通过向栈上注入orw的代码让程序执行(需要关闭nx保护)</p>
-<p>例如:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#fd = open(&#x27;/home/orw/flag&#x27;,0) </span><br><span class="line">s = &#x27;&#x27;&#x27; xor edx,edx; mov ecx,0; mov ebx,0x804a094; mov eax,5; int 0x80; &#x27;&#x27;&#x27;</span><br><span class="line"></span><br><span class="line">#read(fd,0x804a094,0x20) </span><br><span class="line">s = &#x27;&#x27;&#x27; mov edx,0x40; mov ecx,ebx; mov ebx,eax; mov eax,3; int 0x80; &#x27;&#x27;&#x27;</span><br><span class="line"></span><br><span class="line">#write(1,0x804a094,0x20) </span><br><span class="line">s = &#x27;&#x27;&#x27; mov edx,0x40; mov ebx,1; mov eax,4 int 0x80; &#x27;&#x27;&#x27;</span><br></pre></td></tr></table></figure>
+        <p><em>因为又在这里栽跟头了所以写一篇博客来记录一下orz</em></p>
+<h1 id="题目通过printf泄露地址的情况"><a href="#题目通过printf泄露地址的情况" class="headerlink" title="题目通过printf泄露地址的情况"></a>题目通过printf泄露地址的情况</h1><p>例如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">	<span class="type">int</span> a;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%p&quot;</span>,&amp;a);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="ROP绕过"><a href="#ROP绕过" class="headerlink" title="ROP绕过"></a>ROP绕过</h2><p>适用于开启了nx保护的情况</p>
-<h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p>通过栈迁移等方法向.bss段写入代码然后构造ROP链到bss段执行相关代码</p>
-<p><a target="_blank" rel="noopener" href="https://x1ng.top/2021/10/28/pwn-orw%E6%80%BB%E7%BB%93/">参考文章</a></p>
+<p><img src="/../images/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/0.png" alt="0"></p>
+<p>可以看到输出的数据是0xe也就是14个字节</p>
+<p>我们都知道一个64位程序的地址最多也就8个字节,为什么这个地址是14个字节呢?</p>
+<p>原因是printf在输出的时候是将这个6个字节的地址转换成的字符串再加上0x进行输出的</p>
+<p>知道原因过后我们的目标就很明确了:<strong>将这个14个字节的字符串转换为6个字节的数据</strong></p>
+<p>首先是要对获取到的数据进行处理:</p>
+<p>我们需要用到python中的<code>decode()</code>方法将字节数据转换为字符串再使用<code>lstrip(&#39;0x&#39;)</code>去掉字符串左边的‘0x’</p>
+<p>再使用<code>bytes.fromhex()</code>方法将十六进制字符串转换为字节数据</p>
+<p>但是还没完,我们知道在大部分机器上数据是以小端序的顺序储存的,也就是我们要把我们得到的字节再进行反序操作</p>
+<p>即使用<code>[::-1]</code></p>
+<p>完整操作如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">raw_bytes = r(<span class="number">14</span>)<span class="comment">#接收数据</span></span><br><span class="line">hex_str = raw_bytes.decode().lstrip(<span class="string">&#x27;0x&#x27;</span>)<span class="comment">#.rstrip(&#x27;\x00&#x27;) 如果结尾有多的&#x27;\x00&#x27;还需要.rstrip(&#x27;\x00&#x27;)来进行去除</span></span><br><span class="line">hex_data = <span class="built_in">bytes</span>.fromhex(hex_str)  <span class="comment">#转换为字节</span></span><br><span class="line">reversed_bytes = hex_data[::-<span class="number">1</span>]  <span class="comment">#反序</span></span><br></pre></td></tr></table></figure>
+
+<p>然后就可以使用u64(reversed_bytes.ljust(8,b’\x00’))对其处理在写入payload中</p>
+<h1 id="puts的情况"><a href="#puts的情况" class="headerlink" title="puts的情况"></a>puts的情况</h1><p>构造ROP链来使puts函数泄露libc地址应该是最常见的情况了,puts函数也是输出的字符串,为什么就可以直接通过u64(p.recv(6).ljust(8,b’\x00’))来获得libc地址呢?</p>
+<p>在构造payload输出的时候虽然输出的是字符串,但这个字符串本质是直接根据字节数据通过诸如ascii转换而来的,也就是,输出的数据仍是原来的字节,而不是像printf那样输出的是将每四位数据对应的字符将这个字符作为一个单独的字节输出</p>
 
     </div>
 
@@ -247,13 +235,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2025/03/17/ret2csu/" rel="prev" title="ret2csu">
-      <i class="fa fa-chevron-left"></i> ret2csu
+    <a href="/2025/04/16/heap/" rel="prev" title="heap">
+      <i class="fa fa-chevron-left"></i> heap
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/" rel="next" title="延迟绑定机制">
-      延迟绑定机制 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -312,7 +297,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BA%E6%B2%99%E7%AE%B1"><span class="nav-number">1.</span> <span class="nav-text">何为沙箱</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BAorw"><span class="nav-number">2.</span> <span class="nav-text">何为orw</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD"><span class="nav-number">3.</span> <span class="nav-text">如何判断</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%BB%95%E8%BF%87"><span class="nav-number">4.</span> <span class="nav-text">如何绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#shellcode%E7%BB%95%E8%BF%87"><span class="nav-number">4.1.</span> <span class="nav-text">shellcode绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">4.1.1.</span> <span class="nav-text">原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ROP%E7%BB%95%E8%BF%87"><span class="nav-number">4.2.</span> <span class="nav-text">ROP绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86-1"><span class="nav-number">4.2.1.</span> <span class="nav-text">原理</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A2%98%E7%9B%AE%E9%80%9A%E8%BF%87printf%E6%B3%84%E9%9C%B2%E5%9C%B0%E5%9D%80%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">1.</span> <span class="nav-text">题目通过printf泄露地址的情况</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#puts%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">2.</span> <span class="nav-text">puts的情况</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
