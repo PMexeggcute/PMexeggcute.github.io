@@ -155,6 +155,430 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/25/fini_array/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/25/fini_array/" class="post-title-link" itemprop="url">fini_array</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-25 21:07:50" itemprop="dateCreated datePublished" datetime="2025-03-25T21:07:50+08:00">2025-03-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-27 15:32:46" itemprop="dateModified" datetime="2025-03-27T15:32:46+08:00">2025-03-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><img src="/../images/fini_array/0.png" alt="0"></p>
+<h1 id="什么是fini-array"><a href="#什么是fini-array" class="headerlink" title="什么是fini_array"></a>什么是fini_array</h1><p>fini_array被<code>__libc_csu_fini</code>调用的函数的指针数组.一般可以在ida中用<code>shift+f7</code>找到</p>
+<p>一般来讲这个数组有两个数据,但也有特例(只有一个数据)</p>
+<p><img src="/../images/fini_array/2.png" alt="2"></p>
+<p><img src="/../images/fini_array/3.png" alt="3"></p>
+<h1 id="fini-array能干嘛"><a href="#fini-array能干嘛" class="headerlink" title="fini_array能干嘛"></a>fini_array能干嘛</h1><p>由图0可知,exit在执行时会调用这个指针,具体在<code>exit--&gt;__run_exit_handlers--&gt;_dl_fini--&gt;_dl_cal_fini</code>里(下图是已经将fini_array的数据改为了main函数的地址)</p>
+<p><img src="/../images/fini_array/1.png" alt="1"></p>
+<p><img src="/../images/fini_array/4.png" alt="4"></p>
+<h1 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h1><h2 id="实现多次执行main"><a href="#实现多次执行main" class="headerlink" title="实现多次执行main"></a>实现多次执行main</h2><p>先来看静态链接的<code>__libc_csu_fini</code>函数代码(动态链接并没有这些指令)</p>
+<p><img src="/../images/fini_array/5.png" alt="5"></p>
+<p>由图可知,<code>__libc_csu_fini</code>在执行fini_array时先执行的fini_array[1],再执行的fini_array[0]</p>
+<p>我们可以fini_array改为main函数来实现多次利用程序中漏洞的机会</p>
+<p>也可以将fini_array[1]改为函数A,将fini_array[0]改为<code>__libc_csu_fini </code>以实现死循环</p>
+<h2 id="构造栈迁移"><a href="#构造栈迁移" class="headerlink" title="构造栈迁移"></a>构造栈迁移</h2><p>通过上图还可以发现在0x968位置将一个地址赋给了ebp,这个地址就是我们的fini_array的地址</p>
+<p>利用这一点我们可以先构造死循环利用程序的漏洞在指定位置写入ROP链,然后再通过将<code>fini_array</code>改为<code>leave;ret;</code>实现栈迁移执行布置好的ROP链</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/system/226003.html">详解64位静态编译程序的fini_array劫持及ROP攻击</a></p>
+<p><a target="_blank" rel="noopener" href="https://wiki.mrskye.cn/Pwn/stackoverflow/fini_array%E5%8A%AB%E6%8C%81/fini_array%E5%8A%AB%E6%8C%81/#_7">劫持 64 位 fini_array 进行 ROP 攻击</a></p>
+<p><a target="_blank" rel="noopener" href="https://xuanxuanblingbling.github.io/ctf/pwn/2019/09/06/317/">和媳妇一起学Pwn 之 3x17</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/" class="post-title-link" itemprop="url">格式化字符串漏洞</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-21 19:11:18" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-22 14:43:00" itemprop="dateModified" datetime="2025-04-22T14:43:00+08:00">2025-04-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="何为格式化字符串漏洞"><a href="#何为格式化字符串漏洞" class="headerlink" title="何为格式化字符串漏洞"></a>何为格式化字符串漏洞</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">`	<span class="type">char</span> buf[<span class="number">16</span>];</span><br><span class="line">	gets(buf,<span class="number">0x400</span>);</span><br><span class="line">	<span class="built_in">printf</span>(buf);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>形如上述代码的程序一般具有格式化字符串漏洞,试想如果往buf里输入%p等格式化字符串时会发生什么</p>
+<p>那么细心的师傅们可能就会说了:<strong>你这后面也没跟第二个参数啊,这能运行吗?</strong></p>
+<p>答案是肯定的,并且打印出的地址就是栈上的地址,这就是格式化字符串最简单的用法:<strong>泄露栈地址</strong></p>
+<p>那么还有什么别的用途吗,且听我继续分析</p>
+<h1 id="格式化字符串函数介绍"><a href="#格式化字符串函数介绍" class="headerlink" title="格式化字符串函数介绍"></a>格式化字符串函数介绍</h1><p>在开始之前,我们先来介绍一下格式化字符串函数</p>
+<h2 id="格式化字符串函数"><a href="#格式化字符串函数" class="headerlink" title="格式化字符串函数"></a>格式化字符串函数</h2><p>常见的有格式化字符串函数有</p>
+<ul>
+<li>输入<ul>
+<li>scanf</li>
+</ul>
+</li>
+<li>输出</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">函数</th>
+<th align="center">基本介绍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">printf</td>
+<td align="center">输出到 stdout</td>
+</tr>
+<tr>
+<td align="center">fprintf</td>
+<td align="center">输出到指定 FILE 流</td>
+</tr>
+<tr>
+<td align="center">vprintf</td>
+<td align="center">根据参数列表格式化输出到 stdout</td>
+</tr>
+<tr>
+<td align="center">vfprintf</td>
+<td align="center">根据参数列表格式化输出到指定 FILE 流</td>
+</tr>
+<tr>
+<td align="center">sprintf</td>
+<td align="center">输出到字符串</td>
+</tr>
+<tr>
+<td align="center">snprintf</td>
+<td align="center">输出指定字节数到字符串</td>
+</tr>
+<tr>
+<td align="center">vsprintf</td>
+<td align="center">根据参数列表格式化输出到字符串</td>
+</tr>
+<tr>
+<td align="center">vsnprintf</td>
+<td align="center">根据参数列表格式化输出指定字节到字符串</td>
+</tr>
+<tr>
+<td align="center">setproctitle</td>
+<td align="center">设置 argv</td>
+</tr>
+<tr>
+<td align="center">syslog</td>
+<td align="center">输出日志</td>
+</tr>
+<tr>
+<td align="center">err, verr, warn, vwarn 等</td>
+<td align="center">。。。</td>
+</tr>
+</tbody></table>
+<h2 id="格式化字符串"><a href="#格式化字符串" class="headerlink" title="格式化字符串"></a>格式化字符串</h2><p>其基本格式如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%[parameter][flags][field width][.precision][length]type</span><br></pre></td></tr></table></figure>
+
+<p>每一种 pattern 的含义请具体参考维基百科的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2">格式化字符串</a> 。以下几个 pattern 中的对应选择需要重点关注</p>
+<ul>
+<li>parameter<ul>
+<li>n$，获取格式化字符串中的指定参数</li>
+</ul>
+</li>
+<li>flag</li>
+<li>field width<ul>
+<li>输出的最小宽度</li>
+</ul>
+</li>
+<li>precision<ul>
+<li>输出的最大长度</li>
+</ul>
+</li>
+<li>length，输出的长度<ul>
+<li>hh，输出一个字节</li>
+<li>h，输出一个双字节</li>
+<li>ll, 输出一个八字节</li>
+</ul>
+</li>
+<li>type<ul>
+<li>d&#x2F;i，有符号整数</li>
+<li>u，无符号整数</li>
+<li>x&#x2F;X，16 进制 unsigned int 。x 使用小写字母；X 使用大写字母。如果指定了精度，则输出的数字不足时在左侧补 0。默认精度为 1。精度为 0 且值为 0，则输出为空。</li>
+<li>o，8 进制 unsigned int 。如果指定了精度，则输出的数字不足时在左侧补 0。默认精度为 1。精度为 0 且值为 0，则输出为空。</li>
+<li>s，如果没有用 l 标志，输出 null 结尾字符串直到精度规定的上限；如果没有指定精度，则输出所有字节。如果用了 l 标志，则对应函数参数指向 wchar_t 型的数组，输出时把每个宽字符转化为多字节字符，相当于调用 wcrtomb 函数。</li>
+<li>c，如果没有用 l 标志，把 int 参数转为 unsigned char 型输出；如果用了 l 标志，把 wint_t 参数转为包含两个元素的 wchart_t 数组，其中第一个元素包含要输出的字符，第二个元素为 null 宽字符。</li>
+<li>p， void * 型，输出对应变量的值。printf(“%p”,a) 用地址的格式打印变量 a 的值，printf(“%p”, &amp;a) 打印变量 a 所在的地址。</li>
+<li>n，不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。</li>
+<li>%， ‘<code>%</code>‘字面值，不接受任何 flags, width。</li>
+</ul>
+</li>
+</ul>
+<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><p>即对应要输出的变量</p>
+<h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>那么基础打牢,开始实践吧</p>
+<h2 id="泄露内存"><a href="#泄露内存" class="headerlink" title="泄露内存"></a>泄露内存</h2><p>上文已经介绍过用%p泄露出栈的地址,那么如何泄露栈变量的值和对应字符串呢</p>
+<p>要做到这些只需要将%p换成%x和%s即可</p>
+<p>我们可以用%k$s这种形式的格式化字符串来获取偏移量为<strong>k</strong>的地址的数据,所以只要知道指定内存地址相对于参数位置的偏移就可以打印任意地址的数据了</p>
+<h2 id="覆盖内存"><a href="#覆盖内存" class="headerlink" title="覆盖内存"></a>覆盖内存</h2><p>这里需要用到一个非常特别的字符串%n</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%n,不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。</span><br></pre></td></tr></table></figure>
+
+<p>这使得我们可以通过精妙的构造来向指定地址写入任意的值</p>
+<p>可以使用pwntools中fmtstr中的神器<strong>fmtstr_payload</strong></p>
+<p>使用方法入下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmtstr_payload(offset,&#123;原始地址:目标地址&#125;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="关于偏移"><a href="#关于偏移" class="headerlink" title="关于偏移"></a>关于偏移</h3><p>这里主要说一下64位与32位程序的差异,64位程序是用寄存器传参,所以在计算偏移的时候要把寄存器数量考虑上,而32位程序就没这个顾虑了</p>
+<h2 id="大小数字覆盖问题"><a href="#大小数字覆盖问题" class="headerlink" title="大小数字覆盖问题"></a>大小数字覆盖问题</h2><h3 id="覆盖小数字"><a href="#覆盖小数字" class="headerlink" title="覆盖小数字"></a>覆盖小数字</h3><p>针对要写入的值小于偏移的值的情况,我们可以换一种方法来构造</p>
+<p>我们可以将格式化字符串放在我们构造的数据的中间,将地址放在后面</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload = &#x27;aa%8$naa&#x27; + p32(a_addr)</span><br></pre></td></tr></table></figure>
+
+<p>就像这样</p>
+<h3 id="覆盖大数字"><a href="#覆盖大数字" class="headerlink" title="覆盖大数字"></a>覆盖大数字</h3><p>我们需要用到一下两个标志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hh 对于整数类型，printf期待一个从char提升的int尺寸的整型参数。</span><br><span class="line">h  对于整数类型，printf期待一个从short提升的int尺寸的整型参数。</span><br></pre></td></tr></table></figure>
+
+<p>我们可以将一个大数字进行分解,就像这样</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0x0804A028 \x78</span><br><span class="line">0x0804A029 \x56</span><br><span class="line">0x0804A02a \x34</span><br><span class="line">0x0804A02b \x12</span><br></pre></td></tr></table></figure>
+
+<p>然后通过如下这种方法构造payload进行覆盖</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p32(0x0804A028)+p32(0x0804A029)+p32(0x0804A02a)+p32(0x0804A02b)+pad1+&#x27;%6$n&#x27;+pad2+&#x27;%7$n&#x27;+pad3+&#x27;%8$n&#x27;+pad4+&#x27;%9$n&#x27;</span><br></pre></td></tr></table></figure>
+
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章:"></a>参考文章:</h1><p><a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/fmtstr/fmtstr-exploit/#_14">ctf-wiki</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/" class="post-title-link" itemprop="url">延迟绑定机制</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-20 15:14:18" itemprop="dateCreated datePublished" datetime="2025-03-20T15:14:18+08:00">2025-03-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-03-21 20:08:50" itemprop="dateModified" datetime="2025-03-21T20:08:50+08:00">2025-03-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="何为延迟绑定"><a href="#何为延迟绑定" class="headerlink" title="何为延迟绑定"></a>何为延迟绑定</h1><p>延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题</p>
+<p>延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明</p>
+<h1 id="plt和got的狗血恋情"><a href="#plt和got的狗血恋情" class="headerlink" title="plt和got的狗血恋情"></a>plt和got的狗血恋情</h1><h2 id="plt表和got表是什么"><a href="#plt表和got表是什么" class="headerlink" title="plt表和got表是什么"></a>plt表和got表是什么</h2><p>got表和plt表都是程序调用外部函数时，定位该函数需要使用到的表。</p>
+<h3 id="got"><a href="#got" class="headerlink" title="got"></a>got</h3><p>got表(Global Offset Table)是全局偏移量表，这是链接器在执行链接时需要填充的部分，保存了所有外部符号的地址信息。</p>
+<p>got表分为以下四个部分</p>
+<ul>
+<li><strong>GOT[0]</strong> 是.dynamic段的装载地址，.dynamic段包含了动态链接器用来绑定过程地址的信息，比如符号的位置和重定位信息;</li>
+<li><strong>GOT[1]</strong> 是动态链接器的标识<code>link_map</code>的地址;</li>
+<li><strong>GOT[2]</strong> 包含动态链接器的延迟绑定代码<code>_dl_runtime_resolve</code>的入口点，用于得到真正的函数地址，回写到对应的got表中;</li>
+<li><strong>GOT[3]</strong> 从此开始就是函数的地址。</li>
+</ul>
+<p><img src="/../images/LazyBinding/6.png" alt="6"></p>
+<h3 id="plt"><a href="#plt" class="headerlink" title="plt"></a>plt</h3><p>plt表(Procedure Linkage Table)是程序链接表.位于代码段.plt节的PLT是一个数组，每个条目占16个字节。</p>
+<ul>
+<li>**PLT[0]**用于跳转到动态链接器</li>
+<li>**PLT[1]**用于调用系统启动函数__libc_start_main()，我们熟悉的main()函数就是在这里面调用的</li>
+<li>**PLT[2]**开始就是被调用的各个函数条目。</li>
+</ul>
+<h2 id="延迟绑定过程"><a href="#延迟绑定过程" class="headerlink" title="延迟绑定过程"></a>延迟绑定过程</h2><p><img src="/../images/LazyBinding/7.png" alt="7"></p>
+<p>这里先放一张流程图作为参考↑</p>
+<p><strong>现在以printf函数为例探究plt和got这俩小情侣是如何操作的</strong></p>
+<p>这里直接查看到printf第一次被调用时plt表里的内容</p>
+<p><img src="/../images/LazyBinding/0.png" alt="0"></p>
+<p>可以看到跳进plt表中后又跳进了0x404000地址,那我们继续跟进</p>
+<p><img src="/../images/LazyBinding/1.png" alt="1"></p>
+<p>这个地址中储存的地址其实就是我们plt表上的地址,所以这里又跳回来了</p>
+<p><img src="/../images/LazyBinding/8.png" alt="8"></p>
+<p>由图这里调回来后执行prepare resolver,推测是和将真实地址解析到got表相关的函数</p>
+<p>那么程序接着执行跳转到0x401020位置,我们继续跟进看看这对小情侣到底要干嘛</p>
+<p><img src="/../images/LazyBinding/2.png" alt="2"></p>
+<p>这里执行了一系列代码</p>
+<p><img src="/../images/LazyBinding/3.png" alt="3"></p>
+<p>看不懂,但根据流程图应该是与解析地址有关的函数</p>
+<p>那么执行完这一段代码后再来看看我们printf的got表地址</p>
+<p><img src="/../images/LazyBinding/5.png" alt="5"></p>
+<p>A,您猜怎么着,确实got表的内容变了,根据实践,这就是printf的真实地址</p>
+<p>那么延迟绑定就到此结束了</p>
+<p><img src="/../images/LazyBinding/9.png" alt="9"></p>
+<p>之后函数再call printf函数时就可以直接通过got表跳转到真实地址了</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章:"></a>参考文章:</h1><p><a target="_blank" rel="noopener" href="https://yjy123123.github.io/2021/12/06/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/">延迟绑定过程分析</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.xuenixiang.com/thread-3185-1-1.html">elf文件的延迟绑定机制和plt，got表之间的调用</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/yiyeguzhou100/article/details/85036774">使用反汇编理解动态库函数调用方式GOT&#x2F;PLT</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -662,7 +1086,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">18</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -675,7 +1099,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
