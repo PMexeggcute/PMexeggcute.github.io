@@ -155,6 +155,81 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/21/House-Of-Lorce/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/05/21/House-Of-Lorce/" class="post-title-link" itemprop="url">House Of Lorce</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-05-21 19:02:48 / 修改时间：20:48:03" itemprop="dateCreated datePublished" datetime="2025-05-21T19:02:48+08:00">2025-05-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>针对small bin的堆利用</p>
+<p>作用:分配任意地址的<code>chunk</code></p>
+<p>要求:堆溢出修改<code>chunk</code>的bk域</p>
+<h1 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h1><p>感觉和fastbin attack差不多,都是修改指向的堆块,然后申请出来</p>
+<p>不过在small bin上需要注意绕过堆<code>bck-&gt;fd</code>的检测,而且small bin是<code>FIFO</code>即先进先出的</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取 small bin 中倒数第二个 chunk 。</span></span><br><span class="line">bck = victim-&gt;bk;</span><br><span class="line"><span class="comment">// 检查 bck-&gt;fd 是不是 victim，防止伪造</span></span><br><span class="line"><span class="keyword">if</span> (__glibc_unlikely(bck-&gt;fd != victim)) &#123;</span><br><span class="line">    errstr = <span class="string">&quot;malloc(): smallbin double linked list corrupted&quot;</span>;</span><br><span class="line">    <span class="keyword">goto</span> errout;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 设置 victim 对应的 inuse 位</span></span><br><span class="line">set_inuse_bit_at_offset(victim, nb);</span><br><span class="line"><span class="comment">// 修改 small bin 链表，将 small bin 的最后一个 chunk 取出来</span></span><br><span class="line">bin-&gt;bk = bck;</span><br><span class="line">bck-&gt;fd = bin;</span><br></pre></td></tr></table></figure>
+
+<p>举一个简单的例子:</p>
+<ol>
+<li>申请<code>chunkA</code>,<code>chunkB</code>,<code>chunkC</code>三个chunk,其中<code>chunkB</code>位于smallbin范围内</li>
+<li>释放<code>chunkB</code>,使其进入unsortedbin中</li>
+<li>申请一个比<code>chunkB</code>还大的堆块,使<code>chunkB</code>进入smallbin中</li>
+<li>修改<code>chunkB</code>的<code>bk</code>指针为伪造的<code>fake chunk</code></li>
+<li>构造<code>fake chunk</code>使<code>fake chunk</code>的<code>fd</code>指针指向<code>chunkB</code></li>
+<li><code>malloc</code>两次即可申请到<code>fake chunk</code></li>
+</ol>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>一句话就修改bk伪造堆块然后就行了</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/20/House-Of-Force/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1071,95 +1146,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/27/%E4%BC%AA%E9%9A%8F%E6%9C%BA%E6%95%B0%E7%BB%95%E8%BF%87/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/27/%E4%BC%AA%E9%9A%8F%E6%9C%BA%E6%95%B0%E7%BB%95%E8%BF%87/" class="post-title-link" itemprop="url">伪随机数绕过</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-27 17:45:31" itemprop="dateCreated datePublished" datetime="2025-03-27T17:45:31+08:00">2025-03-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-31 22:17:19" itemprop="dateModified" datetime="2025-03-31T22:17:19+08:00">2025-03-31</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="随机数生成原理"><a href="#随机数生成原理" class="headerlink" title="随机数生成原理"></a>随机数生成原理</h1><h2 id="rand"><a href="#rand" class="headerlink" title="rand()"></a>rand()</h2><p>C 库函数 <strong>int rand(void)</strong> 返回一个范围在 0 到 <em>RAND_MAX</em> 之间的伪随机数。</p>
-<p>RAND_MAX 是一个常量，它的默认值在不同的实现中会有所不同，但是值至少是 32767。</p>
-<h2 id="srand"><a href="#srand" class="headerlink" title="srand()"></a>srand()</h2><p>C 库函数 <strong>void srand(unsigned int seed)</strong> 播种由函数 <strong>rand</strong> 使用的随机数发生器。</p>
-<p><code>void srand(unsigned int seed)</code></p>
-<p>参数<strong>seed</strong>是一个整形值,用于伪随机数生成算法播种。</p>
-<h1 id="伪随机数绕过方法"><a href="#伪随机数绕过方法" class="headerlink" title="伪随机数绕过方法"></a>伪随机数绕过方法</h1><h2 id="修改seed"><a href="#修改seed" class="headerlink" title="修改seed"></a>修改seed</h2><p>有时随机数的种子<strong>seed</strong>会在栈上,可以通过栈溢出等方法对齐进行覆盖为已知值,再通过这个已知值获取对应的随机数序列</p>
-<h2 id="利用ctypes撞库"><a href="#利用ctypes撞库" class="headerlink" title="利用ctypes撞库"></a>利用ctypes撞库</h2><p>ctypes是Python内建的用于调用动态链接库函数的功能模块，通过调用该模块以及利用与题目相同的libc文件，来达到一个与题目中随机数生成方式相同的效果，实现撞库，这种方式下如果提前覆盖了指定种子，是更容易达成，如果直接设置时间种子撞库，可能存在时间对不上的情况，需要多测试几次。</p>
-<p>使用方法:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> ctype <span class="keyword">import</span> *</span><br><span class="line">libc=cdll.LoadLibrary(<span class="string">&quot;libc.so.6&quot;</span>) </span><br><span class="line">a=[]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">50</span>):</span><br><span class="line">    a.append(libc.rand())</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#使用相同时间为种子</span></span><br><span class="line">elf1=ctypes.CDLL(<span class="string">&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;</span>)</span><br><span class="line">elf1.srand(elf1.time(<span class="number">0</span>))</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1231,7 +1217,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-count">20</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
