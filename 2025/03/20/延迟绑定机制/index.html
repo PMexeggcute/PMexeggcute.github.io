@@ -17,15 +17,15 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="何为延迟绑定延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题 延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明 plt和got的狗血恋情plt表和got表是什么got表和plt表都是程序调用外部函数时，定位该函数需要使用到的表。 gotgot表(Global Offset Ta">
+  <meta name="description" content="何为延迟绑定延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题 延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明">
 <meta property="og:type" content="article">
 <meta property="og:title" content="延迟绑定机制">
 <meta property="og:url" content="http://example.com/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/index.html">
-<meta property="og:site_name" content="Welcome!">
-<meta property="og:description" content="何为延迟绑定延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题 延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明 plt和got的狗血恋情plt表和got表是什么got表和plt表都是程序调用外部函数时，定位该函数需要使用到的表。 gotgot表(Global Offset Ta">
+<meta property="og:site_name" content="Sn0r1ax">
+<meta property="og:description" content="何为延迟绑定延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题 延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/LazyBinding/6.png">
 <meta property="og:image" content="http://example.com/images/LazyBinding/7.png">
@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/images/LazyBinding/5.png">
 <meta property="og:image" content="http://example.com/images/LazyBinding/9.png">
 <meta property="article:published_time" content="2025-03-20T07:14:18.897Z">
-<meta property="article:modified_time" content="2025-03-21T12:08:50.969Z">
+<meta property="article:modified_time" content="2025-05-26T14:30:43.244Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/images/LazyBinding/6.png">
@@ -55,7 +55,7 @@
   };
 </script>
 
-  <title>延迟绑定机制 | Welcome!</title>
+  <title>延迟绑定机制 | Sn0r1ax</title>
   
 
 
@@ -106,9 +106,10 @@
 
     <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Welcome!</h1>
+      <h1 class="site-title">Sn0r1ax</h1>
       <span class="logo-line-after"><i></i></span>
     </a>
+      <p class="site-subtitle" itemprop="description">Sleep all day</p>
   </div>
 
   <div class="site-nav-right">
@@ -152,10 +153,6 @@
     </header>
 
     
-  <div class="back-to-top">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
 
 
     <main class="main">
@@ -175,11 +172,11 @@
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
       <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
+      <meta itemprop="description" content="😘😘😘">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
+      <meta itemprop="name" content="Sn0r1ax">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -200,7 +197,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-21 20:08:50" itemprop="dateModified" datetime="2025-03-21T20:08:50+08:00">2025-03-21</time>
+                <time title="修改时间：2025-05-26 22:30:43" itemprop="dateModified" datetime="2025-05-26T22:30:43+08:00">2025-05-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,6 +226,8 @@
       
         <h1 id="何为延迟绑定"><a href="#何为延迟绑定" class="headerlink" title="何为延迟绑定"></a>何为延迟绑定</h1><p>延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题</p>
 <p>延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明</p>
+<span id="more"></span>
+
 <h1 id="plt和got的狗血恋情"><a href="#plt和got的狗血恋情" class="headerlink" title="plt和got的狗血恋情"></a>plt和got的狗血恋情</h1><h2 id="plt表和got表是什么"><a href="#plt表和got表是什么" class="headerlink" title="plt表和got表是什么"></a>plt表和got表是什么</h2><p>got表和plt表都是程序调用外部函数时，定位该函数需要使用到的表。</p>
 <h3 id="got"><a href="#got" class="headerlink" title="got"></a>got</h3><p>got表(Global Offset Table)是全局偏移量表，这是链接器在执行链接时需要填充的部分，保存了所有外部符号的地址信息。</p>
 <p>got表分为以下四个部分</p>
@@ -358,7 +357,7 @@
     <img class="site-author-image" itemprop="image" alt="Sn0r1ax"
       src="/uploads/avatar.png">
   <p class="site-author-name" itemprop="name">Sn0r1ax</p>
-  <div class="site-description" itemprop="description"></div>
+  <div class="site-description" itemprop="description">😘😘😘</div>
 </div>
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
@@ -392,6 +391,10 @@
 
 
       </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
 
     </div>
   </aside>
@@ -416,8 +419,30 @@
   </span>
   <span class="author" itemprop="copyrightHolder">Sn0r1ax</span>
 </div>
-  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
-  </div>
+
+<!-- <br /> --> <!-- 网站运行时间的设置 --> <span id="timeDate">载入天数...</span> <!-- <span id="times">载入时分秒...</span> --> <script>   var now = new Date();   function createtime() {     var grt= new Date("11/17/2022 8:00:00");//此处修改你的建站时间或者网站上线时间     now.setTime(now.getTime()+250);     days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);     hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);     if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);     mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}     seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);     snum = Math.round(seconds);      if(String(snum).length ==1 ){snum = "0" + snum;}     // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";     document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";   } setInterval("createtime()",250); </script>
+
+<!-- <br /> -->
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">...</span>
+<!-- <span id="times">载入时分秒...</span> -->
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("3/10/2025 8:00:00");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); 
+        if(String(snum).length ==1 ){snum = "0" + snum;}
+        // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
 
         
 

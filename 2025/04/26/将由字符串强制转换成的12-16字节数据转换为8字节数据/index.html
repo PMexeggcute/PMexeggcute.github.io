@@ -17,14 +17,14 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="因为又在这里栽跟头了所以写一篇博客来记录一下orz 题目通过printf泄露地址的情况例如: 123456#include&lt;stdio.h&gt;int main()&#123;	int a;	printf(&quot;%p&quot;,&amp;a);	return 0;&#125;   可以看到输出的数据是0xe也就是14个字节 我们都知道一个64位程序的地址最多也就8个字节,为什么这个">
 <meta property="og:type" content="article">
 <meta property="og:title" content="将由字符串强制转换成的12-16字节数据转换为8字节数据">
 <meta property="og:url" content="http://example.com/2025/04/26/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/index.html">
-<meta property="og:site_name" content="Welcome!">
+<meta property="og:site_name" content="Sn0r1ax">
 <meta property="og:description" content="因为又在这里栽跟头了所以写一篇博客来记录一下orz 题目通过printf泄露地址的情况例如: 123456#include&lt;stdio.h&gt;int main()&#123;	int a;	printf(&quot;%p&quot;,&amp;a);	return 0;&#125;   可以看到输出的数据是0xe也就是14个字节 我们都知道一个64位程序的地址最多也就8个字节,为什么这个">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/%E5%B0%86%E7%94%B1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2%E6%88%90%E7%9A%8412-16%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E4%B8%BA8%E5%AD%97%E8%8A%82%E6%95%B0%E6%8D%AE/0.png">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>将由字符串强制转换成的12-16字节数据转换为8字节数据 | Welcome!</title>
+  <title>将由字符串强制转换成的12-16字节数据转换为8字节数据 | Sn0r1ax</title>
   
 
 
@@ -98,9 +98,10 @@
 
     <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Welcome!</h1>
+      <h1 class="site-title">Sn0r1ax</h1>
       <span class="logo-line-after"><i></i></span>
     </a>
+      <p class="site-subtitle" itemprop="description">Sleep all day</p>
   </div>
 
   <div class="site-nav-right">
@@ -144,10 +145,6 @@
     </header>
 
     
-  <div class="back-to-top">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
 
 
     <main class="main">
@@ -167,11 +164,11 @@
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
       <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="">
+      <meta itemprop="description" content="😘😘😘">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Welcome!">
+      <meta itemprop="name" content="Sn0r1ax">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -319,7 +316,7 @@
     <img class="site-author-image" itemprop="image" alt="Sn0r1ax"
       src="/uploads/avatar.png">
   <p class="site-author-name" itemprop="name">Sn0r1ax</p>
-  <div class="site-description" itemprop="description"></div>
+  <div class="site-description" itemprop="description">😘😘😘</div>
 </div>
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
@@ -353,6 +350,10 @@
 
 
       </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
 
     </div>
   </aside>
@@ -377,8 +378,30 @@
   </span>
   <span class="author" itemprop="copyrightHolder">Sn0r1ax</span>
 </div>
-  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
-  </div>
+
+<!-- <br /> --> <!-- 网站运行时间的设置 --> <span id="timeDate">载入天数...</span> <!-- <span id="times">载入时分秒...</span> --> <script>   var now = new Date();   function createtime() {     var grt= new Date("11/17/2022 8:00:00");//此处修改你的建站时间或者网站上线时间     now.setTime(now.getTime()+250);     days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);     hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);     if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);     mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}     seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);     snum = Math.round(seconds);      if(String(snum).length ==1 ){snum = "0" + snum;}     // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";     document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";   } setInterval("createtime()",250); </script>
+
+<!-- <br /> -->
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">...</span>
+<!-- <span id="times">载入时分秒...</span> -->
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("3/10/2025 8:00:00");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); 
+        if(String(snum).length ==1 ){snum = "0" + snum;}
+        // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
 
         
 
