@@ -154,6 +154,101 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/17/ret2csu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/17/ret2csu/" class="post-title-link" itemprop="url">ret2csu</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-17 21:41:47" itemprop="dateCreated datePublished" datetime="2025-03-17T21:41:47+08:00">2025-03-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-26 22:41:15" itemprop="dateModified" datetime="2025-05-26T22:41:15+08:00">2025-05-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="何为ret2csu"><a href="#何为ret2csu" class="headerlink" title="何为ret2csu?"></a>何为ret2csu?</h1><p>ret2csu即通过栈溢出等方法构造ROP链劫持利用<code>__libc_csu_init</code>函数</p>
+<h1 id="这个函数长什么样"><a href="#这个函数长什么样" class="headerlink" title="这个函数长什么样"></a>这个函数长什么样</h1><p><img src="/../images/ret2csu/0.png" alt="0"></p>
+<p>这是该函数全貌,不过我们主要利用<code>0x40050</code>到<code>0x4005a4</code>这两段,下文简称下面那部分为<code>csu0</code>,上面那部分为<code>csu1</code></p>
+<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><p><code>csu0</code>段代码主要进行的是将栈上的数据弹入到指定寄存器中(进行劫持利用时一般是直接从csu0段的第二行开始利用,即跳过&#96;&#96;add rsp,8&#96;)</p>
+<p>而<code>csu1</code>段则对弹入寄存器中的数据进行进一步处理</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">rbx --&gt; 与r12一起控制跳转地址</span><br><span class="line">rbp --&gt; 与rbx一起作为是否循环条件</span><br><span class="line">r12 --&gt; 与rbx一起控制跳转地址</span><br><span class="line">r13 --&gt; rdx</span><br><span class="line">r14 --&gt; rsi</span><br><span class="line">r15 --&gt; edi(零扩展地赋值给rdi)</span><br></pre></td></tr></table></figure>
+
+<p>这里rbx一般赋值为0,rbp赋值1,避免进入循环.(<strong>如果需要借助csu来控制rbx的值,得注意r12与rbp的值</strong>)</p>
+<h1 id="适用情形"><a href="#适用情形" class="headerlink" title="适用情形"></a>适用情形</h1><h2 id="控制edi-rsi-rdx的参数"><a href="#控制edi-rsi-rdx的参数" class="headerlink" title="控制edi,rsi,rdx的参数"></a>控制edi,rsi,rdx的参数</h2><p>这三个寄存器在64位程序中储存的是函数调用时前三个参数</p>
+<h2 id="向bss段写入数据"><a href="#向bss段写入数据" class="headerlink" title="向bss段写入数据"></a>向bss段写入数据</h2><p>前提得先泄露出libc的版本及基址</p>
+<p>通过csu(0,1,read_addr,0,bss_addr,0,ret_addr)来向bss段写入数据</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/03/17/ret2csu/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/11/%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -185,7 +280,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-19 16:04:23" itemprop="dateModified" datetime="2025-03-19T16:04:23+08:00">2025-03-19</time>
+                <time title="修改时间：2025-05-27 19:48:59" itemprop="dateModified" datetime="2025-05-27T19:48:59+08:00">2025-05-27</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -213,7 +308,7 @@
 
       
           <h1 id="强制转换"><a href="#强制转换" class="headerlink" title="强制转换"></a>强制转换</h1><p><img src="/../images/%E6%95%B4%E6%95%B0%E6%BA%A2%E5%87%BA/0.png" alt="0"></p>
-<p>这里由int转换为unsigned int时-1会转换为最大的无符号数,可以利用这个来规避掉一些字符数限制</p>
+<p>这里由int转换为unsigned int时-1会转换为最大的无符号数,可以利用这个来规避掉一些字符数限制,也称作<strong>整数溢出</strong></p>
 
       
     </div>
@@ -451,7 +546,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -464,7 +559,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
