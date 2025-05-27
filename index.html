@@ -179,7 +179,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2025-05-27 19:47:42 / 修改时间：20:58:02" itemprop="dateCreated datePublished" datetime="2025-05-27T19:47:42+08:00">2025-05-27</time>
+              <time title="创建时间：2025-05-27 19:47:42 / 修改时间：20:59:39" itemprop="dateCreated datePublished" datetime="2025-05-27T19:47:42+08:00">2025-05-27</time>
             </span>
 
           
@@ -194,87 +194,14 @@
 
       
           <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>学PWN之余学点轻松的,跟着菜鸟<del>驿站</del>教程学学正则表达式</p>
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="普通字符"><a href="#普通字符" class="headerlink" title="普通字符"></a>普通字符</h2><p><code>[ABC]</code> 匹配[…]中所有字符</p>
-<p><code>[^ABC]</code> 匹配除了[…]中字符的所有字符,<code>^</code>即逻辑非</p>
-<p><code>[A-Z]</code> <code>[A-Z]</code>表示所有大写字母这个区间,同理<code>[a-z]</code></p>
-<p><code>.</code> 匹配出换行符(<code>\n</code>,<code>\r</code>)之外的任何单个字符</p>
-<p><code>\s</code> 匹配所有空白符,包括换行符</p>
-<p><code>\S</code> 匹配所有非空白符 <code>[\s\S]</code>组合使用可以匹配所有</p>
-<p><code>\w</code> 匹配字母,数字,下划线.相当于[A-Za-z0-9_]</p>
-<p><code>\d</code> 匹配任意一个阿拉伯数字.相当于[0-9]</p>
-<h2 id="非打印字符"><a href="#非打印字符" class="headerlink" title="非打印字符"></a>非打印字符</h2><p><code>\cx</code> 匹配由x指明的控制字符.且x的值必须为A-Z或a-z之一,不然将c视为一个原意的‘c’字符</p>
-<p><img src="/../images/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/0.png" alt="0"></p>
-<p><code>\f</code> 匹配一个换页符,等价于<code>\x0c</code>和<code>\cL</code>(\x0c即匹配十六进制0c对应的字符)</p>
-<p><code>\n</code> 匹配一个换行符.等价于<code>\x0a</code>和<code>\cJ</code></p>
-<p><code>\r</code> 匹配一个回车符.等价于<code>\x0d</code>和<code>\cM</code></p>
-<p><code>\t</code> 匹配一个制表符.等价于 <code>\x09</code> 和 <code>\cI</code></p>
-<p><code>\v</code> 匹配一个垂直制表符.等价于<code>\x0b</code>和<code>\cK</code></p>
-<h2 id="特殊字符"><a href="#特殊字符" class="headerlink" title="特殊字符"></a>特殊字符</h2><p>要匹配这些字符本身需要通过在其前面加上转义字符<code>\</code></p>
-<p>这里仅作举例,后面其他部分再详细说明</p>
-<p><code>$</code>,<code>(</code>,<code>)</code>,<code>*</code>,<code>+</code>,<code>.</code>,<code>[</code>,<code>?</code>,<code>\</code>,<code>^</code>,<code>&#123;</code>,<code>|</code></p>
-<h2 id="限定符"><a href="#限定符" class="headerlink" title="限定符"></a>限定符</h2><p><code>*</code> 匹配前面的子表达式零次或多次.相当于<code>&#123;0,&#125;</code></p>
-<p><code>+</code> 匹配前面的子表达式一次或多次.相当于<code>&#123;1,&#125;</code></p>
-<p><code>?</code> 匹配前面的子表达式零次或一次.相当于<code>&#123;0,1&#125;</code></p>
-<p><code>&#123;n&#125;</code> n为一个非负整数,匹配确定的n次</p>
-<p><code>&#123;n,&#125;</code> n为一个非负整数,至少匹配n次</p>
-<p><code>&#123;n,m&#125;</code> n,m均为非负整数,其中n&lt;&#x3D;m,匹配最少n次最多m次</p>
-<h2 id="定位符"><a href="#定位符" class="headerlink" title="定位符"></a>定位符</h2><p><code>^</code> 匹配输入字符串开始的位置(需放在正则表达式开头)</p>
-<p><code>$</code> 匹配输入字符串结尾的位置(需放在正则表达式结尾)</p>
-<p><code>\b</code> 匹配一个单词边界,即字与空格间的位置(注意位置)</p>
-<p><code>\B</code> 匹配非单词边界(注意位置)</p>
-<h2 id="选择"><a href="#选择" class="headerlink" title="选择"></a>选择</h2><p>用圆括号 <strong>()</strong> 将所有选择项括起来，相邻的选择项之间用 <strong>|</strong> 分隔</p>
-<p><strong>非捕获元</strong></p>
-<p><code>?=</code> <code>exp1(?=exp2)</code>: 查找exp2前面的exp1</p>
-<p><code>?&lt;=</code> <code>(?&lt;=exp2)exp1</code>：查找 exp2 后面的 exp1</p>
-<p><code>?!</code> <code>exp1(?!exp2)</code>: 查找后面不是exp2的exp1</p>
-<p><code>?&lt;!</code> <code>(?&lt;!exp2)exp1</code>: 查找前面不是exp2的exp1</p>
-<h1 id="修饰符"><a href="#修饰符" class="headerlink" title="修饰符"></a>修饰符</h1><p>标识符卸载正则表达式之外,格式为</p>
-<p><code>/pattern/flags</code>,其中<code>/</code>是作为正则表达式的定界符</p>
-<p><code>i</code>(ignore case) 忽略大小写</p>
-<p><code>g</code>(global) 全局匹配(查找所有匹配项,而不是在第一个匹配后停止)</p>
-<p><code>m</code>(multline) 多行模式(使<code>^</code>和<code>$</code>匹配每行的开头和结尾,而不仅使整个字符串的开头和结尾)</p>
-<p><code>s</code>(single line&#x2F;dotall) 单行模式(使<code>.</code>匹配包括换行符在内的所有字符)</p>
-<p><code>u</code>(unicode) Unicode模式(启用完整的Unicode支持)</p>
-<p><code>y</code>(sticky) 粘性匹配(从目标字符串的当前位置开始匹配)</p>
-<p><code>x</code>(extended) 扩展模式(忽略模式中的空白和注释,使正则表达式更易读)</p>
-<h1 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h1><p>基本都是前文介绍过的,贪婪与非贪婪量词可以看下</p>
-<h2 id="基本元字符"><a href="#基本元字符" class="headerlink" title="基本元字符"></a>基本元字符</h2><p><code>.</code> </p>
-<p><code>^</code></p>
-<p><code>$</code></p>
-<p><code>\</code> 上文都说过</p>
-<h2 id="字符类元字符"><a href="#字符类元字符" class="headerlink" title="字符类元字符"></a>字符类元字符</h2><p><code>[]</code> 定义字符集合,匹配其中任意一个字符</p>
-<p><code>[^]</code> 匹配不在方括号中的任意字符</p>
-<p><code>-</code>  连字符.在字符类中表示范围</p>
-<h2 id="量词元字符"><a href="#量词元字符" class="headerlink" title="量词元字符"></a>量词元字符</h2><p><code>*</code> </p>
-<p><code>+</code></p>
-<p><code>?</code></p>
-<p><code>&#123;n&#125;</code></p>
-<p><code>&#123;n,&#125;</code></p>
-<p><code>&#123;n,m&#125;</code></p>
-<h2 id="分组和选择元字符"><a href="#分组和选择元字符" class="headerlink" title="分组和选择元字符"></a>分组和选择元字符</h2><p><code>()</code></p>
-<p><code>|</code></p>
-<h2 id="特殊字符类元字符"><a href="#特殊字符类元字符" class="headerlink" title="特殊字符类元字符"></a>特殊字符类元字符</h2><p><code>\d</code></p>
-<p><code>\D</code> 匹配任意非数字</p>
-<p><code>\w</code></p>
-<p><code>\W</code> 匹配任意非单词字符</p>
-<p><code>\s</code></p>
-<p><code>\S</code></p>
-<h2 id="边界匹配元字符"><a href="#边界匹配元字符" class="headerlink" title="边界匹配元字符"></a>边界匹配元字符</h2><p><code>\b</code></p>
-<p><code>\B</code></p>
-<h2 id="其他元字符"><a href="#其他元字符" class="headerlink" title="其他元字符"></a>其他元字符</h2><p><code>\n</code></p>
-<p><code>\t</code></p>
-<p><code>\r</code></p>
-<p><code>\f</code></p>
-<p><code>\v</code></p>
-<h2 id="贪婪与非贪婪量词"><a href="#贪婪与非贪婪量词" class="headerlink" title="贪婪与非贪婪量词"></a>贪婪与非贪婪量词</h2><p><code>*?</code> 零次或多次,尽可能少</p>
-<p><code>+?</code> 一次或多次,尽可能少</p>
-<p><code>??</code> 零次或一次,尽可能少</p>
-<p><code>&#123;n,m&#125;?</code> n到m次,尽可能少</p>
-<h2 id="正向和负向预查"><a href="#正向和负向预查" class="headerlink" title="正向和负向预查"></a>正向和负向预查</h2><p><code>(?=...)</code>(正向肯定预查)</p>
-<p><code>(?!...)</code>(正向否定预查)</p>
-<p><code>(?&lt;=...)</code>(反向肯定预查)</p>
-<p><code>(?&lt;!...)</code>(反向否定预查)</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/05/27/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
