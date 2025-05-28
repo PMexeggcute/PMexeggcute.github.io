@@ -243,10 +243,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-05-26 17:19:33 / 修改时间：22:29:08" itemprop="dateCreated datePublished" datetime="2025-05-26T17:19:33+08:00">2025-05-26</time>
+              <time title="创建时间：2025-05-26 17:19:33" itemprop="dateCreated datePublished" datetime="2025-05-26T17:19:33+08:00">2025-05-26</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-28 20:47:33" itemprop="dateModified" datetime="2025-05-28T20:47:33+08:00">2025-05-28</time>
+              </span>
 
           
 
@@ -259,8 +265,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><p>这里分析的是给glibc2.23的源码为例</p>
-<p>在<code>libio/libio/h</code>中有这样一个结构体</p>
+          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>因为高版本libc的利用离不开io file,故前来学习</p>
+<p>从源码入手,分析和IO file有关的结构体和函数,并总结常用的利用方法</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2025/05/26/IO-file%E5%85%A5%E9%97%A8/#more" rel="contents">
