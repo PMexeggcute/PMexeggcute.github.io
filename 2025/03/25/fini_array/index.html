@@ -20,25 +20,18 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="什么是fini_arrayfini_array被__libc_csu_fini调用的函数的指针数组.一般可以在ida中用shift+f7找到 一般来讲这个数组有两个数据,但也有特例(只有一个数据)">
+  <meta name="description" content="Here&#39;s something encrypted, password is required to continue reading.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="fini_array">
 <meta property="og:url" content="http://example.com/2025/03/25/fini_array/index.html">
 <meta property="og:site_name" content="Sn0r1ax">
-<meta property="og:description" content="什么是fini_arrayfini_array被__libc_csu_fini调用的函数的指针数组.一般可以在ida中用shift+f7找到 一般来讲这个数组有两个数据,但也有特例(只有一个数据)">
+<meta property="og:description" content="Here&#39;s something encrypted, password is required to continue reading.">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/fini_array/0.png">
-<meta property="og:image" content="http://example.com/images/fini_array/2.png">
-<meta property="og:image" content="http://example.com/images/fini_array/3.png">
-<meta property="og:image" content="http://example.com/images/fini_array/1.png">
-<meta property="og:image" content="http://example.com/images/fini_array/4.png">
-<meta property="og:image" content="http://example.com/images/fini_array/5.png">
 <meta property="article:published_time" content="2025-03-25T13:07:50.113Z">
-<meta property="article:modified_time" content="2025-05-27T11:48:03.652Z">
+<meta property="article:modified_time" content="2025-09-26T13:12:42.915Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta property="article:tag" content="待重写">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/fini_array/0.png">
 
 <link rel="canonical" href="http://example.com/2025/03/25/fini_array/">
 
@@ -195,7 +188,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-27 19:48:03" itemprop="dateModified" datetime="2025-05-27T19:48:03+08:00">2025-05-27</time>
+                <time title="修改时间：2025-09-26 21:12:42" itemprop="dateModified" datetime="2025-09-26T21:12:42+08:00">2025-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -222,27 +215,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p><img src="/../images/fini_array/0.png" alt="0"></p>
-<h1 id="什么是fini-array"><a href="#什么是fini-array" class="headerlink" title="什么是fini_array"></a>什么是fini_array</h1><p>fini_array被<code>__libc_csu_fini</code>调用的函数的指针数组.一般可以在ida中用<code>shift+f7</code>找到</p>
-<p>一般来讲这个数组有两个数据,但也有特例(只有一个数据)</p>
-<span id="more"></span>
-
-<p><img src="/../images/fini_array/2.png" alt="2"></p>
-<p><img src="/../images/fini_array/3.png" alt="3"></p>
-<h1 id="fini-array能干嘛"><a href="#fini-array能干嘛" class="headerlink" title="fini_array能干嘛"></a>fini_array能干嘛</h1><p>由图0可知,exit在执行时会调用这个指针,具体在<code>exit--&gt;__run_exit_handlers--&gt;_dl_fini--&gt;_dl_cal_fini</code>里(下图是已经将fini_array的数据改为了main函数的地址)</p>
-<p><img src="/../images/fini_array/1.png" alt="1"></p>
-<p><img src="/../images/fini_array/4.png" alt="4"></p>
-<h1 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h1><h2 id="实现多次执行main"><a href="#实现多次执行main" class="headerlink" title="实现多次执行main"></a>实现多次执行main</h2><p>先来看静态链接的<code>__libc_csu_fini</code>函数代码(动态链接并没有这些指令)</p>
-<p><img src="/../images/fini_array/5.png" alt="5"></p>
-<p>由图可知,<code>__libc_csu_fini</code>在执行fini_array时先执行的fini_array[1],再执行的fini_array[0]</p>
-<p>我们可以fini_array改为main函数来实现多次利用程序中漏洞的机会</p>
-<p>也可以将fini_array[1]改为函数A,将fini_array[0]改为<code>__libc_csu_fini </code>以实现死循环</p>
-<h2 id="构造栈迁移"><a href="#构造栈迁移" class="headerlink" title="构造栈迁移"></a>构造栈迁移</h2><p>通过上图还可以发现在0x968位置将一个地址赋给了ebp,这个地址就是我们的fini_array的地址</p>
-<p>利用这一点我们可以先构造死循环利用程序的漏洞在指定位置写入ROP链,然后再通过将<code>fini_array</code>改为<code>leave;ret;</code>实现栈迁移执行布置好的ROP链</p>
-<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/system/226003.html">详解64位静态编译程序的fini_array劫持及ROP攻击</a></p>
-<p><a target="_blank" rel="noopener" href="https://wiki.mrskye.cn/Pwn/stackoverflow/fini_array%E5%8A%AB%E6%8C%81/fini_array%E5%8A%AB%E6%8C%81/#_7">劫持 64 位 fini_array 进行 ROP 攻击</a></p>
-<p><a target="_blank" rel="noopener" href="https://xuanxuanblingbling.github.io/ctf/pwn/2019/09/06/317/">和媳妇一起学Pwn 之 3x17</a></p>
-
+        <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="0f06b35cee60286c81a4608e9bc53af4e8192c9c7365f849bc80179248c51999">0657a937b9257134273ec414d3e19ccdcfb55f325c5f8f583a2405c947bbe276791c0f1fbb54a80b38e9f526650d4d8ecf017189f0ab6634d014dfd555a4dfacf36a78715978c7ef31d53782c61fa8e666882782f74264327f25ee54ec86d6f6cd77c7335fec903c8b34ba93468296303b63d6bfac24046c5a8b483652b1da508cba80b9b1529f55f838b3d1802020ce432de8a2aa120600cdfdc0049f754973d0278fda9b785eb0ae1d424a971182b20b31c2b7112416b91e206cf2f4086a06a1114088a85dabe1b25281807d11df8bca2e6baa9ab6bae7578ebff7f6b0d6df9dd4cb4c03e761e49d814213dacc8c4f715b5b9f1acec76686e9539c2ef243adf99834e49b1fa28530eb5bfe23fe217f7285ce023dbbc72e90f3c0c7cc2a6971ff4b1760b96f4bfb22cd7549b1b051fe2b518124aeea8e88f24925aba1c40485ea9eb6584aab86ff9058d1d621fbafd37ae486bf392dfdc7035b58646c359120957ba78949a05b60575824ded0c899766aaf2985a2ccfbdfb0a665e9cc3b27bbb4c631f095afbf8c5d3421da64535537a3fc3f111de75f48d84a3d9b18dc8f1e0c284e88fb94b82c9f9977ad3241eda1af96018862ccd7da9f376e65188ca757ccb386539b112113609a3ace627c412ddc5402a34b70992aa30537defe38d111c23024059ef6a65b9a03512a99c3a4db4fe6bcc32ad86c89c23ee41b9919dc053461a119632850a6bce9640aabe97907db3cd31a17c7b2780916adf825bbb7faf0b243af1c31dad96f89b3f831f72c3bef52c60320258d6315b8a7925b75ce6e59e4a250f10f9846b42ef3e5c88fc559c63912e9c068244bb4f648512598c4c9bbebcbd007c6275f8326c3198f31e90cf1c124ccc09bee5bc87bea43f944ea106987d714bf50730db1e5804c9385413d510df66c025ab1aca876f560ebf5ca75b01b8e8a70e18746fb69205f8d3cec017b88054838d9edb310332573a130aba6ff035a8f2b574d6ffe2570d701b0e1483c0ac81dc35ce2a1b206edc0268fc4ec215e9d6a089c4f3b6eb10dfb2414b9da20bf42ec412138a414de0f3604aa1bccd3581f38df1ff1e56527b412ec6de00a0f00b6faa5e2ff6032518025b8d4d051d859e3444ff89230d7318a946bda6d16ca1508ab1e313f0755a06fe4beb754b74b17dee286d46ee0d8f1897a52bcd9c613e2f17d68602dc1761597306db9c85bb337ec878ee5cbfad80f69b0f43c2428f9f9dacaab2eb3b6b8792434a97763be58c700bd0ca5bab821a92e02754afdf0484fb22cddfcffa285414726da0abce504ff76bd4806e2852acf8d6f0fef5e9e7a49642941ddd70250680395068333b905e6efc6fe0c2b97c7f1e4f61cc0e537d23c842f89931f114f9a48688f4ff99a77b1d24b211347fc8d87fdd85af9f95ebfb1575e7c711003e7b7d9d336479f6d288cbf7683c3f4f3861ed9cb40a897d1f9ba5b45f86680326f95f9019827ac641b082659be5569132e94efa56caa55f6ccfd1fa626efa6e704184537b6306334a9a5a4f5b42aec2a9eb5dbc23770c7ccb9928189f1ef81527ae18f919e95e76c3b42d0498702507d66b1a067ebbac389439bfce0a385c6b5e8cf990411921749b615d8874374b6b87e4a2b82a43d5b3072aca23ecee6e8c02c8fdeb3ea4988e20d4c90776b4f7d70580a2f39ae096155906c0a8416252690513bf1b754318cf0bef989c132da3b4d598cc9b25ef78f116076500fcec4fcdf82dc96c02d5cdfe6556b57b18e87c2fe5a12695548e63e972b32fcfef72fca29222823bc99b76abea0b0703e4dcdd18401abc6de724fe69eb06e8893224b5fb2beacdd38961b48d157681db13a878c83ec9a34da747159f93646eec63d8a32020327b3931b1418bbf1c7fba4613cf6469ac634bec371f1daa4ea3d7f87146cb74911716463eb458dd2034359a28333ac9aa5be55b9e8e9425f7ef2cdfe702f79e8b28e4089890b5a34efeada10fe0a267630a5cb8264058e845837b30ac4e1398070b20306fb7837c7f3fc3b94f18dac15d0fde1e36a7574aa572775858eac589d6f79984a132d0e37bdff8b7cdd7fe08becf8442c417af209279a30b495d188094187f8948d855b9543c55707d3073f772f62ae529b43796bd802d971bef8645691f69fda5ea039efae58e61449c3a9fef2fa6204e6a8295c209ebe1cfb6254e676406e08ae2870a111d5ceb0603035cbad31a79ccf75bff52583b36df0615651e71087b538392770aacbcb91aecb634bb446e06e41723f03d1b77c64c0dacaf8241d61fe8d8f316b015316b88256a63477123d1eeef4ea573bfbe7433dc6a1ddb3d460817d8a8f71bd20e55a9fd8f0d517d9a28a3b03a2b1d6aee7683b53aff955c53e5921b8134816de9067d854c7c0e122c247b5b8c63bc3ff2ff4466c566b75364bf0cd8d7722d77a29ed456a10eb2c8a9715ad2f8b17701caf63763e03a7a3ac9d64f6cf7a95d014856c9c22dcf1c345b397bb356c18c6651ec2e34d936e72fbccae0f21d41a82bdca8c3d4fd753d43975397769ba8f27c2fec526214e2128ae83200d0ea66f97e0efa81898d4d551441da1c544676ac7e5820adf737fe7c55a1bb914d988bc52b51afc3cefbc5e49303c3cdcbb36ea8e6b534dd2065f80ecee19652a2b3454b196aeb6391956274a6c93a7dece38334135608680a0a23406e9b345c0585f4cbf47ba431651ef933d8bbeab5cf7d39796fa9b87b6990c18c5c9063ee4edd77cd45f9b2f493663a738f0e05a52b680cab53dafedde78e12e4d922139b02929696d007a74d461122578503cdc59336a51b5cedbe26ace1069327d882e58265473096e1017d0de05d8a84a80270bd8c8859af710486d3ec2a8a486949d15b5b129f6671a5992a7ee4f4bd3f1a00be1aeec7d7b614c31af298e9d271c829a81e7b50842bdc175cea54eb60ca8224e1e4b26154e2416126202038fa24357c6c2d533bfd4bd13ff4c1b2b453894fe805d45fc7e1ad655e4911a18ec814b1e1a2dd22e78b86fd06750bdb10344c214549d54d4cc70c9bc5d3dceacdcbb4cee6e51aa2cda9c941635a9cb026e72732e3ec8122ae479a4f2d86fa6af016a9c04a5b0d1ee4c7ae39232a2b573e746f50becea6ef4da84671d160d44ed5df6675e86ac5f3a87e8cff9f1b7e5d6ffdbbe90672d828c2693d7c52c451f85308e3ab78c27b4af76fc948db4b9f6da426326e1b7a6f74fe829bc793016eaa60dc3b2fee98ea3b1fd8258cc973ae51a9a1a8e3cafe2ec1fcd86d95a0d019355c8312315fc75f2bf575bcafb03787021f5b044b35a6218b690dd22c0d1c58ab97fb1b417aea98d859be9d46bf59587410502071beb6aefa16fa3ace3e0362412cbbeaf9d775acf87b077423fce48fb6b8fb17ede97fbe9522d96203c68644919643cb621e2da7d310b967e9982af16cbc1a97bfd9f80375ec411c930fb80fe9805edb265309bd7dc48588e06eaf403d742dad600aab66b3e0521264fd7982f276eb9622cc18a44cdd1a6e08b6908d1d4553dc897c0b4cd9949c9f7dd8ece1bfab1ebaf3e759406f4f858215c19c2d4ec2d634027e68e7b7089d5d12d8d0182b9a6988237ebb8135763f6acae446e0e6958b52b642d215294cad8495411b11f268b17980817cb4e561f71ebc5b44d9a3f8c5f1b906842406f2c726ebb7ec93ac826b9c1be06005c71d56146b4676e8125804d3e07509a541033be6139ea87fb3a7d314fe5fbd2f956543d121ad236192dc1075eeaab56cb29850bb2478b1168b69e46166613c42297c2e35d7b3a4cc56951f278a2590c02fe95369dc1bd27b3894752e8cd145c5341f2daa4ea04a9f8a97ce944746dc98fc8dc112d3ec2a131dca958fb4c3ff17b</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">
     </div>
 
     
@@ -325,7 +309,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFfini-array"><span class="nav-number">1.</span> <span class="nav-text">什么是fini_array</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#fini-array%E8%83%BD%E5%B9%B2%E5%98%9B"><span class="nav-number">2.</span> <span class="nav-text">fini_array能干嘛</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E6%80%9D%E8%B7%AF"><span class="nav-number">3.</span> <span class="nav-text">利用思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%A4%9A%E6%AC%A1%E6%89%A7%E8%A1%8Cmain"><span class="nav-number">3.1.</span> <span class="nav-text">实现多次执行main</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E6%A0%88%E8%BF%81%E7%A7%BB"><span class="nav-number">3.2.</span> <span class="nav-text">构造栈迁移</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -341,7 +324,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-count">27</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

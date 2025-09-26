@@ -154,6 +154,96 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/" class="post-title-link" itemprop="url">格式化字符串漏洞入门</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-21 19:11:18" itemprop="dateCreated datePublished" datetime="2025-03-21T19:11:18+08:00">2025-03-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-27 19:49:23" itemprop="dateModified" datetime="2025-05-27T19:49:23+08:00">2025-05-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="何为格式化字符串漏洞"><a href="#何为格式化字符串漏洞" class="headerlink" title="何为格式化字符串漏洞"></a>何为格式化字符串漏洞</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">`	<span class="type">char</span> buf[<span class="number">16</span>];</span><br><span class="line">	gets(buf,<span class="number">0x400</span>);</span><br><span class="line">	<span class="built_in">printf</span>(buf);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>形如上述代码的程序一般具有格式化字符串漏洞,试想如果往buf里输入%p等格式化字符串时会发生什么</p>
+<p>那么细心的师傅们可能就会说了:<strong>你这后面也没跟第二个参数啊,这能运行吗?</strong></p>
+<p>答案是肯定的,并且打印出的地址就是栈上的地址,这就是格式化字符串最简单的用法:<strong>泄露栈地址</strong></p>
+<p>那么还有什么别的用途吗,且听我继续分析</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/03/21/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -185,7 +275,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-27 19:48:30" itemprop="dateModified" datetime="2025-05-27T19:48:30+08:00">2025-05-27</time>
+                <time title="修改时间：2025-09-26 21:13:03" itemprop="dateModified" datetime="2025-09-26T21:13:03+08:00">2025-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -212,8 +302,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="何为延迟绑定"><a href="#何为延迟绑定" class="headerlink" title="何为延迟绑定"></a>何为延迟绑定</h1><p>延迟绑定指的是在程序运行过程中将动态链接库中的符号与程序中的代码进行绑定的过程,这样做的目的可以减少程序启动时间以及避免因静态链接带来的内存和磁盘空间浪费问题</p>
-<p>延迟绑定涉及到plt表和got表这两个概念,下文对此加以说明</p>
+          Here's something encrypted, password is required to continue reading.
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2025/03/20/%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6/#more" rel="contents">
@@ -271,7 +360,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-27 19:50:03" itemprop="dateModified" datetime="2025-05-27T19:50:03+08:00">2025-05-27</time>
+                <time title="修改时间：2025-09-26 21:13:57" itemprop="dateModified" datetime="2025-09-26T21:13:57+08:00">2025-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -298,9 +387,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="何为沙箱"><a href="#何为沙箱" class="headerlink" title="何为沙箱"></a>何为沙箱</h1><p>沙箱即限制程序只能调用指定函数来保证程序的安全性</p>
-<h1 id="何为orw"><a href="#何为orw" class="headerlink" title="何为orw"></a>何为orw</h1><p>orw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种</p>
-<p>那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag)</p>
+          Here's something encrypted, password is required to continue reading.
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/#more" rel="contents">
@@ -358,7 +445,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-26 22:41:15" itemprop="dateModified" datetime="2025-05-26T22:41:15+08:00">2025-05-26</time>
+                <time title="修改时间：2025-09-26 21:12:18" itemprop="dateModified" datetime="2025-09-26T21:12:18+08:00">2025-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -385,17 +472,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="何为ret2csu"><a href="#何为ret2csu" class="headerlink" title="何为ret2csu?"></a>何为ret2csu?</h1><p>ret2csu即通过栈溢出等方法构造ROP链劫持利用<code>__libc_csu_init</code>函数</p>
-<h1 id="这个函数长什么样"><a href="#这个函数长什么样" class="headerlink" title="这个函数长什么样"></a>这个函数长什么样</h1><p><img src="/../images/ret2csu/0.png" alt="0"></p>
-<p>这是该函数全貌,不过我们主要利用<code>0x40050</code>到<code>0x4005a4</code>这两段,下文简称下面那部分为<code>csu0</code>,上面那部分为<code>csu1</code></p>
-<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><p><code>csu0</code>段代码主要进行的是将栈上的数据弹入到指定寄存器中(进行劫持利用时一般是直接从csu0段的第二行开始利用,即跳过&#96;&#96;add rsp,8&#96;)</p>
-<p>而<code>csu1</code>段则对弹入寄存器中的数据进行进一步处理</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">rbx --&gt; 与r12一起控制跳转地址</span><br><span class="line">rbp --&gt; 与rbx一起作为是否循环条件</span><br><span class="line">r12 --&gt; 与rbx一起控制跳转地址</span><br><span class="line">r13 --&gt; rdx</span><br><span class="line">r14 --&gt; rsi</span><br><span class="line">r15 --&gt; edi(零扩展地赋值给rdi)</span><br></pre></td></tr></table></figure>
-
-<p>这里rbx一般赋值为0,rbp赋值1,避免进入循环.(<strong>如果需要借助csu来控制rbx的值,得注意r12与rbp的值</strong>)</p>
-<h1 id="适用情形"><a href="#适用情形" class="headerlink" title="适用情形"></a>适用情形</h1><h2 id="控制edi-rsi-rdx的参数"><a href="#控制edi-rsi-rdx的参数" class="headerlink" title="控制edi,rsi,rdx的参数"></a>控制edi,rsi,rdx的参数</h2><p>这三个寄存器在64位程序中储存的是函数调用时前三个参数</p>
-<h2 id="向bss段写入数据"><a href="#向bss段写入数据" class="headerlink" title="向bss段写入数据"></a>向bss段写入数据</h2><p>前提得先泄露出libc的版本及基址</p>
-<p>通过csu(0,1,read_addr,0,bss_addr,0,ret_addr)来向bss段写入数据</p>
+          Here's something encrypted, password is required to continue reading.
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2025/03/17/ret2csu/#more" rel="contents">
@@ -436,7 +513,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2025/03/11/%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2/" class="post-title-link" itemprop="url">绕过字符数限制之强制转换的利用</a>
+            <a href="/2025/03/11/%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2/" class="post-title-link" itemprop="url">绕过字符数限制之强制转换的利用(整数溢出)</a>
         </h2>
 
         <div class="post-meta">
@@ -453,7 +530,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-27 19:48:59" itemprop="dateModified" datetime="2025-05-27T19:48:59+08:00">2025-05-27</time>
+                <time title="修改时间：2025-09-26 21:13:33" itemprop="dateModified" datetime="2025-09-26T21:13:33+08:00">2025-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -719,7 +796,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-count">27</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

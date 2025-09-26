@@ -20,19 +20,17 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="概述学PWN之余学点轻松的,跟着菜鸟驿站教程学学正则表达式">
+  <meta name="description" content="Here&#39;s something encrypted, password is required to continue reading.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="正则表达式入门">
 <meta property="og:url" content="http://example.com/2025/05/27/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/index.html">
 <meta property="og:site_name" content="Sn0r1ax">
-<meta property="og:description" content="概述学PWN之余学点轻松的,跟着菜鸟驿站教程学学正则表达式">
+<meta property="og:description" content="Here&#39;s something encrypted, password is required to continue reading.">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/0.png">
 <meta property="article:published_time" content="2025-05-27T11:47:42.889Z">
-<meta property="article:modified_time" content="2025-05-27T12:59:39.419Z">
+<meta property="article:modified_time" content="2025-09-26T13:12:50.403Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/0.png">
 
 <link rel="canonical" href="http://example.com/2025/05/27/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/">
 
@@ -181,10 +179,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-05-27 19:47:42 / 修改时间：20:59:39" itemprop="dateCreated datePublished" datetime="2025-05-27T19:47:42+08:00">2025-05-27</time>
+              <time title="创建时间：2025-05-27 19:47:42" itemprop="dateCreated datePublished" datetime="2025-05-27T19:47:42+08:00">2025-05-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-09-26 21:12:50" itemprop="dateModified" datetime="2025-09-26T21:12:50+08:00">2025-09-26</time>
+              </span>
 
           
 
@@ -197,90 +201,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>学PWN之余学点轻松的,跟着菜鸟<del>驿站</del>教程学学正则表达式</p>
-<span id="more"></span>
-
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="普通字符"><a href="#普通字符" class="headerlink" title="普通字符"></a>普通字符</h2><p><code>[ABC]</code> 匹配[…]中所有字符</p>
-<p><code>[^ABC]</code> 匹配除了[…]中字符的所有字符,<code>^</code>即逻辑非</p>
-<p><code>[A-Z]</code> <code>[A-Z]</code>表示所有大写字母这个区间,同理<code>[a-z]</code></p>
-<p><code>.</code> 匹配出换行符(<code>\n</code>,<code>\r</code>)之外的任何单个字符</p>
-<p><code>\s</code> 匹配所有空白符,包括换行符</p>
-<p><code>\S</code> 匹配所有非空白符 <code>[\s\S]</code>组合使用可以匹配所有</p>
-<p><code>\w</code> 匹配字母,数字,下划线.相当于[A-Za-z0-9_]</p>
-<p><code>\d</code> 匹配任意一个阿拉伯数字.相当于[0-9]</p>
-<h2 id="非打印字符"><a href="#非打印字符" class="headerlink" title="非打印字符"></a>非打印字符</h2><p><code>\cx</code> 匹配由x指明的控制字符.且x的值必须为A-Z或a-z之一,不然将c视为一个原意的‘c’字符</p>
-<p><img src="/../images/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A8/0.png" alt="0"></p>
-<p><code>\f</code> 匹配一个换页符,等价于<code>\x0c</code>和<code>\cL</code>(\x0c即匹配十六进制0c对应的字符)</p>
-<p><code>\n</code> 匹配一个换行符.等价于<code>\x0a</code>和<code>\cJ</code></p>
-<p><code>\r</code> 匹配一个回车符.等价于<code>\x0d</code>和<code>\cM</code></p>
-<p><code>\t</code> 匹配一个制表符.等价于 <code>\x09</code> 和 <code>\cI</code></p>
-<p><code>\v</code> 匹配一个垂直制表符.等价于<code>\x0b</code>和<code>\cK</code></p>
-<h2 id="特殊字符"><a href="#特殊字符" class="headerlink" title="特殊字符"></a>特殊字符</h2><p>要匹配这些字符本身需要通过在其前面加上转义字符<code>\</code></p>
-<p>这里仅作举例,后面其他部分再详细说明</p>
-<p><code>$</code>,<code>(</code>,<code>)</code>,<code>*</code>,<code>+</code>,<code>.</code>,<code>[</code>,<code>?</code>,<code>\</code>,<code>^</code>,<code>&#123;</code>,<code>|</code></p>
-<h2 id="限定符"><a href="#限定符" class="headerlink" title="限定符"></a>限定符</h2><p><code>*</code> 匹配前面的子表达式零次或多次.相当于<code>&#123;0,&#125;</code></p>
-<p><code>+</code> 匹配前面的子表达式一次或多次.相当于<code>&#123;1,&#125;</code></p>
-<p><code>?</code> 匹配前面的子表达式零次或一次.相当于<code>&#123;0,1&#125;</code></p>
-<p><code>&#123;n&#125;</code> n为一个非负整数,匹配确定的n次</p>
-<p><code>&#123;n,&#125;</code> n为一个非负整数,至少匹配n次</p>
-<p><code>&#123;n,m&#125;</code> n,m均为非负整数,其中n&lt;&#x3D;m,匹配最少n次最多m次</p>
-<h2 id="定位符"><a href="#定位符" class="headerlink" title="定位符"></a>定位符</h2><p><code>^</code> 匹配输入字符串开始的位置(需放在正则表达式开头)</p>
-<p><code>$</code> 匹配输入字符串结尾的位置(需放在正则表达式结尾)</p>
-<p><code>\b</code> 匹配一个单词边界,即字与空格间的位置(注意位置)</p>
-<p><code>\B</code> 匹配非单词边界(注意位置)</p>
-<h2 id="选择"><a href="#选择" class="headerlink" title="选择"></a>选择</h2><p>用圆括号 <strong>()</strong> 将所有选择项括起来，相邻的选择项之间用 <strong>|</strong> 分隔</p>
-<p><strong>非捕获元</strong></p>
-<p><code>?=</code> <code>exp1(?=exp2)</code>: 查找exp2前面的exp1</p>
-<p><code>?&lt;=</code> <code>(?&lt;=exp2)exp1</code>：查找 exp2 后面的 exp1</p>
-<p><code>?!</code> <code>exp1(?!exp2)</code>: 查找后面不是exp2的exp1</p>
-<p><code>?&lt;!</code> <code>(?&lt;!exp2)exp1</code>: 查找前面不是exp2的exp1</p>
-<h1 id="修饰符"><a href="#修饰符" class="headerlink" title="修饰符"></a>修饰符</h1><p>标识符卸载正则表达式之外,格式为</p>
-<p><code>/pattern/flags</code>,其中<code>/</code>是作为正则表达式的定界符</p>
-<p><code>i</code>(ignore case) 忽略大小写</p>
-<p><code>g</code>(global) 全局匹配(查找所有匹配项,而不是在第一个匹配后停止)</p>
-<p><code>m</code>(multline) 多行模式(使<code>^</code>和<code>$</code>匹配每行的开头和结尾,而不仅使整个字符串的开头和结尾)</p>
-<p><code>s</code>(single line&#x2F;dotall) 单行模式(使<code>.</code>匹配包括换行符在内的所有字符)</p>
-<p><code>u</code>(unicode) Unicode模式(启用完整的Unicode支持)</p>
-<p><code>y</code>(sticky) 粘性匹配(从目标字符串的当前位置开始匹配)</p>
-<p><code>x</code>(extended) 扩展模式(忽略模式中的空白和注释,使正则表达式更易读)</p>
-<h1 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h1><p>基本都是前文介绍过的,贪婪与非贪婪量词可以看下</p>
-<h2 id="基本元字符"><a href="#基本元字符" class="headerlink" title="基本元字符"></a>基本元字符</h2><p><code>.</code> </p>
-<p><code>^</code></p>
-<p><code>$</code></p>
-<p><code>\</code> 上文都说过</p>
-<h2 id="字符类元字符"><a href="#字符类元字符" class="headerlink" title="字符类元字符"></a>字符类元字符</h2><p><code>[]</code> 定义字符集合,匹配其中任意一个字符</p>
-<p><code>[^]</code> 匹配不在方括号中的任意字符</p>
-<p><code>-</code>  连字符.在字符类中表示范围</p>
-<h2 id="量词元字符"><a href="#量词元字符" class="headerlink" title="量词元字符"></a>量词元字符</h2><p><code>*</code> </p>
-<p><code>+</code></p>
-<p><code>?</code></p>
-<p><code>&#123;n&#125;</code></p>
-<p><code>&#123;n,&#125;</code></p>
-<p><code>&#123;n,m&#125;</code></p>
-<h2 id="分组和选择元字符"><a href="#分组和选择元字符" class="headerlink" title="分组和选择元字符"></a>分组和选择元字符</h2><p><code>()</code></p>
-<p><code>|</code></p>
-<h2 id="特殊字符类元字符"><a href="#特殊字符类元字符" class="headerlink" title="特殊字符类元字符"></a>特殊字符类元字符</h2><p><code>\d</code></p>
-<p><code>\D</code> 匹配任意非数字</p>
-<p><code>\w</code></p>
-<p><code>\W</code> 匹配任意非单词字符</p>
-<p><code>\s</code></p>
-<p><code>\S</code></p>
-<h2 id="边界匹配元字符"><a href="#边界匹配元字符" class="headerlink" title="边界匹配元字符"></a>边界匹配元字符</h2><p><code>\b</code></p>
-<p><code>\B</code></p>
-<h2 id="其他元字符"><a href="#其他元字符" class="headerlink" title="其他元字符"></a>其他元字符</h2><p><code>\n</code></p>
-<p><code>\t</code></p>
-<p><code>\r</code></p>
-<p><code>\f</code></p>
-<p><code>\v</code></p>
-<h2 id="贪婪与非贪婪量词"><a href="#贪婪与非贪婪量词" class="headerlink" title="贪婪与非贪婪量词"></a>贪婪与非贪婪量词</h2><p><code>*?</code> 零次或多次,尽可能少</p>
-<p><code>+?</code> 一次或多次,尽可能少</p>
-<p><code>??</code> 零次或一次,尽可能少</p>
-<p><code>&#123;n,m&#125;?</code> n到m次,尽可能少</p>
-<h2 id="正向和负向预查"><a href="#正向和负向预查" class="headerlink" title="正向和负向预查"></a>正向和负向预查</h2><p><code>(?=...)</code>(正向肯定预查)</p>
-<p><code>(?!...)</code>(正向否定预查)</p>
-<p><code>(?&lt;=...)</code>(反向肯定预查)</p>
-<p><code>(?&lt;!...)</code>(反向否定预查)</p>
-
+        <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="583a2a043d1d4e6be86ad0b3d6f81bbc58b401acd01c799c3a3a5302064e18c7">0657a937b9257134273ec414d3e19ccd0b98a9c0ac9e644b8cc34275965681e4168a0deac7663a7306ce204bda2e78cf0be0dffdf79bbf1fc2c8b86a6d8b36517cc443e1460bca58ccc4f97f7b2537aaa3630002f78771c83c0edb6c9fed0e449be3440cc98b31efbfce170892665e1be709cd29f3022e9bff86b90841d952c861b1b750be6c942d107051e346cbf4e4bc3e42d0662883bd4913b14850e65da126f83abc852c82a3c5f73a3c8c4892dccdfe0f015f6963a2d8b8f674916b29dfc8934cb7e8275cb5be8b82b05d06b541d2757bfee2559b7b663ba7400bf66e6c056428fe94df54aec0786d1c8d734dda61747975cb30e7f440dcf3bfa2421767a54363be9eb40a7cf23b2acb9d8466453d1eeacc863df2dbadc688e78994c3e0b27913e26c9eac956908c9052f1af67af5986db69927efd2a65e608ec6ab71f1346900230d09b99da137a2bb3ea23a4b9d1bcd2f7abdb3539549148364be157ba302f66ce2882d59971fc84167d0df37fb5276880d23ae4365f81a1e207fd26e5b0d2c2a579c3894276be0ad86b177250b261342a6223a127c2653200c8ae543bf9e33995f3b738956fe42ed02862c6655cd494ca479f1e13016e968dc8861d0932d6d051136aa18d521149af6e5a72f4d76b3a30cb903438c5297278b1e2dcfbb23a85dd7e0ac7c31e50b4875a0e0de9a9c9b5e22ab5129b131d6c8c8388203140694edb4f118e59d48d80d63c30adb2f9d4fe607503531602026fba084e63c5ae224e9474cf30989b4df18f2a1978ac84edb829c0e8e5d311f146b8b712e2e3a71bba3f3a89e1294f1a93ea375b07964db08cca64e795bf724dc6acf2be6c4f3197e3b8c726457f3db83b8134c1bd22c2336bf0212a80f1c57970fd5248ec2464f45b244bedafeef5bf5204a4f12942721910afab0175b0635f419bd7459a4e47d06183fd85a55ed7c7a4e2041fb0192dfe1fd6217774c04e8160eb49fa4b3d9a13294068909491db2af2671f6a765478a11c1d1f88bec64e2383773ce8bb9f2952184d36cf19d1f3f1dfde5c794fc3558dd669cce6d059550e28ab3744ac16c7b23acab0f0b61c5fa0ab9dd8036dca306b4bda4353450c3b43c0a79ce8d2dffeebf9f40232d6a9c3cfa8f3930c1e455e534a052da098f14c55c3649d8e625e9ed906df34e559e00b6f76a19752301448559ba7f9518e63029483eb0054ec720c2671654abf4c30648e6a540f8ef74edb5af1964aa35466ed1b98ff45103d0b471805379a12b1c66d53fe86007f92d0cea1da76437a0298063576a6ebd1f7ea4fa1894f142314a68b10fd6d5664ee693dfda6063a168ea279975d827e78dc0176eccfc9186c9f1091ffa6eb1dfb58e3f35e0d93c44b2e1224a076cc13ab98cf2ce1f480d744b273ca03a34a08bfa56c515b6ba494aa7925e2c67f5b9829bb64f7214f47f17fac6cc08ea90b4c568cf5c86fe132350a9ccbba2e8341f55383adb8407dded6fb66598987c450cf0575b71d00ce0cb1e11756550959e42b96f430406cfb73ef47a3fe8b510e1b39ef2da3932232a9ffb4fae22387a97234915483137cd46e70a2ae39f4f3dc7c5c69601d899ac97f935d377d1a2fbde9d968ab5e617701a544fcb1f8c4db1c430075b9a01e7ab1a3bcc6312cbc814080cced60f97d1ae8bbe9371adf3ff3733f14535a25bfe91491feaf21a611dce9f012e8b65dea1590568f40cfc8f6e0288494a081da301a7c51aeaef99975639e3025f19f7ccd5957e40e6223bd825663bfc9c5edb48deb541c166a615971b62df4751bf951d0560bea869e0011d1d389ca2276b739cea1f30ae858931f7a25a6a94510eda5f5bdda25202303b3837ece53a93f82c7ac26334414d4d7806bc1fb9b389cc5966ab2cbd701ad7bbdcf642c48670c8867e2dcf506b5094a9b5431189dd9a3fbb7987bec055bf0138209240763ec619ae0bba9f7f358801a42bdfb611e5e79239ef2d958aeef144c2c5d2b7b0a4720ddf5ca74a9a9807d5f4eca1548275a94b7b76f2288d8679d7717af4e45095dc7221f9cf9167650db13362d13f71c6e290df2bb6d806b5df9230f5c2a22d49308c67fea057c8800aebc531651e8c8133222a252ee10c6bccb64dcb8c513cd3ea019d7b780c482a2e98caf12cae294c420ea75edd00733bd3de2039d5d236433da2b63c21634d96cb30dd40cf26f6a1b2d8b5133133591c4d40aacb0d52208356dd1e198df1ad994c6d8e16d5156d5a980a7c032b75a77d9a63b8db1307ab17990f9c164272907c4af7784a5d57364ea53c4f511a940f8c4f7ececde0308de3281b2e6a1cdd897df4f7d5d068bfd5048a302ef7f86b8545a3ed34c574a4e53d147b07d8662f5893f9dfe57c9e5f977734820b87864032590740a7bc8a0e5e8c6c6052a9b40c382477d867296f814b6b6c90012bdb7f28dc9907d4a8f704643a0b2fad1370ea14467808b1250bac4f5bba82ce13f1cf2271bbe42efa0caebfdaf8cbdc9de827378ad60463e0524d63a506b5560085f0b3e508b5cc45ac8f95a2da9267f5a251271a9b19b597745c0cad398bec3568ba3aed0c0420f9581faf7ba499f4b52f26b9dc8a2a27e0285e26849282610dc439a05d1508fab3ccd8088928e4478049c38a2d655573bf023c7c087d3ca55d6a5b8fd9e9d8eb5125886252c0df15255cb6c85047ca943133c67f53d38c96a9d80220fc1d6541191b9e9125c29b4e781e915717726bfc51559eb2eb06d329247d0a75f170c52aa8d07b4c89fdaa27b8c8b2ca55e87cfd7fdd706f5f8f0b88dc7c87d2569b36afdbb77eb9b2ba35faa2715fc8e60c19ca23a98b6e8ae6f1e1e5ea6c145c3e28629397227cfcad6dfa292dab4fbcd0d6dacc6a79cc06fc74f85d60c6aca5406cefa1796779c7e1f6648f404ad1fd1007b52a3ea9c2e84883168ab98595d40afe846375c19f7f3d3b160d80a5d56299edff81a6efbe8607c52744e1ef098a943e151c7340892f9f31d570382b758917f86d5470b1032a18b2b0acea4517a9e2a41708d4e9dd0a53cf9efe324c2b4494590b7003beb81765b3309f098b9ed806bb750b7a14de8f3d1e0d5c4c4083faa944efcc802e090f0b30c2e5b78070c0cd3b5bf89e8157fade19a18811301659d2e5bf9d7b1eb99094f042792d596c92f197d26a03d5dbc32917082d1e1fc5412735ede003292fb94837045c8a1c241c02bf377eb537db6dbbbc59350697b0590a3714ea1a45c3d80091b54905ca3640fa2eab65a9da32523ada7db93867cce12e0976f488feaabaef13cfb1faabb618460a4a35a7cd219f10243a5a6553acab8c4fabfc1ab146677c3eacfb6581892ae0fb72da6e13a1600a59ccfa83ee114aea3c0a5510560e54521ec298e9ec4fb4afa55d3e2a2bc584388e98fc1da203f7b2baa1012382364be8a42c6708c5aa34b8e381f71045221ee25aa21445e52c3cae0ecb8b1d3a2146084e110f110fa647f6f8960064792deeff188b11993ba915162448ab631b401012b514aaf0c6e6be6ec1e96d2d59aab337344be4a8046c9fca249cb25de8db13573a06b2f4f5411d4f6577634794368d7b9ae1ef255b1b3435e2ad47d0a217f1e5a98d30d5b47cdb8da5a3df587cb6b20f87e61b6793a6d9ee6af438de6ad6f7605de440039ecc4e55eb00e572a4b50ae60139f82e881229cc8daad8292c9e1184d7e6b8d88335104437d132e6130ab33eb6186e51eef0dbd6747536d3bcdc7fdd502f567dc7a631393164ee5ca8a0ec5af9a6efdefd2a05bdf90f447003d2cd07077bfba1cd31abcf9c15997f5ded2aa6d502fa9153a0bb96b5aede0efe01e4b31bc0e5116baf5b56cb77d945ef3a104cdf7d9a5106431693949d1d720093d3beae8e4f9c6ae80a5fbcab8fbaf7c0e4b6356dc43a0943f68441f5ad8dadb9611ea1eafc6983890bdcaf21844859e72e4ada4607783776f92eaef23973163a5119f21ab9cc68d9a10a4416728a36b2280857acf29f60c6231c74125abcb633ad6f2482248382cc4f9c903f33cc7e6d129cdb7fcf29f43131debd8ec031ecb64ff08a19f718b033e870c05c5c6a87dea4097c0a19c8a0d7dd7bd80f3d54107d26c7a67e4d327f1193d637ada219f829c415943ea2888126932f5c928f17e8e9c76fc805de572b6af99c695fedad8a6126d7a786a797e7d5a0ae89467c40de4c3857d296d866ea1223f05179b17c3b9c2ce45d6e6a198346e45c07fa7455fc199268d42d8ec430d47cc9d2f37a59faa3ee1fff69fe6b3831aeaf7412b646f5c9d1c622a49064663e51dfd9f40d09cc66fee028b47a069dfc795edd7a9e81d25da9f48a76c1883e7e8c0fab9a29cda212d4ed9eecaa01692cc835b011827ae9f3503baac12098112f35fae66cf91f91b9545cc0a157d85c506c71619c2e44df8e0de42d41b606e1cabf13dde5e8020cde36db17ebcf09f5ee120246f6fbd2d73db27d20e4f8cf532a8f12b578ac50c23ee6b1d32cf5dd32f60a9062c1a1f6bff8aff976fe95d8b436929b99ea883fc81e1ba5eb999b1c907b68403ff7f42e5800cdbe7c8ef407ac233ba73f4ae344509b6702f43a540f41e3c1a5880ba1e18f1c812d1f8da762540b654214a1b997566d4a1245e65669e24890d082b0a432c22eb9d028ff591ec52067cf80692135bd93c0ce84a7693ad47f84c49a2fb11e63c8638b844fc443dd99ccb213f3bbbaeb391355d48ebd167882e7673465f8126cef67dad28401770cd01140c5a31e11271924eaf70dca58893b47c63c026b42c6e55b63525cb8262575422f564029490c92b74b7567aa948882c15073380b433624b68dfbd2b46827f20cc0bd2d3feaf9d2ef53432bc069abc802f3eae5ee749d8ef472d7c4691bd179a6ed045456138ed5cd041bc24da7f373db1fc2792e01533b6951a8013e3ec67b21ec513ec34eb91fb9b1403825e27967c96bdb31357f885f443751ef961fbe0e675d546f75100397678036369884fbc87318a8a79ae55dd8821c5e520fda0669f8ded09d3a6e6dd34ceb7c310c6245cb13ad0de06b67b043c8b750324dd85e61cea7320fe9fb39f24db280209ca4af7b53983b6cf17acf60fe23072b61e73d16008f9b4427468351208ba778205f97d4267fa16e713470f178ce5077dcc3a26d002e80971f5948a85c1a3a556eb31699cb510f4e30687fa22e23752636aba70e3e712a35b0989e5baddc563eb98dadba0f25919ad324b01cf9bb00b13b3221cbb5ff935a1b72233bfba3803f43318b3996e48e473bdab8fc281c0a88a681f51a3d0820785405d6d88feb6617c21e29c7bca2709e7c29f0f5e0045c3933c887f3feaf107c4360696eeea2063d7407f59b5564d3b9ea4b5fee5fd515b68815bdf96f24381c4bef8d5aea8629e0983ca0ecf2ba6c1e40e0ed9dac27f26475d10d3bfdc9e690a75008f115679b389bb67446648812dba9368b2bf03c07f468a46fd74ecfdee6e90f7bea05bcadc7b0e46c0a62511ac16b35d8ede54f450503fbb53dc1bcaccd265bdc848d661b67e8c412c6a66d569db17decba1b37480ed6e40734ec7a8910b71fa8180d87e6fed748f1c43fc8855059f47f07388e350f6bfdbb4697cfccf9f10c7f858091cd7d1f100b8e2ee81f2e51dd1dd9eba716c65fce3a4bc0304ea96872e1959d0588a282567db2c723eef3372489b1d8dabbe9abb741802ad7f6b2d7bc6bdeabb145f530a11e9d5d6e858142fc1aa5c3747660b838191ad65dc8dc137a402b504dd343e9bf626742e681cc7c8f19a3be90d78095b2619fa8cc020bc463fc4f27a1d3572afddb7e3809bdac6bed5cbd1ec6e860560afcea78cc5916714ff9bcdc07911345817c331e6fcf2de6e7c2bc610403f0153505626c01f99102f5dacbc6a00259a3d21010d8e881685ac390c8016a325d15b0d3c762fb7953f9bcd75f99ff2be001cb0f68d5e8e8fba16b345a50e43ccc5bb084e47a2d1e2fc57b958fd51c6fb65c848c52d3520d82cabdb63921644f8f15b7f968c80c8522646160a335739efcb6588832970e13eefbeb5161f637be846ca8f92c8bcc22f187c0601a50684cf3117f2e9b871cfdbf6a1a71ccfada84088a975c5431cc34d186ee2ba622c5ed91f67769f21138da77ab66a85adedd05670dbc8b2620de0600f63b8c94c0d52d8eed43e09b10e73fc15efba7a368aad04e9fb3b338d61906566c3f52bf4168987a0ed5d45996109bd08b92b4f402fde298479f0be6834f34308cdb0501faca53e7ac9458b69ab486f05e24e5a0bff2ea7b812e2c85a480f1fe1de07590fea6a8bab3d844dbf1eb2a352be2ba221a63e9b3db369eb82c459a3f5258b4ff7be59eb3187f7e79b55d1322e4d59c3e490db401f5a6564051fa508f0a87c7c3eedf9c2716ca88974a0ff4ee2738d858ba7dd531a7c0664883d08a482ae7f3bca9496de34959a4a7d16a2efce78859852def1e07209933f56a4ae6c293350e7c67b0283858abd5025b416dbd5e295907cb9e02c98d4d5b0fb393f741c1d8d654c22e83c1d79626335135c7d1b7a380daebbdcfe64837b5ff92fbaa5a6d2f1e97e16bc165859a27626948e7a5ebcfcd9bb88d985d797b883e681237f1cc95f559c68ebb23db7b0d7690e9f6672a306827543a8e6b4ed44ea6b7e38b90d16370c8df6a7b0e68363a099d9e5fff9b8e7417315c746c3b5c83c79f369b8471827ad2d4f4f69f7177b34fdb0371bad90de992f80b86883d7567e73bccebd29a4e5f4d398c38ea3bc0b9fe368d8010446c0fc3cc6f0e0f9960c0b162eb5037d269914ca73a165978fe6e91feb5587d3c8f7699fcd2fac550f5bb3111ded79881c2a5fd5d305278df4cf6e7edd99160b09a8d6833b94a8e710de09261a9eb40a0382091f13ba1282eb877687d61c4b45dd5179f35b9a4e5de7fffe3e0b72f0fe00316dfb985b234ec6857a084bf6803591df78ff94402729c9cfb10f2478f5841911dbb6ce272eb04112a0f121f666ce5a38917816abf35743fc4111a71b0d6693987ec348ccb56e39328b2bd0b4c0e47010901a9a1834ecd6924b382d1f39483c6d5acc3ce22f167ea25cef944963cb7136c2399ff386c63667a669218aae8c531fb19183b5354a3f82662bf1e3ad5b43240e42cc95b265ebc5984f724735a3fbdd59eaf34ece137b36e6bfcbaabb71b3c1a4db987d2c062259d2e2055f19a90fe21971d5688d74c980bc89801d788238cb93989126cf63ea7e3b1dc698677260d3adfc491a29e657281ff709c871a36bb1cf2ed358def0c12ff9ef3fe75b03f3b9abe2c0fc1ef4e5523b3e36bc4d037fe382793a640d1537162ed1aafdcc7cfdfb5eb3dfd747b2f9b9cef815847125ee6e844e9d05b574e5eb96449fe105f106b2903a1694ae795270b3e307bde96f86dd3a21fd4c0d788f59483e731c97a34e1670635921cb9e5d080bce2445c7b93f3ad4562f6ba457553239d4c300409aa2aa2f555649aaf730931353f4f460a883216ba391093537e5c756c71e9f0c2972547ac095cc239a8e7535957f14cba54bfb36b4884b611123276a852e8d0759a9256de2540ccc8617c42acef7b0705eca0d12e71bede2f77bf8da4382adcd353447c55f874fb3e2b2235f9f5891f9718c436572416adfc52ab87e969bdb696280472d4b87cd5d669b963045a04524ce0a7076d35d1278ecfa37dc217cd041daeb5a2b0d9c6f09c4d638a90d9f4533862ec76fb44e1013efa207fce76fdc52f51fcef17b09adfa203e1331f4e124f2581eab1a8c29afc8ee768edbc254a963ddc01073d057e6c6c6c82b1ed0ea8bcb7ca87b55bbd9129a4c8041e4e4b491e804350d5957f455d249cdc011e6e9aac1bf74fd7b347eac1a0aaa9dfcce5648c398987d23f250e8d7bcd3181522572cf126cf6c8357e6519f17398a8a1441209161300cda4dba981440e792cd0c47964420b2d82a30bf813829aa42712f1b9ff8a33384bd49d0ff6ae850fc516b6d14ba04253d1fc814a958c4cf33105b7221b4c987dc9dafda6961cd3b57458ba821d5e01be0941f7efc1a0454566827589de883ac49b1ebea0a5743394560dc28edf8a291f2a61c6e8b30d529508d2a87a6743ebdf844c20592ed9a63f2e6b9ead914333f0a534bca72e87373716b7dde3d42e2fafa6cd7066d9f3025f34c17fc9ba6e754840c195165a5e61e666e7f946323ffe6b6269db03f3d0c19ad9b40a9ed334e4b36cde382a16241073d879b9147db0736141bccd28a06e9f8ff5e5b33a58af13b30b65869f4a6fb47b98a11e79e5212224bb8af00abef99b162301c99a0be44450c26d2da891569616b5b14d8daad61834478a815f473f16b3323c7985bbda44367293988a6c6db64fd67774e1460d273080f4c33b6f1c1683a3ff95954b268e64f08ac736cdb032433a330151dda766953ebcb83ba9af80f8c687bc50125f346f4cf8745d324e73841e1260966e01caeaab0fe371c76aee1656f8f347678fe34c974422087973e18b2f465bd35d306ab84c67d0e7d793b3998e80059519d8f6b3fe72a9481e7cb43ae54efd994aa758b140422afd642e06ce54d535ab72bce014c6f496c4199ee4f29a7d624cae03d11b81618846b29352a3019b41850f596e4a0ea4e74176aeefaab0fd271ad5fd31255f351418c00ef22b90abf9121e742e29cedf4798c90b1691f9eea8e4636a7854ba24e5dfe048e9da83480cb8aa5b19b082fd83fa119bc327e9ef7e440da1c3002e182529b34df97ec90655e0b319164c7acb1986d86df54b6b3c6bef82b9873537f77724580a904d19a1a6bc90789d2b9981695c1f6bbc0f6be39cf94cd958a279cb31391ef1dec76cb9f57b1fb60ccf89cf84c0628c5f2c1cc5bac9758ac4e7fbc59de814b3478cddbe1ece8c9610717a86152c154d0bc13c39283c4985b0aea0106d6a32e32251e2d7c02696570adef829fb305dadffb208a591b5c83b378e4fbd12077a18029ec170265ebcff591898d466e4c9a8e1dcf1f4bc50f4778653d94de7b065919591413ee0f8b43fb70bf1bd7ed427e6fae5b3889942d7ffe28b3a91cd7d0488f361f53c7511345cf412d781ce8d8953981bdd21e5621885181115d46bf129ce3dcbe9b60a7703cb6dd85515d8e39d1f50d35173bef93714837584e58b9e1f41d99bfaeee904d044ac8eedeb4d8c985830e075cb2be7eadffc81e74d42ffd3d42ae4a8584ac898b39f24291be3b846b8ea9fcb16bf8e0c40b724eeced173e76e25fd3ee25a1e070859b00b070afa22344ef6b64c725b2118a4a75f250d039cc705541ba24661c3e5ef7e616c10132893eacf42b528221d7c03777b40d29c688019a56163c4cd836b0eac0e41f933a752bfbb2bb95aa350ccd513d695cfc81a912f86ce1cbe4e1ffb3c5e12770b4b04222af725f14e95e61fafadb107dc0b90f4839efec17b799bae76d32b4ba217eee3186d145cda25dc7f59f7a25ac613cb05b79225f42dcb1645920f1f912972272cf9ed1623992faae62adbf7ab21a9633a5ff92cf47f013cc45a4e945295b182afcfa928e71680560dfa607453bf14dcc7df8bc04c2aae1a41391a07e35382b8542e4f2cad664bcc81225c1c47570bcbdfb38ecf46af7147b722c6badb8aa4299fb767324dfdea56f3478202b99f9ba7ae4fe458bd7b9dfb9b4a6d48a196a739a2d409e73eeb21b52ab45fc55461301ace97ed13edf16599b27333c78bb7c4971b6bcdde765aaeb0e66c2cedbf84f70a55ab06b663d5da75a81b7b318532ab018c205c8f828bbe20f4bb8f72114c57b31b81b3622bbacc739b44c1e60d99873232ebf591194083c881226251e6eb6333bbb06859b38f732370abcbec43d6e0115c246cc0ac78c07b8334a0fe532753a11e0dd725212995ef75076f41793fd6c7f0b3d139041a3251177d4d41dfd33c010a3cff20de013af742555f96614753472727f42ad39c93357dead80800d62e17381e3412c318bf7b49f8781563423ee9225ac80f1d3fed980b11a512f4c8f1f17bbcfd678268ebd7da25da98966692b737dee8a1cb924637dbdeb5cb7c42379a05cf09a562b911b77b56e6db3ae2a284c5eeac769f256494c7bb867041302fdcd290e641584b2f89bf044084dae7498bb19678ca4ec86211126c89502291a35b877df08f2e54e06baa1aabb0cc45788a672672b4be258f57007cb3d36b6a2b17525e9027deb4fe3293022bf20298d9bc7e91fa92f731299bb5d015607fbd95293d7092bee457ab7a6f2bd1b4ed369c7f76705a79b50dcf6ecdc493c108aa103f828c582525935edd59fa5628ca2c0f13cf8ace90848ade323d12358f94ddc3906342d45d75e7816b6072b4cb0722c912a67dc7d2373cd49f238e3b1d609bf3581fd09615028a5de7096873510615f5c3c2214e74cfe93251a0bcbed211ab7ac7c9362a743ca0d5e17ebb83798a952b279cb0b10abfd7b7421965bb93056cb36ec7c833ae3ad352e9f7dbf2e7d38734bf89ea910567bc8fff86c0577a4abfb6806651664a827dd5937644cee78c30b8e258bd48aa641e679cb1777a9b16211608d5bcc566b24e7da1f25f2f267e4b02e5ecb053653dc044979f28bfd1a6e5f972078529656a354df9275da6833ba8581a01de301d788be64d1b1847ac3df3ba504a05e9fa5fc1c484593f96e916f6d2bea68bb2aef5734b6a0f260804a7669203a4c4ab20e403dc407c9a98973d5b301271f8ebcee8c78b15d88176739eb5f2dcb99baee16341dc95497a6ba79eaf90cc65c401df2a3a84b4d70ce79fff01c87ea4d9bcd6dbf45f4302a8e7ea44bc9a9c08fed0225c57d2da7b17011cd6a4fe4d136760d26d48cd1c62e65c4b0c356eaaed7ae6e444d4bc349a9d6ee7944a57f010</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">
     </div>
 
     
@@ -360,7 +292,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">语法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E5%AD%97%E7%AC%A6"><span class="nav-number">2.1.</span> <span class="nav-text">普通字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E6%89%93%E5%8D%B0%E5%AD%97%E7%AC%A6"><span class="nav-number">2.2.</span> <span class="nav-text">非打印字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E5%AD%97%E7%AC%A6"><span class="nav-number">2.3.</span> <span class="nav-text">特殊字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="nav-number">2.4.</span> <span class="nav-text">限定符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%BD%8D%E7%AC%A6"><span class="nav-number">2.5.</span> <span class="nav-text">定位符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89%E6%8B%A9"><span class="nav-number">2.6.</span> <span class="nav-text">选择</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%AE%E9%A5%B0%E7%AC%A6"><span class="nav-number">3.</span> <span class="nav-text">修饰符</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.</span> <span class="nav-text">元字符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.1.</span> <span class="nav-text">基本元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E7%B1%BB%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.2.</span> <span class="nav-text">字符类元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8F%E8%AF%8D%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.3.</span> <span class="nav-text">量词元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E7%BB%84%E5%92%8C%E9%80%89%E6%8B%A9%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.4.</span> <span class="nav-text">分组和选择元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E5%AD%97%E7%AC%A6%E7%B1%BB%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.5.</span> <span class="nav-text">特殊字符类元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%B9%E7%95%8C%E5%8C%B9%E9%85%8D%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.6.</span> <span class="nav-text">边界匹配元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%85%83%E5%AD%97%E7%AC%A6"><span class="nav-number">4.7.</span> <span class="nav-text">其他元字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%AA%E5%A9%AA%E4%B8%8E%E9%9D%9E%E8%B4%AA%E5%A9%AA%E9%87%8F%E8%AF%8D"><span class="nav-number">4.8.</span> <span class="nav-text">贪婪与非贪婪量词</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E5%90%91%E5%92%8C%E8%B4%9F%E5%90%91%E9%A2%84%E6%9F%A5"><span class="nav-number">4.9.</span> <span class="nav-text">正向和负向预查</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -376,7 +307,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-count">27</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

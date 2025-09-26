@@ -20,19 +20,17 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="何为沙箱沙箱即限制程序只能调用指定函数来保证程序的安全性 何为orworw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种 那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag)">
+  <meta name="description" content="Here&#39;s something encrypted, password is required to continue reading.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="初探sandbox(C沙盒逃逸)">
 <meta property="og:url" content="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/index.html">
 <meta property="og:site_name" content="Sn0r1ax">
-<meta property="og:description" content="何为沙箱沙箱即限制程序只能调用指定函数来保证程序的安全性 何为orworw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种 那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag)">
+<meta property="og:description" content="Here&#39;s something encrypted, password is required to continue reading.">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/orw/0.png">
 <meta property="article:published_time" content="2025-03-18T11:58:46.974Z">
-<meta property="article:modified_time" content="2025-05-27T11:50:03.509Z">
+<meta property="article:modified_time" content="2025-09-26T13:13:57.427Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/orw/0.png">
 
 <link rel="canonical" href="http://example.com/2025/03/18/%E5%88%9D%E6%8E%A2sandbox(C%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8)%E4%B9%8Borw/">
 
@@ -189,7 +187,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-27 19:50:03" itemprop="dateModified" datetime="2025-05-27T19:50:03+08:00">2025-05-27</time>
+                <time title="修改时间：2025-09-26 21:13:57" itemprop="dateModified" datetime="2025-09-26T21:13:57+08:00">2025-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -216,22 +214,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="何为沙箱"><a href="#何为沙箱" class="headerlink" title="何为沙箱"></a>何为沙箱</h1><p>沙箱即限制程序只能调用指定函数来保证程序的安全性</p>
-<h1 id="何为orw"><a href="#何为orw" class="headerlink" title="何为orw"></a>何为orw</h1><p>orw即open,read,write函数的缩写,一般情况下程序会限制只能调用这三个函数的其中几种</p>
-<p>那么由于程序只允许我们调用这三个函数,那么我们无法通过系统调用execve来getshell,只能通过orw这三个函数来获取关键信息(即flag)</p>
-<span id="more"></span>
-
-<h1 id="如何判断"><a href="#如何判断" class="headerlink" title="如何判断"></a>如何判断</h1><p>可以通过seccomp-tools来判断是否开启沙箱</p>
-<p><code>seccomp-tools dump ./pwn</code></p>
-<p><img src="/../images/orw/0.png" alt="0"></p>
-<h1 id="如何绕过"><a href="#如何绕过" class="headerlink" title="如何绕过"></a>如何绕过</h1><h2 id="shellcode绕过"><a href="#shellcode绕过" class="headerlink" title="shellcode绕过"></a>shellcode绕过</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>通过向栈上注入orw的代码让程序执行(需要关闭nx保护)</p>
-<p>例如:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#fd = open(&#x27;/home/orw/flag&#x27;,0) </span><br><span class="line">s = &#x27;&#x27;&#x27; xor edx,edx; mov ecx,0; mov ebx,0x804a094; mov eax,5; int 0x80; &#x27;&#x27;&#x27;</span><br><span class="line"></span><br><span class="line">#read(fd,0x804a094,0x20) </span><br><span class="line">s = &#x27;&#x27;&#x27; mov edx,0x40; mov ecx,ebx; mov ebx,eax; mov eax,3; int 0x80; &#x27;&#x27;&#x27;</span><br><span class="line"></span><br><span class="line">#write(1,0x804a094,0x20) </span><br><span class="line">s = &#x27;&#x27;&#x27; mov edx,0x40; mov ebx,1; mov eax,4 int 0x80; &#x27;&#x27;&#x27;</span><br></pre></td></tr></table></figure>
-
-<h2 id="ROP绕过"><a href="#ROP绕过" class="headerlink" title="ROP绕过"></a>ROP绕过</h2><p>适用于开启了nx保护的情况</p>
-<h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p>通过栈迁移等方法向.bss段写入代码然后构造ROP链到bss段执行相关代码</p>
-<p><a target="_blank" rel="noopener" href="https://x1ng.top/2021/10/28/pwn-orw%E6%80%BB%E7%BB%93/">参考文章</a></p>
-
+        <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="cdf1d7783d7890ba434d719957fc42e6392f1b9b9d1da9a66a458455150147a0">0657a937b9257134273ec414d3e19ccd0b98a9c0ac9e644b8cc34275965681e458b1eb8aa5dd249938684dd90596e37439d17b18d74aab1ae137a6921f9f85dca64cca54aab0e4317d4541afb2a71240f21573443f901eac253ae50cbd763f81ced484d9c6cc40b06f97629b5fe12aac058b0f798a8b02d8bc8bd42c0f009ca389bd8f520eb0667e88ac9b2f596bdd4ff0a5999ec4b946d7c02d3b04dceb410278111b7b7cf959710df3eb5ab221ae86632def7b563b984dc2d0bd392e75e0838d99b39c0f83d83c6032674f277f067e4d072ac90046fada64e39ff053daea3302346e1b11356dcf689a4c322a71b4da39f6dc3f8ca4dae4475ced6893ba1b927437f7a0c14c9d68673b542925d14ed8287a89b04fd6073cbc2057b6bbd748040dca1b48db854f1dfca550508f19d7c0833fdc50cb5c63b6a4a008feb60e84a1025b0287fe33488fed6f4bb292ff82a3a84931d8343cf89a687ea3264afb2e891a379a66181720329b7a37369bff07f0e80b9a378513b3b04d96016d09d98112961b78b609c5b215782b6688512570163f2fe20af7699c4dc719d2b625455c599e67595a1518202fb295098edcd36155275a61c6471706f1174d5906a5937b3af1c8518775ba19815b9fc8e5ff7d8ffd95552e9c1333e629c01ded6c7fdb7ed2234ecd2e13ba6911bf5a724f149bd80ddf3f855bf54ecc901c69a03720aa6e7c908027254b072757da484fc534f683242f95849923238a643998ca2381280437118c260795f8a9affc1857acb52ebbf253ffacb528a58d90e3a84d76fc93db45281700451142b8c9b9286408659503f705471be87f639010c171f4d9188517c8e88e0a8193b8997e2a8f761497f8a697f689cfd0581f7844d7a05713bd265094f5a6ef63fe69dca6603ac208daf4e4111976e4bae72d450e89afa34e7fdaa5a697401314825e8f90db7507f169b1aa8d4074ae7b69af398669c910643c318a1d45377e8d22c705db97ff67d6ded84262b4841cfbdc941ec21b128bcbc2165c8d58519f51e2aff2cb61f1df4120b0898a6fbd3ff8bf7ca625ffe0686702da6ed8a270edc6f26cab977fb1d46ea0ec4a3591bdea4c7b69c9be69d619eaf42f32612ff300a877bcad156cf4238b629f453b98288f5ee2af470bdd38acfc343b38fc0d0bd2349f681253a243b2cbba2f9ffa07b08c90f1cdd2e9cf0d0b3a1b82a97ce18a19dee92742169d18671d93ef5d2373e437cb0115a328f8c51e22bd569fc86c3c2b4733509e2e9d602c6166bf1ede598b1768575fb573ac4ea5c98811d6575392825bd03e878eaaac016fc614de673aa4ad5f7177af4ae8387e045ac74c3845929a76e911360c564d192cfca504af6516988af011f86707e00d89ba0269bb58dd76b1e9f4ebbd234ab61afe344f4ae94cfe683ebf975e399d93ed6c4c30667657cacea43d2bc74eeae2b40fe71d8156a6eb5ac08ca5c1e3a1f8c3650b1c4c77db024bf4a63c4fa9540c60055d10e33a280289f82d1d7e67321e022d5f508636dcfac93a25c2853ce3cc3ea75559f31166f6bb85649ebd95d521b58237c55c1a8092a99210e724a9e920734ae4811018187568e8ac1b2b67a471265f23f2354859da7ce912f805b315f672acfc20be2d81d27d8e3b6c3ba2166e3e38e6d338a0e4a36290754cd0e98dee9b1d2fed4d610623d95f6cc0c5b2aa92991b3fcc3b80ad2020b36b4613c8f44028ee5b6cf5795ebd03ebdb385753d51605cb174f059dfdd8048ffc77a999a98e2453caeb0d765abe508f5aaccee88799bf3a72f511987a422aa38166ef20bd9b62cfb29df5623a2aa6ba8f5b2f09b7d952a5ff87392ad308f38e9e6f3c0862f954831d4c23a9ae99b1d12b47c5fd00df889919c6311074813818c484c64d9448897df5b8984637381b93cf28eff655eb6d6563bb0c9adb59cf01b4c5918692fed2fbc9b526c2d97afd62219a58e036cd9bbff05dbf31ccb5d7227162727218b23c03dc8621644afaad8c6cf303dec762e58fe4d2efaa0a749d62f142098959ed99a987147e39d3838f40db9d4132ebb4e071e6bf8f21badb1f5b5ee929264f16ff03f0d16f84bae0d6bcdb2bbc26a868d3c28cfc82dc6d64d6e0e8ac1d03458803a07abecbc2003dc5afb325b426755ce276cc8845091fe445433ca33c41624896ea9e043b90335f38320b3d299eae43f68ff35694d0dcda292e7508eb8b90aa87890c9d2c8ba0413d46a1fbc284708d1c325e69c8077faaf196c687f979cea3f2212752359dbe593d166a95d343acd28238ea38a564b39409810f72858d0a785bdb4d14b9278adba077c941d5aec2bb42b9199c50f2ada09fb02d79d296627a3fdefd4eb4272e4e838c3789166d6b5957175d882e2260d078d2e9af3ce25f414bd3d0a2173eed0e1c017ae4c8cea8e7ad217652ceff080f6443811ae365a469b8831f9440948a673481aa0012c8f4a5ba7c1fb2ef2d27c4bb0a795927547db71d3a1b126d88bcdbf9337aaadc037f252298b200e84762fb75f960979e34505b42789344274bdc23844bd821066b158aed12eaac2b88852de7226882eece972ffed2b8ec752bb50fc3d5a6040522d88cb87b0bbc688d400c2421192a887f98ca2700fdffbebbf46c0588ecebc4b10ad9f839006c5fef169e4da96f5416d42584b57a3e2863bd487b269d5ef07fda9274d56ff9982b786a33a85798d5c66f2ba51b5c022f333024b5aa4473ed4ba3c3eb7f96bc0994b1f48c715ee652bed52f5b22888136ee6880fa9e39eeea7701bdb178a57d429bd6c40dfca8855499b48be40a0c6bebbe1fb9f6f99ea0c4545118f2572783636d7994515b3290a4be3e46dbc8bf4eea0e995bf6addca2c774e51cb2301e87465956b25aa4298b4abfdd7b754416ab532685842defa23237b078d9c3689aef54ce209a7cbe225726869bff73f6be84bd6d3374e540bf7d328d883a16e5d690569a0dfecb2dcda6aa68147b57eaf2983dd283a8b4e8562944b6bf71540c8cfc4ca54c922c2905abf8d40df96dacb58260504be66eeaee22eee4e38191e3c9217fd4a5e7d4324b5d5d57c69566c95f7e469e21dc6c3eef648e0221d02039c0616798d24039a6c1f73b5029d1a6fcfb576517297d326c43fc8a45b8af0566d32da1b64654b1f7296fa881bc851f7f11cdc51f078e68c5b1a20def71ed46f6bd2cfd10d49213b5c42b1d715647f61d7ea3297e2e25b0d56490fc6e142187bdb1f132f832cf3ac49607b87be83c756b003f2b58885567fe7ee44914bc5d54be22f0e910608e87d8b9a87584f2d5d966aa9c3529a3e08ccb2e8049616d9f9a54d81a4c5be495ded21c48a15cbc0f5e4cfda590f95b050c670e947b3b7f0fe002d06b5378dcd88ebb41dbcfd5501d3ae474819b2658eeddf7c4cb43fc32aef3f1ae1dc2261c69caffa1fe47816713b616349acb84f4f34c17d961bb15c27e5020e9b032b95f7ffd55e1e3bfad7781f176a2e2d93eabfd2b9621e8119bffc5e0ac14d1265e2c566d4407fe0055b323c9812aea6ef76727fb9949592b4bb86bccba7079c97175f8e2a644064834d21a40eca42867a25bf33eb545d40c357a8362d5cd5f99bb279f5390f5352d3ea32bfb84c539ae9acff53236d4697d17bff5fd358e29c1220f837394d739a36896429cc2a04c95d1a085a43e63f95e09785c8eadd34da911b1329c7bab76734ccef00901531144a57069cae7235e0484fc2319aa0f1e3e500696131c24632f00f4eb044e93d9290e1de65dc81651c970394e7cafa983382d8a14d5197daeb9d832a2f9f98fd34d13316b1e9bf5e137fed44bdee700c3df4e</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">
     </div>
 
     
@@ -311,7 +305,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BA%E6%B2%99%E7%AE%B1"><span class="nav-number">1.</span> <span class="nav-text">何为沙箱</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%95%E4%B8%BAorw"><span class="nav-number">2.</span> <span class="nav-text">何为orw</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD"><span class="nav-number">3.</span> <span class="nav-text">如何判断</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%BB%95%E8%BF%87"><span class="nav-number">4.</span> <span class="nav-text">如何绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#shellcode%E7%BB%95%E8%BF%87"><span class="nav-number">4.1.</span> <span class="nav-text">shellcode绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">4.1.1.</span> <span class="nav-text">原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ROP%E7%BB%95%E8%BF%87"><span class="nav-number">4.2.</span> <span class="nav-text">ROP绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86-1"><span class="nav-number">4.2.1.</span> <span class="nav-text">原理</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -327,7 +320,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-count">27</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
