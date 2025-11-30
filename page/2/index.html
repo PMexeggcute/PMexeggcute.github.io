@@ -154,6 +154,198 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/20/House-Of-Force/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/05/20/House-Of-Force/" class="post-title-link" itemprop="url">House Of Force</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-05-20 19:46:41" itemprop="dateCreated datePublished" datetime="2025-05-20T19:46:41+08:00">2025-05-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-26 22:29:50" itemprop="dateModified" datetime="2025-05-26T22:29:50+08:00">2025-05-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="适用范围"><a href="#适用范围" class="headerlink" title="适用范围"></a>适用范围</h1><p>2.23~2.29</p>
+<p>2.29的libc中增加了top chunk的size域合法性检验</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 申请的大小如果超过系统内存，报错</span></span><br><span class="line"><span class="keyword">if</span> (__glibc_unlikely(size &gt; av-&gt;system_mem))</span><br><span class="line">	malloc_printerr(<span class="string">&quot;malloc(): corrupted top size&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>作用:得到任意地址的chunk</p>
+<p>要求:</p>
+<ol>
+<li>控制top chunk的size域</li>
+<li>自由控制分配堆的大小</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/05/20/House-Of-Force/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/15/%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/05/15/%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/" class="post-title-link" itemprop="url">代码恢复</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-05-15 10:16:28" itemprop="dateCreated datePublished" datetime="2025-05-15T10:16:28+08:00">2025-05-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-05-27 19:49:30" itemprop="dateModified" datetime="2025-05-27T19:49:30+08:00">2025-05-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="如何去除"><a href="#如何去除" class="headerlink" title="如何去除"></a>如何去除</h1><p>对于一个程序,我们可以通过strip来去除其符号表,表现如下:</p>
+<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/0.png" alt="0"></p>
+<p>去除前</p>
+<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/5.png" alt="5"></p>
+<p>去除后</p>
+<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/4.png" alt="4"></p>
+<h1 id="如何恢复"><a href="#如何恢复" class="headerlink" title="如何恢复"></a>如何恢复</h1><h2 id="IDA-flair"><a href="#IDA-flair" class="headerlink" title="IDA flair"></a>IDA flair</h2><p>通过加载相应的签名文件来恢复符号表</p>
+<h3 id="操作方法"><a href="#操作方法" class="headerlink" title="操作方法"></a>操作方法</h3><p>在ida中用快捷键<code>shift+f5</code>进入签名界面,右键<code>apply new signature</code>选择要加载的签名文件即可,通过<code>ctrl+z</code>撤销上一步操作</p>
+<p>ida9.0自带的签名较少可以从<a target="_blank" rel="noopener" href="https://github.com/push0ebp/sig-database">sig-database</a>中获取</p>
+<h2 id="ida-finger插件"><a href="#ida-finger插件" class="headerlink" title="ida finger插件"></a>ida finger插件</h2><p>Finger是阿里云·云安全技术实验室推出的一款二进制函数符号识别引擎，可以识别二进制程序中的库函数与常见的第三方函数，快速定位恶意代码，提高样本分析效率</p>
+<h3 id="操作方法-1"><a href="#操作方法-1" class="headerlink" title="操作方法"></a>操作方法</h3><p>先<code>pip install finger_sdk</code>安装finger_sdk库</p>
+<p>注意安装Finger的python的版本要与IDAPython的版本一致</p>
+<p>然后从<a target="_blank" rel="noopener" href="https://github.com/aliyunav/Finger">finger</a>这个项目中下载<code>finger_plugin.py</code>,由于原项目年久失修,可以根据这个<a target="_blank" rel="noopener" href="https://github.com/aliyunav/Finger/issues/12">issue</a>方法进行patch</p>
+<p>将<code>finger_plugin.py</code>复制到IDA插件目录<code>IDAx.x\plugins</code>中</p>
+<p>重启ida,即可在顶栏看见<code>finger</code>了</p>
+<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/3.png" alt="3"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我现在用的是这两个,另外还有<code>iscan</code>可以自动检测静态二进制程序使用的libc版本,可以自行google下</p>
+<h1 id="恢复效果"><a href="#恢复效果" class="headerlink" title="恢复效果"></a>恢复效果</h1><p>恢复前</p>
+<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/2.png" alt="2"></p>
+<p>恢复后</p>
+<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/1.png" alt="1"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/14/%E5%88%9D%E6%8E%A2vmpwn/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -820,176 +1012,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/27/exit_hook/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/27/exit_hook/" class="post-title-link" itemprop="url">exit_hook</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-27 13:53:12" itemprop="dateCreated datePublished" datetime="2025-03-27T13:53:12+08:00">2025-03-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-09-26 21:12:45" itemprop="dateModified" datetime="2025-09-26T21:12:45+08:00">2025-09-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          Here's something encrypted, password is required to continue reading.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/03/27/exit_hook/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/25/fini_array/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/03/25/fini_array/" class="post-title-link" itemprop="url">fini_array</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-03-25 21:07:50" itemprop="dateCreated datePublished" datetime="2025-03-25T21:07:50+08:00">2025-03-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-09-26 21:12:42" itemprop="dateModified" datetime="2025-09-26T21:12:42+08:00">2025-09-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          Here's something encrypted, password is required to continue reading.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/03/25/fini_array/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1061,14 +1083,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">29</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
