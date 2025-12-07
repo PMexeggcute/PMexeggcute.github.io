@@ -154,6 +154,274 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/03/FreeRTOS(%E4%B8%80)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/12/03/FreeRTOS(%E4%B8%80)/" class="post-title-link" itemprop="url">FreeRTOS学习笔记(一) 任务管理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-12-03 20:07:37" itemprop="dateCreated datePublished" datetime="2025-12-03T20:07:37+08:00">2025-12-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-12-07 22:16:02" itemprop="dateModified" datetime="2025-12-07T22:16:02+08:00">2025-12-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/FreeRTOS/" itemprop="url" rel="index"><span itemprop="name">FreeRTOS</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Six API functions may be used to create tasks: xTaskCreate(), xTaskCreateStatic(),<br>xTaskCreateRestricted(), xTaskCreateRestrictedStatic(), xTaskCreateAffinitySet(), and<br>xTaskCreateStaticAffinitySet()</p>
+<p>static关键字和c语言关键字相同</p>
+<p>restricted” or “unprivileged” mode 决定能否使用系统内存 权限管理下能管</p>
+<p>Affinity 供多核处理器使用的模式 support Symmetric Multi Processing (SMP) allow different tasks to run simultaneously on<br>multiple cores of the same CPU</p>
+<p>Each task requires two blocks of RAM: one to hold its Task Control Block (TCB) and one to store its stack.</p>
+<p>If a task that was created using dynamic memory allocation later deletes itself, the Idle task is responsible for<br>freeing the memory allocated for use</p>
+<p>Note: Only memory allocated to a task by the kernel itself is freed automatically when the task is deleted.<br>Any memory or other resource that was allocated during the implementation of the task must be freed<br>explicitly if it is no longer needed.</p>
+<p>In a multi-tasking application the application writer must take care that a resource is not accessed by more<br>than one task simultaneously, as simultaneous access could corrupt the resource. As an example, consider the<br>following scenario in which the accessed resource is a UART (serial port). Two tasks write strings to the UART;<br>Task 1 writes “abcdefghijklmnop”, and Task 2 writes “123456789”:</p>
+<ol>
+<li>Task 1 is in the Running state and starts to write its string. It writes “abcdefg” to the UART, but leaves the<br> Running state before writing any further characters.</li>
+<li>Task 2 enters the Running state and writes “123456789” to the UART, before leaving the Running state.</li>
+<li>Task 1 re-enters the Running state and writes the remaining characters of its string to the UART.<br> In that scenario, what is actually written to the UART is “abcdefg123456789hijklmnop”. The string written by<br> Task 1 has not been written to the UART in an unbroken sequence as intended, but instead it has been<br> corrupted, because the string written to the UART by Task 2 appears within it.<br> Using the cooperative scheduler normally makes it easier to avoid problems caused by simultaneous access<br> than when using the preemptive scheduler</li>
+</ol>
+<p>处理连续发送情况, 但一般有更好的进程间通信方式</p>
+<h2 id="什么是任务"><a href="#什么是任务" class="headerlink" title="什么是任务"></a>什么是任务</h2><p>在 FreeRTOS 中，<strong>任务（Task）是内核调度的基本执行单位</strong>。<br> 它本质上是一个独立运行的函数，并且拥有自己的运行环境。</p>
+<p>FreeRTOS 为每个任务分配两块独立的内存：</p>
+<ul>
+<li><strong>TCB（Task Control Block）</strong>：保存任务的元信息，例如优先级、状态、上下文指针等。</li>
+<li><strong>任务栈（Stack）</strong>：保存此任务的局部变量、函数调用现场和寄存器上下文。</li>
+</ul>
+<p>任务之间的栈空间相互独立，因此每个任务可以像“单独运行”的程序一样执行自己的逻辑。</p>
+<p>虽然单核 MCU 在任意时刻只能执行一条指令，但 FreeRTOS 通过<strong>优先级调度</strong>和<strong>快速的上下文切换</strong>让多个任务“轮流运行”，从而表现出类似多线程的效果。</p>
+<blockquote>
+<p><strong>因此，任务可以理解为：FreeRTOS 中由调度器管理的独立执行单元，是整个系统中最小的可调度对象。</strong></p>
+</blockquote>
+<p>一个最简单的任务长这样</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">StartDefaultTask</span><span class="params">(<span class="type">void</span> *argument)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* Infinite loop */</span></span><br><span class="line">  <span class="keyword">for</span>(;;)</span><br><span class="line">  &#123;</span><br><span class="line">      </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="任务的状态机及其生命周期"><a href="#任务的状态机及其生命周期" class="headerlink" title="任务的状态机及其生命周期"></a>任务的状态机及其生命周期</h2><p>一个任务包含四种状态, 刚创建时的<strong>就绪态(Ready)</strong>, 执行时的<strong>运行态(Runing)</strong>, 阻塞时的<strong>阻塞态(Blocked)</strong>, 暂停时的<strong>挂起态(Suspended)</strong></p>
+<p>当然还有被<strong>delete</strong>后的状态, 这里不列入其中</p>
+<h3 id="如何创建一个任务"><a href="#如何创建一个任务" class="headerlink" title="如何创建一个任务"></a>如何创建一个任务</h3><h4 id="函数参数及返回值"><a href="#函数参数及返回值" class="headerlink" title="函数参数及返回值"></a>函数参数及返回值</h4><p>FreeRTOS提供了6个api函数供我们使用, 分别是:</p>
+<p><code>xTaskCreate(), xTaskCreateStatic(),xTaskCreateRestricted(), xTaskCreateRestrictedStatic(), xTaskCreateAffinitySet(), and xTaskCreateStaticAffinitySet()</code></p>
+<p>其中最基础的是<code>xTaskCreate()</code>, 函数定义如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">BaseType_t <span class="title function_">xTaskCreate</span><span class="params">( TaskFunction_t pvTaskCode,</span></span><br><span class="line"><span class="params"><span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> pcName,</span></span><br><span class="line"><span class="params">configSTACK_DEPTH_TYPE usStackDepth,</span></span><br><span class="line"><span class="params"><span class="type">void</span> * pvParameters,</span></span><br><span class="line"><span class="params">UBaseType_t uxPriority,</span></span><br><span class="line"><span class="params">TaskHandle_t * pxCreatedTask )</span>;</span><br></pre></td></tr></table></figure>
+
+<p>另外提一嘴, FreeRTOS这个项目使用的命名方法可以看作是一种<strong>匈牙利命名法的变体</strong>, 通过在变量名前加’i’, ‘u’ 之类的单词表示变量的类型</p>
+<p>如uxPriority 就是指的unsigned basetype (basetype在不同的架构上位数不同, 如32位架构下是32位, 64位下则是64位)</p>
+<p>话说回来, 介绍一下其中的参数及返回值</p>
+<p><strong>参数:</strong></p>
+<ul>
+<li>pvTaskCode: 该参数为指向任务的函数的指针</li>
+<li>pcName: 用于调试时显示的任务名称, 可置NULL, <code>configMAX_TASK_NAME_LEN</code>记录了其最大长度</li>
+<li>usStackDepth: 用于指定分配给任务使用的堆栈大小, 该值指定的是堆栈可容纳的字节数, 即 如果该参数为128, 则会分配128 * 4 个字节的堆栈空间. <code>configSTACK_DEPTH_TYPE</code>规定了用于保存堆栈大小的数据类型, 默认为<code>uint16_t</code>, 意味着如果堆栈深度乘以堆栈宽度大于65535时会发生溢出</li>
+<li>pvParameters: 用于给任务的参数传值</li>
+<li>uxPriority: 该任务的优先级, 范围为0到<code>configMAX_PRIORITIES - 1</code></li>
+<li>pxCreatedTask: 用于储存该任务的句柄, 可置NULL</li>
+</ul>
+<p><strong>返回值:</strong></p>
+<ul>
+<li>pdPASS: 标志着任务被成功创建</li>
+<li>pdFAIL: 表明没有足够的堆内存创建任务</li>
+</ul>
+<h4 id="不同的任务创建函数"><a href="#不同的任务创建函数" class="headerlink" title="不同的任务创建函数"></a>不同的任务创建函数</h4><p>从另外五个函数中可以提取出这几个关键词, <strong>static</strong>, <strong>Restricted</strong>, <strong>AffinitySet</strong></p>
+<p>其中:</p>
+<ul>
+<li>static表示使用静态的内存, 和c语言中static一个作用, 不多赘述</li>
+<li>restricted表示创建的任务的权限受到限制, 无法访问系统内存</li>
+<li>affinity表示可用于多核处理器的任务, 支持Symmetric Multi Processing(SMP)</li>
+</ul>
+<h4 id="创建任务的不同姿势"><a href="#创建任务的不同姿势" class="headerlink" title="创建任务的不同姿势"></a>创建任务的不同姿势</h4><p>简单的创建几个任务</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * Variables declared here may no longer exist after starting the FreeRTOS</span></span><br><span class="line"><span class="comment">    * scheduler. Do not attempt to access variables declared on the stack used</span></span><br><span class="line"><span class="comment">    * by main() from tasks.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * Create one of the two tasks. Note that a real application should check</span></span><br><span class="line"><span class="comment">    * the return value of the xTaskCreate() call to ensure the task was</span></span><br><span class="line"><span class="comment">    * created successfully.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    xTaskCreate( vTask1, <span class="comment">/* Pointer to the function that implements the task.*/</span></span><br><span class="line">    <span class="string">&quot;Task 1&quot;</span>,<span class="comment">/* Text name for the task. */</span></span><br><span class="line">    <span class="number">1000</span>, <span class="comment">/* Stack depth in words. */</span></span><br><span class="line">    <span class="literal">NULL</span>, <span class="comment">/* This example does not use the task parameter. */</span></span><br><span class="line">    <span class="number">1</span>, <span class="comment">/* This task will run at priority 1. */</span></span><br><span class="line">    <span class="literal">NULL</span> ); <span class="comment">/* This example does not use the task handle. */</span></span><br><span class="line">    <span class="comment">/* Create the other task in exactly the same way and at the same priority.*/</span></span><br><span class="line">    xTaskCreate( vTask2, <span class="string">&quot;Task 2&quot;</span>, <span class="number">1000</span>, <span class="literal">NULL</span>, <span class="number">1</span>, <span class="literal">NULL</span> );</span><br><span class="line">    <span class="comment">/* Start the scheduler so the tasks start executing. */</span></span><br><span class="line">    vTaskStartScheduler();</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * If all is well main() will not reach here because the scheduler will now</span></span><br><span class="line"><span class="comment">    * be running the created tasks. If main() does reach here then there was</span></span><br><span class="line"><span class="comment">    * not enough heap memory to create either the idle or timer tasks</span></span><br><span class="line"><span class="comment">    * (described later in this book). Chapter 3 provides more information on</span></span><br><span class="line"><span class="comment">    * heap memory management.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">for</span>( ;; );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个任务不止能在<code>main</code>函数里创建, 还可以在任务之中进行任务的创建</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTask1</span><span class="params">( <span class="type">void</span> * pvParameters )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *pcTaskName = <span class="string">&quot;Task 1 is running\r\n&quot;</span>;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">long</span> ul; <span class="comment">/* volatile to ensure ul is not optimized away. */</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * If this task code is executing then the scheduler must already have</span></span><br><span class="line"><span class="comment">    * been started. Create the other task before entering the infinite loop.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    xTaskCreate( vTask2, <span class="string">&quot;Task 2&quot;</span>, <span class="number">1000</span>, <span class="literal">NULL</span>, <span class="number">1</span>, <span class="literal">NULL</span> );</span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Print out the name of this task. */</span></span><br><span class="line">        vPrintLine( pcTaskName );</span><br><span class="line">        <span class="comment">/* Delay for a period. */</span></span><br><span class="line">        <span class="keyword">for</span>( ul = <span class="number">0</span>; ul &lt; mainDELAY_LOOP_COUNT; ul++ )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/*</span></span><br><span class="line"><span class="comment">            * This loop is just a very crude delay implementation. There is</span></span><br><span class="line"><span class="comment">            * nothing to do in here. Later examples will replace this crude</span></span><br><span class="line"><span class="comment">            * loop with a proper delay/sleep function.</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过任务模板进行实例的创建</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskFunction</span><span class="params">( <span class="type">void</span> * pvParameters )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> *pcTaskName;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">long</span> ul; <span class="comment">/* volatile to ensure ul is not optimized away. */</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * The string to print out is passed in via the parameter. Cast this to a</span></span><br><span class="line"><span class="comment">    * character pointer.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    pcTaskName = ( <span class="type">char</span> * ) pvParameters;</span><br><span class="line">    <span class="comment">/* As per most tasks, this task is implemented in an infinite loop. */</span></span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Print out the name of this task. */</span></span><br><span class="line">        vPrintLine( pcTaskName );</span><br><span class="line">        <span class="comment">/* Delay for a period. */</span></span><br><span class="line">        <span class="keyword">for</span>( ul = <span class="number">0</span>; ul &lt; mainDELAY_LOOP_COUNT; ul++ )</span><br><span class="line">        &#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * This loop is just a very crude delay implementation. There is</span></span><br><span class="line"><span class="comment">        * nothing to do in here. Later exercises will replace this crude</span></span><br><span class="line"><span class="comment">        * loop with a proper delay/sleep function.</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Define the strings that will be passed in as the task parameters. These are</span></span><br><span class="line"><span class="comment">* defined const and not on the stack used by main() to ensure they remain</span></span><br><span class="line"><span class="comment">* valid when the tasks are executing.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">char</span> * pcTextForTask1 = <span class="string">&quot;Task 1 is running&quot;</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">char</span> * pcTextForTask2 = <span class="string">&quot;Task 2 is running&quot;</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * Variables declared here may no longer exist after starting the FreeRTOS</span></span><br><span class="line"><span class="comment">    * scheduler. Do not attempt to access variables declared on the stack used</span></span><br><span class="line"><span class="comment">    * by main() from tasks.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="comment">/* Create one of the two tasks. */</span></span><br><span class="line">    xTaskCreate( vTaskFunction, <span class="comment">/* Pointer to the function that implements the task. */</span></span><br><span class="line">    <span class="string">&quot;Task 1&quot;</span>, <span class="comment">/* Text name for the task. This is to facilitate debugging only. */</span></span><br><span class="line">    <span class="number">1000</span>, <span class="comment">/* Stack depth - small  microcontrollers will use much less stack than this.*/</span></span><br><span class="line">    ( <span class="type">void</span> * ) pcTextForTask1, <span class="comment">/* Pass the text to be printed into the task using the task parameter.*/</span></span><br><span class="line">    <span class="number">1</span>, <span class="comment">/* This task will run at priority 1.*/</span></span><br><span class="line">    <span class="literal">NULL</span> ); <span class="comment">/* The task handle is not used in this example. */</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * Create the other task in exactly the same way. Note this time that</span></span><br><span class="line"><span class="comment">    * multiple tasks are being created from the SAME task implementation</span></span><br><span class="line"><span class="comment">    * (vTaskFunction). Only the value passed in the parameter is different.</span></span><br><span class="line"><span class="comment">    * Two instances of the same task definition are being created.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    xTaskCreate( vTaskFunction,</span><br><span class="line">    <span class="string">&quot;Task 2&quot;</span>,</span><br><span class="line">    <span class="number">1000</span>,</span><br><span class="line">    ( <span class="type">void</span> * ) pcTextForTask2,</span><br><span class="line">    <span class="number">1</span>,</span><br><span class="line">    <span class="literal">NULL</span> );</span><br><span class="line">    <span class="comment">/* Start the scheduler so the tasks start executing. */</span></span><br><span class="line">    vTaskStartScheduler();</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * If all is well main() will not reach here because the scheduler will</span></span><br><span class="line"><span class="comment">    * now be running the created tasks. If main() does reach here then there</span></span><br><span class="line"><span class="comment">    * was not enough heap memory to create either the idle or timer tasks</span></span><br><span class="line"><span class="comment">    * (described later in this book). Chapter 3 provides more information on</span></span><br><span class="line"><span class="comment">    * heap memory management.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="四种状态"><a href="#四种状态" class="headerlink" title="四种状态"></a>四种状态</h3><h4 id="就绪态和运行态"><a href="#就绪态和运行态" class="headerlink" title="就绪态和运行态"></a>就绪态和运行态</h4><p>那么创建完一个任务之后, 其默认会处于<strong>就绪态</strong></p>
+<p>那么有了<strong>就绪态</strong>, 我们创建一个任务肯定想要让他执行, 于是有了<strong>运行态</strong></p>
+<p>运行完毕的任务回到就绪态, 然后从就绪态中选一个任务执行, 那么最简单的一个模型诞生了</p>
+<p><img src="/../images/FreeRTOS/0.png" alt="0"></p>
+<p>这里提一嘴优先级, 顾名思义, 优先级决定了哪个任务能够先执行</p>
+<p>上文还说到, freertos通过不断地上下文切换达到”伪”多线程的目的</p>
+<p>那么在每次上下文切换的时候都会根据优先级决定谁会被选中为下一个运行的任务</p>
+<p>试想以下场景: 我们现在有两个优先级不同的任务, 请问这两个任务会如何执行?</p>
+<p>答案显而易见, 低优先级的任务会被高优先级的任务<strong>饿死</strong></p>
+<p>那么我们两个状态的模型就不够用了</p>
+<p>于是诞生了<strong>阻塞态</strong>和<strong>挂起态</strong></p>
+<h4 id="阻塞态和挂起态"><a href="#阻塞态和挂起态" class="headerlink" title="阻塞态和挂起态"></a>阻塞态和挂起态</h4><p>当搞优先级的任务进入阻塞态后, 那么就绪态就只剩下低优先级的任务可以执行了</p>
+<p>这样, 低优先级的任务就饿不死了</p>
+<p><strong>阻塞态</strong>分为两种类型:</p>
+<p><strong>时间(Temporal)事件</strong>和<strong>同步(Synchronization)事件</strong></p>
+<p><strong>同步事件</strong>可由FreeRTOS 队列、二进制信号量、计数信号量、互斥体、递归互斥体、事件组、流缓冲区、消息缓冲区和直接任务通知产生</p>
+<p>任务可以阻塞同步事件并设置超时，从而有效地同时阻塞两种类型的事件。例如，任务可以选择等待最多 10 毫秒以便数据到达队列。如果 10 毫秒内有数据到达或 10 毫秒后没有数据到达，任务将离开阻塞状态</p>
+<p><strong>时间事件</strong>会在指定时间到达或过去一定时间后发生</p>
+<p>对应<code>void vTaskDelay( TickType_t xTicksToDelay )</code>和</p>
+<p><code>void vTaskDelayUntil( TickType_t * pxPreviousWakeTime, TickType_t xTimeIncrement )</code>函数</p>
+<p>通过这两个函数即可设定一个任务执行的频率</p>
+<p>其中<code>xTicksToDelay </code>参数指的是所需等待的tick数, 通过<code>pdMS_TO_TICKS()</code>函数将毫秒数转换为tick数</p>
+<p>tick数和mcu的频率挂钩, 所以通过函数将毫秒数进行转换可以避免因频率更改带来的错误</p>
+<p><code>pxPreviousWakeTime</code>参数指的是当前的tick数, <code>xTimeIncrement </code>指定多少tick产生一次事件</p>
+<p><code>pxPreviousWakeTime</code>仅需指定一次, 之后会在函数内自增</p>
+<p>两个函数不同点在于, 前者是相对的, 而后者是绝对的</p>
+<p>使用示例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskFunction</span><span class="params">( <span class="type">void</span> * pvParameters )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> * pcTaskName;</span><br><span class="line">    <span class="type">const</span> TickType_t xDelay250ms = pdMS_TO_TICKS( <span class="number">250</span> );</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * The string to print out is passed in via the parameter. Cast this to a</span></span><br><span class="line"><span class="comment">    * character pointer.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    pcTaskName = ( <span class="type">char</span> * ) pvParameters;</span><br><span class="line">    <span class="comment">/* As per most tasks, this task is implemented in an infinite loop. */</span></span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Print out the name of this task. */</span></span><br><span class="line">        vPrintLine( pcTaskName );</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * Delay for a period. This time a call to vTaskDelay() is used which</span></span><br><span class="line"><span class="comment">        * places the task into the Blocked state until the delay period has</span></span><br><span class="line"><span class="comment">        * expired. The parameter takes a time specified in &#x27;ticks&#x27;, and the</span></span><br><span class="line"><span class="comment">        * pdMS_TO_TICKS() macro is used (where the xDelay250ms constant is</span></span><br><span class="line"><span class="comment">        * declared) to convert 250 milliseconds into an equivalent time in</span></span><br><span class="line"><span class="comment">        * ticks.</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        vTaskDelay( xDelay250ms );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">vTaskFunction</span><span class="params">( <span class="type">void</span> * pvParameters )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> * pcTaskName;</span><br><span class="line">    TickType_t xLastWakeTime;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * The string to print out is passed in via the parameter. Cast this to a</span></span><br><span class="line"><span class="comment">    * character pointer.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    pcTaskName = ( <span class="type">char</span> * ) pvParameters;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * The xLastWakeTime variable needs to be initialized with the current tick</span></span><br><span class="line"><span class="comment">    * count. Note that this is the only time the variable is written to</span></span><br><span class="line"><span class="comment">    * explicitly. After this xLastWakeTime is automatically updated within</span></span><br><span class="line"><span class="comment">    * vTaskDelayUntil().</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    xLastWakeTime = xTaskGetTickCount();</span><br><span class="line">    <span class="comment">/* As per most tasks, this task is implemented in an infinite loop. */</span></span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Print out the name of this task. */</span></span><br><span class="line">        vPrintLine( pcTaskName );</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * This task should execute every 250 milliseconds exactly. As per</span></span><br><span class="line"><span class="comment">        * the vTaskDelay() function, time is measured in ticks, and the</span></span><br><span class="line"><span class="comment">        * pdMS_TO_TICKS() macro is used to convert milliseconds into ticks.</span></span><br><span class="line"><span class="comment">        * xLastWakeTime is automatically updated within vTaskDelayUntil(), so</span></span><br><span class="line"><span class="comment">        * is not explicitly updated by the task.</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        vTaskDelayUntil( &amp;xLastWakeTime, pdMS_TO_TICKS( <span class="number">250</span> ) );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>挂起态</strong></p>
+<p>处于挂起状态的任务不可用于调度程序。进入挂起状态的唯一方法是通过调用 <code>vTaskSuspend() </code>API 函数，而退出状态的唯一方法是调用 <code>vTaskResume() </code>或 <code>xTaskResumeFromISR()</code> API 函数。大多数应用程序不使用挂起状态</p>
+<p><img src="/../images/FreeRTOS/1.png" alt="1"></p>
+<p>至此, 总结出四种状态的状态转换图</p>
+<h3 id="删除-Delete-一个任务"><a href="#删除-Delete-一个任务" class="headerlink" title="删除(Delete)一个任务"></a>删除(Delete)一个任务</h3><p><code>vTaskDelete()</code> API 函数删除任务。仅当 FreeRTOSConfig.h 中的 <code>INCLUDE_vTaskDelete</code> 设置为 1 时，<code>vTaskDelete()</code> API 函数才可用</p>
+<p><code>void vTaskDelete( TaskHandle_t xTaskToDelete )</code>通过传递任务句柄的指针完成删除</p>
+<p>当任务被删除时，只有内核本身分配给任务的内存才会被自动释放。如果不再需要，在任务执行期间分配的任何内存或其他资源都必须显式释放</p>
+<p>当任务被删除时, 内核本身分配给任务的资源由<strong>空闲任务</strong>来进行释放</p>
+<p>这里暂且把空闲任务看作为一个<strong>最低优先级的</strong>, <strong>只在就绪态只存在空闲任务时才执行</strong>的一个任务</p>
+<p>因为资源需要通过空闲任务来进行释放, 所以需要<strong>保证空闲任务不被饿死</strong>, 之后会说明</p>
+<h2 id="调度算法"><a href="#调度算法" class="headerlink" title="调度算法"></a>调度算法</h2><p>调度器….</p>
+<h3 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h3><h3 id="时间片"><a href="#时间片" class="headerlink" title="时间片"></a>时间片</h3><h3 id="抢占式与协作式"><a href="#抢占式与协作式" class="headerlink" title="抢占式与协作式"></a>抢占式与协作式</h3><h3 id="空闲任务"><a href="#空闲任务" class="headerlink" title="空闲任务"></a>空闲任务</h3><h2 id="上下文切换原理"><a href="#上下文切换原理" class="headerlink" title="上下文切换原理"></a>上下文切换原理</h2><h2 id="TLS与可重入"><a href="#TLS与可重入" class="headerlink" title="TLS与可重入"></a>TLS与可重入</h2>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/28/HAL%E5%BA%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/11/28/HAL%E5%BA%93/" class="post-title-link" itemprop="url">HAL库学习随笔</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-11-28 20:58:41" itemprop="dateCreated datePublished" datetime="2025-11-28T20:58:41+08:00">2025-11-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-12-01 15:09:16" itemprop="dateModified" datetime="2025-12-01T15:09:16+08:00">2025-12-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          Here's something encrypted, password is required to continue reading.
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2025/11/28/HAL%E5%BA%93/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/27/CAN%E6%80%BB%E7%BA%BF/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -738,174 +1006,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/21/House-Of-Lorce/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/05/21/House-Of-Lorce/" class="post-title-link" itemprop="url">House Of Lorce</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-05-21 19:02:48" itemprop="dateCreated datePublished" datetime="2025-05-21T19:02:48+08:00">2025-05-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-26 22:29:42" itemprop="dateModified" datetime="2025-05-26T22:29:42+08:00">2025-05-26</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>针对small bin的堆利用</p>
-<p>作用:分配任意地址的<code>chunk</code></p>
-<p>要求:堆溢出修改<code>chunk</code>的bk域</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/05/21/House-Of-Lorce/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/20/House-Of-Force/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/05/20/House-Of-Force/" class="post-title-link" itemprop="url">House Of Force</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-05-20 19:46:41" itemprop="dateCreated datePublished" datetime="2025-05-20T19:46:41+08:00">2025-05-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-26 22:29:50" itemprop="dateModified" datetime="2025-05-26T22:29:50+08:00">2025-05-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="适用范围"><a href="#适用范围" class="headerlink" title="适用范围"></a>适用范围</h1><p>2.23~2.29</p>
-<p>2.29的libc中增加了top chunk的size域合法性检验</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 申请的大小如果超过系统内存，报错</span></span><br><span class="line"><span class="keyword">if</span> (__glibc_unlikely(size &gt; av-&gt;system_mem))</span><br><span class="line">	malloc_printerr(<span class="string">&quot;malloc(): corrupted top size&quot;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>作用:得到任意地址的chunk</p>
-<p>要求:</p>
-<ol>
-<li>控制top chunk的size域</li>
-<li>自由控制分配堆的大小</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/05/20/House-Of-Force/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -977,20 +1077,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-count">30</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
