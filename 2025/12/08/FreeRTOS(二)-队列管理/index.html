@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="Here&#39;s something encrypted, password is required to continue reading.">
+  <meta name="description" content="什么是队列用于任务与任务之间, 中断与中断之间, 任务与中断中间通信的一种方式 队列本身也是一种FIFO的数据结构 使用起来也是如此, 通过xQueueSend()api函数将数据发送到队列中 可以选择是以拷贝的形式还是以指针的形式存放于队列中 将数据发送进队列的时候可以选择是发送到队首还是队尾 队列的读取总是从队首读取数据 为了处理多任务间通信的问题 可以用结构体来储存数据 结构体中标明该信息的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FreeRTOS学习笔记(二) 队列管理">
 <meta property="og:url" content="http://example.com/2025/12/08/FreeRTOS(%E4%BA%8C)-%E9%98%9F%E5%88%97%E7%AE%A1%E7%90%86/index.html">
 <meta property="og:site_name" content="Sn0r1ax">
-<meta property="og:description" content="Here&#39;s something encrypted, password is required to continue reading.">
+<meta property="og:description" content="什么是队列用于任务与任务之间, 中断与中断之间, 任务与中断中间通信的一种方式 队列本身也是一种FIFO的数据结构 使用起来也是如此, 通过xQueueSend()api函数将数据发送到队列中 可以选择是以拷贝的形式还是以指针的形式存放于队列中 将数据发送进队列的时候可以选择是发送到队首还是队尾 队列的读取总是从队首读取数据 为了处理多任务间通信的问题 可以用结构体来储存数据 结构体中标明该信息的">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-12-08T13:28:02.543Z">
-<meta property="article:modified_time" content="2025-12-12T05:41:53.412Z">
+<meta property="article:modified_time" content="2025-12-16T14:44:47.394Z">
 <meta property="article:author" content="Sn0r1ax">
 <meta property="article:tag" content="学习笔记">
 <meta name="twitter:card" content="summary">
@@ -188,7 +188,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-12-12 13:41:53" itemprop="dateModified" datetime="2025-12-12T13:41:53+08:00">2025-12-12</time>
+                <time title="修改时间：2025-12-16 22:44:47" itemprop="dateModified" datetime="2025-12-16T22:44:47+08:00">2025-12-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -215,18 +215,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="aaf019e1ba6b3f3d580df0761e249d9ec942ac7e3daf87829a48deeb9126a655">0657a937b9257134273ec414d3e19ccd01682d8cdf67c1316a4c0981f5d3eabfa66cc9c64e810d9d5ae7f26a79facf043197aa73ad3680c85c18519f14b10ea84cfa5bbf1eb36fa947e83f36cfe6d3b3f21d339cbf6efa41444d136690225b8a15e9f6b5af736c1d9d5cd42c9f646aae17d3bc828e7bda334e869c25d1fc859b587a99959de987d4afacae6dcbed8f58942c789e3cd240712f3f2afe4f293b3bb0007220e63198c4d4117070755502f5f911fa97be51da1ab143a5269d7e710724bb4f1f8390543c9ae4acc03df09a32638360f70aff1ef23aa54b1206972192df645601197c9d3ff6b188c4b3ad9e2bc9bd6dac3777ebab0ca3ac9c90fa3e287c8dc292300222b2a45982f53792f3ea1d53cdd3729e7989d940de266cb1dc73fd1d14c1eb48edd1aca16bb247dc5e609292510f6f54e8bd460736977ba9cbd7976dd7ed04ff2a206cd4f3a1aaf5a01f2aa841ac2e5711eba3945b6f50b878cda17ff745fdff805d0603f9effd07f45a7ad2a62df4d8287f9576f9a03b5376987a074ba062f29ae8ad25b1fa0f15703a1f0f3299a47f4b192fea3374154eb2e0a5c2ff500d646207e51d73a6151f7405fbfc63f3cae2e9c2af39e7a14505d3048cfed4283ba622d61835d4ee3e64c55017778d357956ed580f2be36cb64a5105a90ebec80c9b6c91c049812015d3411ee0b90f08a6ff15b031ed5ebc614cab89bdc0c14c43d95deae3b04d52ebb229936f15016e0ab7c114d33dbc6242bca9c3dbce8d18e7ce232c8ae71d6d080ecbe8606b0e24202cfe0556cf1562333b12bb1be8cc5e97e74422cc2a4e7f44c4b83f0a7adac34063cc525be7de8462094aac3bd7b0ace215829d3e340ced8624c69ec37e0dabf2f28b4eb1bf6b01fd5a4d8019db2802656508558b23c07146ce0df121a3b8e83b2f69476e5345c14a805987367d6d251b685ce3c5ee44568396e29fcd8fcbcc0deacd5f094c46afe94536ad921f591d54ca6c97f6bd9690ffaf2087ab77e56c447caf84379c66bf237590db3fed6d75caa387cdcba95637db48a62ec15e2fde2d1a8120ce59f650a32a5c25f4c50ed62cc01e97e106b298ee86d2c7caaccf47b7bbdadd17038b58736be453fe86e53baf56f9425a6b1160beffa3ebdadc7606c7911cb3957be908f5de513942b2b1c54d13a58514cd363f368f8976a13019833977255d237df2269ef1315cb7abba0de30cba9e36c5ab1473e2883d13b7f4a27c68c21f4e58f97bfd99c37291d5efa42bc897deb72bc0fa97a379772cbc063c6996af30c30f032f9e9c989a414913356b92208ed36e32d72aa9ac41c3a74bddaeeb4f9d95c2c0e51f2e2ae42a0dd4284437ee2e5c735c6f6d8b67f0193236e958d1f522c85093bb3925ab1c9b77a927671d37885116ca854c0b49f256a331b500d470728c8c62e1287b844093f963080cd7f9ed12d1e6c8befe09cbb67fdbb3daaa7368ed27a4175424a76dc947b367d05044c597defe9263b2176f0b480b243cb9983c10c94b80b8b23877275bc6927ab55812854b54ce7eeb999584677c6719dd0684523c3fb9771f78f2f2ccbd006cbfbabf80f3946c2544fd1ac781a49fb1e5c5a0e066b9b216b5b866e28d645323423f2203687cd5afd76022d558aa789f8dc415bc36f088a542f76ede09fe2e07037c69a4c98fd22b5d13d6dda314acbefd82dc70afe8845a72f2043d8511d2e4b70e3a32da848c67a6781b6009aa671093e336abd2d5bdfd78b7da1234151e1f202b91215f274b9d6670bd81c743d0ba9326b39918285958c7228b05a423c02b1a41e3a8e5c6033d96a68054f6972b2217a23f995546ff17fc0b973491f74985a3022bdc992695bff984ef3eb84505de282296d1441d83f43eac48c6af7c873645c8abe4801593682e1ae372dd6e5620127ab38b49293cccf7823a57c34ff9e35fa62a3f4bb69febbabc0e5ae162e62f855fb9246539d3cf799d2b0a538e15195de7fb3e91dc2e90d1f37541bd9919aaf2626ef15c5ecc3345852a8a7e7da49d693db1cbdd435a241bb1f359d3dd9ce2a37ef70c64920e11d082420d8f502a131d3250bdadd71d3e9b7f6c5a42704934ed85b658c5ea8951ee519dcd9da0bf06453acb8f3b44ce079ab74e6683ee24e910857539fb0f20b26f016bf78f0e837aa34572b8cc193a0cf49f8bcf4b0d089a5f19782de5e6ba89e8042a8c9c8094fa226208ebe28d2fcd7092f831ffe9778168eebb226c0ded495777784c0ece7b0ec83c91c3ea53cb8bff881b6fa8b5a50f22c0f0bc8268bc57839c1bc5aee2bf4c2b378831a31eebee8eb25ec84306f47e4358045a24b626ba8ee2eb374c739398cfdca902be7c39c755551dacf1fc682fae1617d5256a68c7c0314cbbbcc897a7d2af4b4a4dd65bba3436da16d16d02867f451aa50a966b59e1032587dc0d974ff3bfc76c437a545ebed54ec37a811c5dddbcffb64d72e23c38d0a630b4a4427ac745af3f12151b17bd76f2a4bb0cd555c5df79b4d3c86e6bf1efe21a4def7cc3c6c668563741a5258a92e4cd54c600a4be9f183e09e7153f2a69c1440aa1758acdad53b186663ba656e5b4b9aa923f9c080c55248ecec52814b871e51186a6908780ad7a3bc5aba0bc136cab6a2bd5ccfe4ec3bc31200e5e7448627ce334c801daacd456420d17278a950411ed2bf8cdec5883e1e3037c72ffa7f846edcf252902c6604708e7160b46694825640a97e034a4c0e6d670b8485e883a3c21ff9f242611c3affbc10fae437fd2660881758513e41bcf82804fab68f141c274e6ef17811ccb654c9af853698caf3cbba240f6b8eb858e11da0ff75e5b9b09fd6c623e56bd419fb755074e144e358cd652ede7d306cb0693bf855d90f08ceed1056852c35808278fe160af50200a85e1fc88e813d9abd68d6adf0d802943a8ea23f716df5e242271cd7434f839697a4c6be3c68e4002ecccea3e2d1cd552818239fa7ff5d18b869d5f042c10386005d5cd19d6b772477b391750595967e304151ddfe411d312416b07962181cd43823da01c4f05c63adc3ecb16810bb5b47ea7b7dd3e2f3a70298cc15e6e701be10a806e1d50c3a7acfa9ab123331d53eb47b234681d59f6d9aebe7562e7c3ae2131b6e0cd704247045242ca324478f23b66e97e62c57beae91d2156156b56682a55bf2b8ad48083eeaa84555acece3c0d872900f7483b2d03eac2423d3730e9dd572e8187b12e7872e9d5d03c2cb25b9a786731cd08d66f5e4b3201fc3439d4b1e6bbdd0ed10cad65d8f3aaf601cde4b6a78f4008fed0ab12e6fb1f98a58d4cec5545099f6dfa50dbe0e30957bdcbb694e33a43a34f16935de277a423e38d6f9fe6979a72c064ef7d6684250d329473e837bb7a2c6d8c1c967db0f2776e64f35d85727b7e110f6a54f7736c93a8f1ee4d648f019285ecdd09ce4309148e00c4d48088b2a88a28574d1876a48ae1e156b9bac3238c89f9eade27a2742862c6736a63d1033d724bd396ddd0421ba01daab98337beeb042250e19f5a5fcfa650cbb51b2351b5d8e1696d92a2493a130f5c2c6e8b6f515a71ec4f158d95c99fdf023a887f9b926713688b61a202486c538e0ae0a3455e5558c61c89b582d1c6753d39301f52e9cf50956bad828a794b75e8dd49d51c64ceff1cf775d33190d1df01d2a8720e08358ed78750095cbeec1b12cea462ee9b7011614e2b3aca5db97b45312d59d77ef97dc17f956a6533ec4463ef27f4ce3d8e1f4846257b29a6164faba5b4bb9a68b830dfd6547e6403a515d9501babe002189dfbcc820435b87f4e895c8a01c18327f6264b7d62712699974a643ce58f28f3aafe2c0ef437a89c16aea448f1ea404e07573b56ebfc32dacb120d345b75a39e22a6b4319b1c82eb74b53b774f266926e3f12008442735df7a183e7f0d2dce826c520c3e58da7acfa27710e6c0b1840cd2487f6f5971f6b630f11b972f122b5f2a55b1f431512b335d91cfbe617caadabe309a11986e8d2702a97bb3effb6ef44e669c60f35630b9686cb765b1bca406a87e51f842eb81a0bfcb1bf51640d127bf24426636449e3a1475858120e73eccde83e1ce48a26db9adbaaa201b7157446ac27df9465fe349c7b74653724c02b72f7a134fbbaf6aefba3b9f0eadb62fb9c5e213864e84b813902421562040e9a71aefa32503113e032f11f8b1b11e93c675cebc647d8318d6dbf7678404835befcd5caa8ffbcdaeffa065a9007ff6564ab3c6f71132905d75795ca6e5043371985153c8d8b81c151eaabcb5cbf6f148e15fae395269380303198c463139b53d462a0e939ec7b5ce9ab37874473f57da393225734d66ac386657a2e79b0f4a1424d0de1b021085b1f976733763f578e8d471d83f3c05a2f4e605ff23691f0c6b178e682fb57f4443331384ef90739d5184cf2e9e338fed8bd1bae1756b75445d042fb3f36d2f7ece6561a99f12e2a33b119afe8cb3a0bc2f3a0f8303e3028346adb7f59ebcffa609e0d2da7443247c87a1644f9b3dfed1cb2a44d3529ae3a20765e9b45929b9caa8ba86e7f47072aea7624d8b134949eb03c8822fed82d5c63bdd938e525ba9730dd85b204d8892ac1da058572f2b94935b5e733db5c1ab4cfc31958c9d8f8853c203ab42f134e8792c40c79838e4090a2c95bbec08131cadc0bb63183ada24643285beae418a23327a4376489f9a3730cf9ba6f81bfef649e9fa96868268f685e0d6a5db34a1b8b99e4514ea5b7fda0e1a1f78b8fee9ce771d402b11470ae0edc6327a18d708802ab53b3b4b39fe21c61f2eeb9d6e3b9bfc3bbe74c81d2488a864afc0397d6728d76bba0a32a0cc176818b7c397013204fe897f5dc88a358bf4b97f5eba159d0da9115aac350d58ddc03db69d4bdcfa007d222e459721929441da207106a5d5f8320781596e96fe7a96d24c623e915e61d5ec545bda364f0a23abd4fbb468607f4345b871cd09d83bd84722c9f0876969b3d1376c3d02eb435b47d98baa60144d572fd87722d63def78e856aa23d8991eb027c4537b3139a1456f576a3b15f65a1f6c89b345ab75e7f934f10d759551f581473c246e6f656a4f8177781ad6b9eb13b9d0c038cdb4a189e5d75da3fc8940ed001326ad0cd440ae53bfc7e1cd5039fb58065de82ef52f545dac3cd32ddb7cc5b6e52855be0d7a23b417fd8c010b1ee27cda09ad9cd5e48c32598305b0e581d013e213781a5f2e4002d8d7789060a830f157341799702e885fa7f979915f6937b8e2b927fade96c9d71da0b503ac84316c232f44a9e0d2cb241ac792c1f8c4fd57d39da3b165d83e34072d5769ed586af55ea2c512868502c64d64895b9a464d8c7801c9d9ec454190c3542308c01e1bd8748257c940dc722428b3aaefdf9d906024823f680ba34c419e5c468fd963918802c648763680e93ed4ca14e77af87488bc65153e3352d606c4f50c47bf30052a44b47323e59c610862baf3f1e064fa6bea2829dfe9014c0df71f4d24ad0f4af633ade3d6096edbcba08ae6a88367ace9aba6e21306942f00d2dc0fed19e1196027f47e7356d56c043df4ec9366e578806b5a2302adc7b2d00b656790dc77daa24981f6d6667794e1ecf448b668cc1e48b27e84684eb816d19af7b1b91ece438b0a1305c03351a50c1e03b829502d86ea2a82000d1b09f659079bf5fa91e68c23c871c10a0e24e4c5921411858a4e3634653329191723ec1245a8f21bf1d6d83b5b91954b3b7891f87e06112b108399edc84f513bab2b6de601971d62efc070513d97d9e0b8e7153fe218617591e642a7b314edfa21a9ca51fc97f42c2b8431b1d06cfdf4ab4655e28ae9fd8c3bc6430f3b0425b5158283915d7c867b3946ccd976108cb0bbe675b0f2d1ba18b7f25993181c35e1e8d8b032f3d1d51aad91b260a0de17ed91f238e67497682278898b4504e32f6cd57f2149ee8e499a20794b253ff1f7fe527aae49e822b0876411adf7522bf369aee1a096e5ea7230d10602e1c4f7a15cb854dbf64867a739</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">
+        <h2 id="什么是队列"><a href="#什么是队列" class="headerlink" title="什么是队列"></a>什么是队列</h2><p>用于任务与任务之间, 中断与中断之间, 任务与中断中间通信的一种方式</p>
+<p>队列本身也是一种FIFO的数据结构</p>
+<p>使用起来也是如此, 通过<code>xQueueSend()</code>api函数将数据发送到队列中</p>
+<p>可以选择是以拷贝的形式还是以指针的形式存放于队列中</p>
+<p>将数据发送进队列的时候可以选择是发送到队首还是队尾</p>
+<p>队列的读取总是从队首读取数据</p>
+<p>为了处理多任务间通信的问题</p>
+<p>可以用结构体来储存数据</p>
+<p>结构体中标明该信息的来源及数据本身</p>
+<p>还可以使用队列集(Queue Set)的方式</p>
+<p>不过队列集相较于结构体更不直观且效率更差</p>
+<p>因此官方更推荐在可选的情况下使用结构体的方式</p>
+<p>说回队列集</p>
+<p>队列集就是多个队列(或信号量)的集合</p>
+<p>当处于队列集中的队列收到数据时, 该队列会将其句柄发送到队列集中, 此时队列集中就有数据了</p>
+<p>通过<code>xQueueSelectFromSet()</code>函数传入队列集的句柄, 以此来返回队列集中存在的队列句柄</p>
+<p>在实际使用时可以通过返回的句柄与现有的句柄进行比较</p>
+<p>根据不同任务的数据选择不同的处理函数</p>
+<p>还有一种叫做<strong>Mailbox</strong>的用法</p>
+<p>在这里, Mailbox指的是队列长度为1的队列</p>
+<p>Mailbox的意思是像邮一样只储存一个数据, 发送数据到该队列时直接覆写, 而不是等待被接收方读取并删除 对应api函数为<code>xQueueOverwrite()</code> 该函数只能用于队列长度为1的队列</p>
+<p>接受时也不进行删除, 而是直接获得一份拷贝 相关api函数为<code>xQueuePeek()</code></p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><strong>Mastering-the-FreeRTOS-Real-Time-Kernel.v1.1.0 (Richard Barry -and- The FreeRTOS Team)</strong></p>
+
     </div>
 
     
@@ -310,6 +322,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%9F%E5%88%97"><span class="nav-number">1.</span> <span class="nav-text">什么是队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">2.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
