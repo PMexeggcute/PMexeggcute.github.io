@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="为什么要进行资源管理在freertos中, 高优先级的任务会抢占低优先级的任务, 中断又会抢占高优先级的任务 试想以下这个情景: 任务A正在访问变量X 这时任务B由于更高的优先级, 抢占了任务A, 同时也访问变量X(例如做了一个++操作) 任务B结束, 任务A对变量X做一个*10操作 这时问题就出现了, 往往我们使任务A进入就绪态目标是为了使现在的X变为原来的10倍, 可现在X变为了原来的10倍还">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FreeRTOS学习笔记(五) 资源管理">
+<meta property="og:url" content="http://example.com/2025/12/17/FreeRTOS(%E4%BA%94)-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="Sn0r1ax">
+<meta property="og:description" content="为什么要进行资源管理在freertos中, 高优先级的任务会抢占低优先级的任务, 中断又会抢占高优先级的任务 试想以下这个情景: 任务A正在访问变量X 这时任务B由于更高的优先级, 抢占了任务A, 同时也访问变量X(例如做了一个++操作) 任务B结束, 任务A对变量X做一个*10操作 这时问题就出现了, 往往我们使任务A进入就绪态目标是为了使现在的X变为原来的10倍, 可现在X变为了原来的10倍还">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/FreeRTOS/13.png">
+<meta property="og:image" content="http://example.com/images/FreeRTOS/15.png">
+<meta property="og:image" content="http://example.com/images/FreeRTOS/16.png">
+<meta property="og:image" content="http://example.com/images/FreeRTOS/14.png">
+<meta property="article:published_time" content="2025-12-17T11:05:44.927Z">
+<meta property="article:modified_time" content="2025-12-18T05:57:01.196Z">
+<meta property="article:author" content="Sn0r1ax">
+<meta property="article:tag" content="学习笔记">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/FreeRTOS/13.png">
+
+<link rel="canonical" href="http://example.com/2025/12/17/FreeRTOS(%E4%BA%94)-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>FreeRTOS学习笔记(五) 资源管理 | Sn0r1ax</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Sn0r1ax</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Sleep all day</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/17/FreeRTOS(%E4%BA%94)-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          FreeRTOS学习笔记(五) 资源管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-12-17 19:05:44" itemprop="dateCreated datePublished" datetime="2025-12-17T19:05:44+08:00">2025-12-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-12-18 13:57:01" itemprop="dateModified" datetime="2025-12-18T13:57:01+08:00">2025-12-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/FreeRTOS/" itemprop="url" rel="index"><span itemprop="name">FreeRTOS</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="为什么要进行资源管理"><a href="#为什么要进行资源管理" class="headerlink" title="为什么要进行资源管理"></a>为什么要进行资源管理</h2><p>在freertos中, 高优先级的任务会抢占低优先级的任务, 中断又会抢占高优先级的任务</p>
+<p>试想以下这个情景:</p>
+<p>任务A正在访问变量X</p>
+<p>这时任务B由于更高的优先级, 抢占了任务A, 同时也访问变量X(例如做了一个++操作)</p>
+<p>任务B结束, 任务A对变量X做一个*10操作</p>
+<p>这时问题就出现了, 往往我们使任务A进入就绪态目标是为了使现在的X变为原来的10倍, 可现在X变为了原来的10倍还要多10</p>
+<p>这明显和我们的预期不符</p>
+<p>那么有什么办法可以避免这种情况呢?</p>
+<p>第一种方法是使用<strong>临界区</strong></p>
+<p>通过<code>taskENTER_CRITICAL()</code>和<code>taskEXIT_CRITICAL()</code>划定临界区</p>
+<p>执行里面的代码使任何其他任务和优先级相同或更低的中断都会失效</p>
+<p>临界区所屏蔽的优先级在<code>FreeRTOSConfig.h</code>中<code>configMAX_SYSCALL_INTERRUPT_PRIORITY</code>设置</p>
+<p>该操作是可以嵌套的, 由内核记录嵌套的深度, 深度归0时退出临界区</p>
+<p>用例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vPrintString</span><span class="params">( <span class="type">const</span> <span class="type">char</span> *pcString )</span></span><br><span class="line">&#123;</span><br><span class="line">     <span class="comment">/* Write the string to stdout, using a critical section as a crude method of</span></span><br><span class="line"><span class="comment">     mutual exclusion. */</span></span><br><span class="line">     taskENTER_CRITICAL();</span><br><span class="line">     &#123;</span><br><span class="line">         <span class="built_in">printf</span>( <span class="string">&quot;%s&quot;</span>, pcString );</span><br><span class="line">         fflush( <span class="built_in">stdout</span> );</span><br><span class="line">     &#125;</span><br><span class="line">     taskEXIT_CRITICAL();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">vAnInterruptServiceRoutine</span><span class="params">( <span class="type">void</span> )</span>	<span class="comment">//中断安全版本</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* Declare a variable in which the return value from</span></span><br><span class="line"><span class="comment">    taskENTER_CRITICAL_FROM_ISR() will be saved. */</span></span><br><span class="line">    UBaseType_t uxSavedInterruptStatus;</span><br><span class="line">    <span class="comment">/* This part of the ISR can be interrupted by any higher priority</span></span><br><span class="line"><span class="comment">    interrupt. */</span></span><br><span class="line">    <span class="comment">/* Use taskENTER_CRITICAL_FROM_ISR() to protect a region of this ISR.</span></span><br><span class="line"><span class="comment">    Save the value returned from taskENTER_CRITICAL_FROM_ISR() so it can</span></span><br><span class="line"><span class="comment">    be passed into the matching call to taskEXIT_CRITICAL_FROM_ISR(). */</span></span><br><span class="line">    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();</span><br><span class="line">    <span class="comment">/* This part of the ISR is between the call to</span></span><br><span class="line"><span class="comment">    taskENTER_CRITICAL_FROM_ISR() and taskEXIT_CRITICAL_FROM_ISR(), so can</span></span><br><span class="line"><span class="comment">    only be interrupted by interrupts that have a priority above that set</span></span><br><span class="line"><span class="comment">    by the configMAX_SYSCALL_INTERRUPT_PRIORITY constant. */</span></span><br><span class="line">    <span class="comment">/* Exit the critical section again by calling taskEXIT_CRITICAL_FROM_ISR(),</span></span><br><span class="line"><span class="comment">    passing in the value returned by the matching call to</span></span><br><span class="line"><span class="comment">    taskENTER_CRITICAL_FROM_ISR(). */</span></span><br><span class="line">    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );</span><br><span class="line">    <span class="comment">/* This part of the ISR can be interrupted by any higher priority</span></span><br><span class="line"><span class="comment">    interrupt. */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是缺点也很明显, 临界区里的代码屏蔽了所有优先级相同或更低的中断</p>
+<p>可能导致必要的中断无法执行</p>
+<p>所以要求临界区要尽量的短, 上面这个例子明显不符合这个要求</p>
+<p>第二种方法是通过<strong>暂停调度器</strong></p>
+<p>通过<code> vTaskSuspendAll()</code>和<code>xTaskResumeAll() </code></p>
+<p>执行完<code>vTaskSuspendAll()</code>会暂停调度器的执行, 但是中断不受影响</p>
+<p>调度器暂停了就不会有更高优先级的任务来抢占了</p>
+<p>这个操作是可以嵌套的</p>
+<p>内核会记录嵌套深度, 只有嵌套深度归0时, 才会恢复调度器</p>
+<p>缺点就是终端仍有可能带来干扰, 同时恢复调度器通常是一个较为耗费时间的过程</p>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vPrintString</span><span class="params">( <span class="type">const</span> <span class="type">char</span> *pcString )</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">/* Write the string to stdout, suspending the scheduler as a method of</span></span><br><span class="line"><span class="comment">mutual exclusion. */</span></span><br><span class="line">    vTaskSuspendScheduler();</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>( <span class="string">&quot;%s&quot;</span>, pcString );</span><br><span class="line">        fflush( <span class="built_in">stdout</span> );</span><br><span class="line">    &#125;</span><br><span class="line">        xTaskResumeScheduler();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>第三种方法则是使用互斥量</p>
+<p>通过将<code>FreeRTOSConfig.h</code>中<code>configUSE_MUTEXES</code>设置为1以启用互斥锁</p>
+<p>互斥量可以看作是一种特殊的信号量</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">prvNewPrintString</span><span class="params">( <span class="type">const</span> <span class="type">char</span> *pcString )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* The mutex is created before the scheduler is started, so already exists</span></span><br><span class="line"><span class="comment">    by the time this task executes.</span></span><br><span class="line"><span class="comment">    Attempt to take the mutex, blocking indefinitely to wait for the mutex</span></span><br><span class="line"><span class="comment">    if it is not available straight away. The call to xSemaphoreTake() will</span></span><br><span class="line"><span class="comment">    only return when the mutex has been successfully obtained, so there is</span></span><br><span class="line"><span class="comment">    no need to check the function return value. If any other delay period</span></span><br><span class="line"><span class="comment">    was used then the code must check that xSemaphoreTake() returns pdTRUE</span></span><br><span class="line"><span class="comment">    before accessing the shared resource (which in this case is standard</span></span><br><span class="line"><span class="comment">    out). As noted earlier in this book, indefinite time outs are not</span></span><br><span class="line"><span class="comment">    recommended for production code. */</span></span><br><span class="line">    xSemaphoreTake( xMutex, portMAX_DELAY );</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* The following line will only execute once the mutex has been</span></span><br><span class="line"><span class="comment">        successfully obtained. Standard out can be accessed freely now as</span></span><br><span class="line"><span class="comment">        only one task can have the mutex at any one time. */</span></span><br><span class="line">        <span class="built_in">printf</span>( <span class="string">&quot;%s&quot;</span>, pcString );</span><br><span class="line">        fflush( <span class="built_in">stdout</span> );</span><br><span class="line">        <span class="comment">/* The mutex MUST be given back! */</span></span><br><span class="line">    &#125;</span><br><span class="line">    xSemaphoreGive( xMutex );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>不同的点在于其具有所有权和优先级继承机制</p>
+<p>优先级继承机制可以用于解决优先级反转问题</p>
+<p>那么什么是优先级反转呢?</p>
+<p>先从互斥量机制说起, 两个任务在访问同一资源时, 需要先take互斥量</p>
+<p>此时另一个任务再take该信号量时就会因为无法得到互斥量陷入阻塞状态</p>
+<p>待互斥量被give后另一个任务又重新进入就绪态</p>
+<p><img src="/../images/FreeRTOS/13.png" alt="13"></p>
+<p>试想以下情景, 现在有三个任务, LP最低优先级任务 MP中等优先级任务 HP最高优先级任务</p>
+<p>任务LP和HP使用互斥量来控制对同一资源的使用</p>
+<p>现在LP先进入运行态, take互斥量</p>
+<p>紧跟着HP被触发进入就绪态, 因为高优先级原因抢占LP</p>
+<p>HP在尝试take互斥量的时候, 因为此时互斥量在LP任务手里, 于是进入阻塞态</p>
+<p>回到LP任务, 此时MP任务进入就绪态, 抢占LP任务</p>
+<p>知道MP任务运行完毕回到LP任务, LP任务运行完毕才轮到HP任务</p>
+<p>问题就出现在这里: HP任务明明是最高优先级的任务, 却到了最后才执行</p>
+<p><img src="/../images/FreeRTOS/15.png" alt="15"></p>
+<p>为了缓解这种问题(无法被根除), 互斥量引入了优先级继承机制</p>
+<p><strong>优先级继承的工作原理是: 暂时将互斥锁的持有者的优先级提升至尝试获取同一互斥锁的最高优先级任务的优先级</strong></p>
+<p>持有互斥锁的低优先级任务<strong>继承</strong>了该优先级</p>
+<p>在这种情况下上述情景将会变为:</p>
+<p>LP任务先进入运行态</p>
+<p>HP任务进入就绪态, 抢占LP</p>
+<p>HP任务获取互斥锁失败, LP任务的优先级提升至HP优先级同一水平</p>
+<p>MP任务进入就绪态, 优先级低于LP 故无法进行抢占</p>
+<p>LP任务执行完毕, HP任务进入运行态</p>
+<p>HP任务执行完毕, MP任务进入运行态</p>
+<p><img src="/../images/FreeRTOS/16.png" alt="16"></p>
+<p>当有多个任务使用同一互斥量的时候, 继承优先级的规则是如何呢?</p>
+<ul>
+<li>如果任务在未释放其已持有的互斥锁的情况下获取了新的互斥锁, 则该任务的继承优先级可能进一步提升</li>
+<li>任务会保持其继承的最高优先级, 直到其释放所有的互斥锁, 且与互斥锁释放的顺序无关</li>
+<li>当一个任务同时持有多个互斥量时，只要其中任意一个互斥量曾导致它继承过更高的优先级，那么该任务会一直保持“最高的继承优先级”，即使等待这些互斥量的其他任务后来超时放弃等待，也不会立即恢复原优先级。</li>
+</ul>
+<p>这意味着, 继承的任务总是保持在一个较高的优先级, 很好的缓解了优先级反转的问题</p>
+<p>互斥锁的另一个缺陷是死锁(Deadlock, Deadly Embarce)</p>
+<p>形成原因是由于两个任务都在等待对方归还互斥量, 导致两个任务都进入阻塞态</p>
+<p>试想以下场景: </p>
+<p>有任务A, 任务B, 任务A先take互斥量X, 再take互斥量Y 任务B先take互斥量Y再take互斥量X</p>
+<p>任务A先进入运行态, take互斥量X</p>
+<p>一个时间片过去, 任务B进入运行态, take互斥量Y</p>
+<p>又一个时间片过去, 任务A take 互斥量Y失败, 进入阻塞态</p>
+<p>任务B 进入运行态, take互斥量X, 进入阻塞态</p>
+<p>这时两个任务均在等待对方归还互斥量</p>
+<p>但我们知道, 如果take函数的等待时间均为无限等待的话, 这两个任务将永远无法执行</p>
+<p>同样, 死锁也是无法完全消除的, 只能在设计时尽量避免</p>
+<p>最简单的避免方法就是给take函数设置一个比预期等待时间稍长的超时时间, 让其take失败继续执行剩下的部分</p>
+<p>对于单个任务也有可能发生死锁</p>
+<p>情景如下:</p>
+<p>任务A获取互斥锁X</p>
+<p>之后任务A再获取互斥锁X, 此时X已经被占用了, 无法获取, 任务A进入阻塞态</p>
+<p>形成死锁</p>
+<p>解决方法是使用递归互斥锁(Recursive Mutexes)</p>
+<p>使用方法与标准互斥锁类似, 不过递归互斥锁和它名称一样支持递归调用</p>
+<p>take多少次就需要give多少次才能解除互斥锁</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Recursive mutexes are variables of type SemaphoreHandle_t. */</span></span><br><span class="line">SemaphoreHandle_t xRecursiveMutex;</span><br><span class="line"><span class="comment">/* The implementation of a task that creates and uses a recursive mutex. */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">vTaskFunction</span><span class="params">( <span class="type">void</span> *pvParameters )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">const</span> TickType_t xMaxBlock20ms = pdMS_TO_TICKS( <span class="number">20</span> );</span><br><span class="line">    <span class="comment">/* Before a recursive mutex is used it must be explicitly created. */</span></span><br><span class="line">    xRecursiveMutex = xSemaphoreCreateRecursiveMutex();</span><br><span class="line">    <span class="comment">/* Check the semaphore was created successfully. configASSERT() is</span></span><br><span class="line"><span class="comment">    described in section 11.2. */</span></span><br><span class="line">    configASSERT( xRecursiveMutex );</span><br><span class="line">    <span class="comment">/* As per most tasks, this task is implemented as an infinite loop. */</span></span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* ... */</span></span><br><span class="line">        <span class="comment">/* Take the recursive mutex. */</span></span><br><span class="line">        <span class="keyword">if</span>( xSemaphoreTakeRecursive( xRecursiveMutex, xMaxBlock20ms ) == pdPASS )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* The recursive mutex was successfully obtained. The task can now</span></span><br><span class="line"><span class="comment">            access the resource the mutex is protecting. At this point the</span></span><br><span class="line"><span class="comment">            recursive call count (which is the number of nested calls to</span></span><br><span class="line"><span class="comment">            xSemaphoreTakeRecursive()) is 1, as the recursive mutex has</span></span><br><span class="line"><span class="comment">            only been taken once. */</span></span><br><span class="line">            <span class="comment">/* While it already holds the recursive mutex, the task takes the</span></span><br><span class="line"><span class="comment">            mutex again. In a real application, this is only likely to occur</span></span><br><span class="line"><span class="comment">            inside a sub-function called by this task, as there is no</span></span><br><span class="line"><span class="comment">            practical reason to knowingly take the same mutex more than</span></span><br><span class="line"><span class="comment">            once. The calling task is already the mutex holder, so the</span></span><br><span class="line"><span class="comment">            second call to xSemaphoreTakeRecursive() does nothing more than</span></span><br><span class="line"><span class="comment">            increment the recursive call count to 2. */</span></span><br><span class="line">            xSemaphoreTakeRecursive( xRecursiveMutex, xMaxBlock20ms );</span><br><span class="line">            <span class="comment">/* ... */</span></span><br><span class="line">            <span class="comment">/* The task returns the mutex after it has finished accessing the</span></span><br><span class="line"><span class="comment">            resource the mutex is protecting. At this point the recursive</span></span><br><span class="line"><span class="comment">            call count is 2, so the first call to xSemaphoreGiveRecursive()</span></span><br><span class="line"><span class="comment">            does not return the mutex. Instead, it simply decrements the</span></span><br><span class="line"><span class="comment">            recursive call count back to 1. */</span></span><br><span class="line">            xSemaphoreGiveRecursive( xRecursiveMutex );</span><br><span class="line">            <span class="comment">/* The next call to xSemaphoreGiveRecursive() decrements the</span></span><br><span class="line"><span class="comment">            recursive call count to 0, so this time the recursive mutex is</span></span><br><span class="line"><span class="comment">            returned. */</span></span><br><span class="line">            xSemaphoreGiveRecursive( xRecursiveMutex );</span><br><span class="line">            <span class="comment">/* Now one call to xSemaphoreGiveRecursive() has been executed for </span></span><br><span class="line"><span class="comment">            every proceeding call to xSemaphoreTakeRecursive(), so the task</span></span><br><span class="line"><span class="comment">            is no longer the mutex holder. */</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>相同优先级任务使用互斥锁 处理时间不均问题</p>
+<p>情景:</p>
+<p>任务A,B两个相同优先级任务, 两个任务都来自同一个模板, 该模板如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* The implementation of a task that uses a mutex in a tight loop. The task</span></span><br><span class="line"><span class="comment">creates a text string in a local buffer, then writes the string to a display.</span></span><br><span class="line"><span class="comment">Access to the display is protected by a mutex. */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">vATask</span><span class="params">( <span class="type">void</span> *pvParameter )</span></span><br><span class="line">    &#123;</span><br><span class="line">    <span class="keyword">extern</span> SemaphoreHandle_t xMutex;</span><br><span class="line">    <span class="type">char</span> cTextBuffer[ <span class="number">128</span> ];</span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Generate the text string – this is a fast operation. */</span></span><br><span class="line">        vGenerateTextInALocalBuffer( cTextBuffer );				<span class="comment">//快操作</span></span><br><span class="line">        <span class="comment">/* Obtain the mutex that is protecting access to the display. */</span></span><br><span class="line">        xSemaphoreTake( xMutex, portMAX_DELAY );</span><br><span class="line">        <span class="comment">/* Write the generated text to the display–this is a slow operation. */</span></span><br><span class="line">        vCopyTextToFrameBuffer( cTextBuffer );					<span class="comment">//慢操作</span></span><br><span class="line">        <span class="comment">/* The text has been written to the display, so return the mutex. */</span></span><br><span class="line">        xSemaphoreGive( xMutex );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们使用快操作和慢操作区分该模板中的两个惭怍</p>
+<p>任务A先执行快操作, 之后take互斥量</p>
+<p>一个时间片过去, 切换到任务B</p>
+<p>任务B执行完快操作, take互斥量失败, 进入阻塞态, 在时间片结束之前切换到任务A</p>
+<p>任务A执行完慢操作且give互斥量, 任务B回到就绪态</p>
+<p>由于优先级相同, 任务B无法抢占任务A</p>
+<p>任务A继续执行完快操作然后take互斥量, 时间片结束切换到任务B</p>
+<p>任务B take互斥量失败, 又回到阻塞态</p>
+<p><img src="/../images/FreeRTOS/14.png" alt="14"></p>
+<p>任务A的占用时间远大于任务B, 这是不合理的</p>
+<p>解决方法是在合适的时机使用<code>taskYIELD()</code>主动切换上下文</p>
+<p>手册给出的示例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vFunction</span><span class="params">( <span class="type">void</span> *pvParameter )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">extern</span> SemaphoreHandle_t xMutex;</span><br><span class="line">    <span class="type">char</span> cTextBuffer[ <span class="number">128</span> ];</span><br><span class="line">    TickType_t xTimeAtWhichMutexWasTaken;</span><br><span class="line">    <span class="keyword">for</span>( ;; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* Generate the text string – this is a fast operation. */</span></span><br><span class="line">        vGenerateTextInALocalBuffer( cTextBuffer );</span><br><span class="line">        <span class="comment">/* Obtain the mutex that is protecting access to the display. */</span></span><br><span class="line">        xSemaphoreTake( xMutex, portMAX_DELAY );</span><br><span class="line">        <span class="comment">/* Record the time at which the mutex was taken. */</span></span><br><span class="line">        xTimeAtWhichMutexWasTaken = xTaskGetTickCount();</span><br><span class="line">        <span class="comment">/* Write the generated text to the display–this is a slow operation. */</span></span><br><span class="line">        vCopyTextToFrameBuffer( cTextBuffer );</span><br><span class="line">        <span class="comment">/* The text has been written to the display, so return the mutex. */</span></span><br><span class="line">        xSemaphoreGive( xMutex );</span><br><span class="line">        <span class="comment">/* If taskYIELD() was called on each iteration then this task would</span></span><br><span class="line"><span class="comment">        only ever remain in the Running state for a short period of time,</span></span><br><span class="line"><span class="comment">        and processing time would be wasted by rapidly switching between</span></span><br><span class="line"><span class="comment">        tasks. Therefore, only call taskYIELD() if the tick count changed</span></span><br><span class="line"><span class="comment">        while the mutex was held. */</span></span><br><span class="line">        <span class="keyword">if</span>( xTaskGetTickCount() != xTimeAtWhichMutexWasTaken )		<span class="comment">//如果结束时和获取互斥量时不位于同一时间片</span></span><br><span class="line">        &#123;</span><br><span class="line">            taskYIELD();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然这个示例并不能完全解决这个问题, 通过时间片来进行判断往往不够精确</p>
+<p>但确实能在一定程度上缓解该问题</p>
+<p>第四种方式则是使用gatekeeper任务</p>
+<p>核心是通过唯一的一个任务来使用这个共享的资源, 任务间通过队列向GateKeeper任务传送数据</p>
+<p>由GateKeeper任务来对共享的资源进行操作</p>
+<p>有时为了更快的对数据进行处理通常会给GateKeeper任务一个较高的优先级, 这会导致GateKeeper任务延迟处理优先级较低的任务</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" rel="tag"># 学习笔记</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/12/10/FreeRTOS(%E5%9B%9B)-%E4%B8%AD%E6%96%AD%E7%AE%A1%E7%90%86/" rel="prev" title="FreeRTOS学习笔记(四) 中断管理">
+      <i class="fa fa-chevron-left"></i> FreeRTOS学习笔记(四) 中断管理
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%9B%E8%A1%8C%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">为什么要进行资源管理</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Sn0r1ax"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">Sn0r1ax</p>
+  <div class="site-description" itemprop="description">😘😘😘</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PMexeggcute" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PMexeggcute" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Sn0r1ax</span>
+</div>
+
+<!-- <br /> --> <!-- 网站运行时间的设置 --> <span id="timeDate">载入天数...</span> <!-- <span id="times">载入时分秒...</span> --> <script>   var now = new Date();   function createtime() {     var grt= new Date("11/17/2022 8:00:00");//此处修改你的建站时间或者网站上线时间     now.setTime(now.getTime()+250);     days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);     hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);     if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);     mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}     seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);     snum = Math.round(seconds);      if(String(snum).length ==1 ){snum = "0" + snum;}     // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";     document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";   } setInterval("createtime()",250); </script>
+
+<!-- <br /> -->
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">...</span>
+<!-- <span id="times">载入时分秒...</span> -->
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("3/10/2025 8:00:00");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); 
+        if(String(snum).length ==1 ){snum = "0" + snum;}
+        // var times = document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "+hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'Ov23liG9WrAtML5LeX5q',
+      clientSecret: '1bec862c217175f2d9cd423957b67f1ec1fec6ab',
+      repo        : 'MyBlogGitalk',
+      owner       : 'PMexeggcute',
+      admin       : ['PMexeggcute'],
+      id          : 'e08fb6bf9ba2bcb3bad8838bb8dbecb1',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
