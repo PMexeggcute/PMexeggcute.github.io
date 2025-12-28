@@ -20,19 +20,22 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="😘😘😘">
+  <meta name="description" content="什么是I2C死锁一种I2C通讯停止工作的现象 具体表现为SDA数据线一直处于低电平状态 什么时候会发生I2C死锁不会发生I2C死锁的情况SCL时钟线, SDA数据线完全交由主机控制时, 通常不会发生I2C死锁 可能会发生I2C死锁的情况既然主机操控SDA时不会发生死锁(SCL由主机控制), 那么发生死锁的情况只能是从机导致的 如果从机错误的操纵SDA数据线则可能造成I2C死锁(SDA死锁) 如果从">
 <meta property="og:type" content="article">
-<meta property="og:title" content="谨此纪念我的第一篇博客">
-<meta property="og:url" content="http://example.com/2025/03/10/first/index.html">
+<meta property="og:title" content="I2C死锁成因及解决方法">
+<meta property="og:url" content="http://example.com/2025/12/27/I2C%E6%AD%BB%E9%94%81/index.html">
 <meta property="og:site_name" content="Sn0r1ax">
-<meta property="og:description" content="😘😘😘">
+<meta property="og:description" content="什么是I2C死锁一种I2C通讯停止工作的现象 具体表现为SDA数据线一直处于低电平状态 什么时候会发生I2C死锁不会发生I2C死锁的情况SCL时钟线, SDA数据线完全交由主机控制时, 通常不会发生I2C死锁 可能会发生I2C死锁的情况既然主机操控SDA时不会发生死锁(SCL由主机控制), 那么发生死锁的情况只能是从机导致的 如果从机错误的操纵SDA数据线则可能造成I2C死锁(SDA死锁) 如果从">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2025-03-10T12:33:44.000Z">
-<meta property="article:modified_time" content="2025-03-17T10:23:56.917Z">
+<meta property="og:image" content="http://example.com/images/I2C%E6%AD%BB%E9%94%81/0.png">
+<meta property="article:published_time" content="2025-12-27T15:06:09.256Z">
+<meta property="article:modified_time" content="2025-12-28T08:10:18.637Z">
 <meta property="article:author" content="Sn0r1ax">
+<meta property="article:tag" content="学习笔记">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/I2C%E6%AD%BB%E9%94%81/0.png">
 
-<link rel="canonical" href="http://example.com/2025/03/10/first/">
+<link rel="canonical" href="http://example.com/2025/12/27/I2C%E6%AD%BB%E9%94%81/">
 
 
 <script id="page-configurations">
@@ -45,7 +48,7 @@
   };
 </script>
 
-  <title>谨此纪念我的第一篇博客 | Sn0r1ax</title>
+  <title>I2C死锁成因及解决方法 | Sn0r1ax</title>
   
 
 
@@ -157,7 +160,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/10/first/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/27/I2C%E6%AD%BB%E9%94%81/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
@@ -170,7 +173,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          谨此纪念我的第一篇博客
+          I2C死锁成因及解决方法
         </h1>
 
         <div class="post-meta">
@@ -180,14 +183,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2025-03-10 20:33:44" itemprop="dateCreated datePublished" datetime="2025-03-10T20:33:44+08:00">2025-03-10</time>
+              <time title="创建时间：2025-12-27 23:06:09" itemprop="dateCreated datePublished" datetime="2025-12-27T23:06:09+08:00">2025-12-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-03-17 18:23:56" itemprop="dateModified" datetime="2025-03-17T18:23:56+08:00">2025-03-17</time>
+                <time title="修改时间：2025-12-28 16:10:18" itemprop="dateModified" datetime="2025-12-28T16:10:18+08:00">2025-12-28</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -195,7 +198,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index"><span itemprop="name">随笔</span></a>
+                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
                 </span>
             </span>
 
@@ -210,7 +213,47 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <h2 id="什么是I2C死锁"><a href="#什么是I2C死锁" class="headerlink" title="什么是I2C死锁"></a>什么是I2C死锁</h2><p>一种I2C通讯停止工作的现象</p>
+<p>具体表现为SDA数据线一直处于低电平状态</p>
+<h2 id="什么时候会发生I2C死锁"><a href="#什么时候会发生I2C死锁" class="headerlink" title="什么时候会发生I2C死锁"></a>什么时候会发生I2C死锁</h2><h3 id="不会发生I2C死锁的情况"><a href="#不会发生I2C死锁的情况" class="headerlink" title="不会发生I2C死锁的情况"></a>不会发生I2C死锁的情况</h3><p>SCL时钟线, SDA数据线完全交由主机控制时, 通常不会发生I2C死锁</p>
+<h3 id="可能会发生I2C死锁的情况"><a href="#可能会发生I2C死锁的情况" class="headerlink" title="可能会发生I2C死锁的情况"></a>可能会发生I2C死锁的情况</h3><p>既然主机操控SDA时不会发生死锁(SCL由主机控制), 那么发生死锁的情况只能是从机导致的</p>
+<p>如果从机错误的操纵SDA数据线则可能造成I2C死锁(SDA死锁)</p>
+<p>如果从机(特定情况下从机也会操纵SCL时钟线, 详见下文)或主机错误的操纵SCL时钟线也可能造成I2C死锁(SCL死锁)</p>
+<h2 id="为什么会发生I2C死锁"><a href="#为什么会发生I2C死锁" class="headerlink" title="为什么会发生I2C死锁"></a>为什么会发生I2C死锁</h2><h3 id="SDA死锁"><a href="#SDA死锁" class="headerlink" title="SDA死锁"></a>SDA死锁</h3><p>从机拉低SDA数据线有以下两种情况:</p>
+<ul>
+<li>发送bit0</li>
+<li>应答ACK</li>
+</ul>
+<p>I2C有规定: 在SCL位于高电平期间, SDA是不能进行更改的</p>
+<p><strong>如果在SCL位于高电平期间, 从机拉低SDA时, 主机意外复位或断电重启</strong></p>
+<p><strong>此时从机识别到SCL时钟线一直为高电平, 就会一直拉低SDA数据线</strong></p>
+<p><strong>而主机I2C硬件识别到SDA数据线一直处于低电平状态, 会认为I2C总线一直处于busy状态, 就会一直不拉低SCL时钟线(死等)</strong></p>
+<p>因此造成SDA死锁</p>
+<p><em>而如果是SDA位于高电平时主机意外复位或断电重启则不会进入死锁, 只是这一帧的数据会出错(主机都复位或重启了 你不出错谁出错…)</em></p>
+<h3 id="SCL死锁"><a href="#SCL死锁" class="headerlink" title="SCL死锁"></a>SCL死锁</h3><p>通常主机和从机通信过程中, 会通过<strong>接收数据FIFO</strong>来接收数据, 如果该FIFO满时, 则会主动拉低SCL总线(从机也会拉低SCL, 即使该SCl是由主机操控)来通知另一方停止发送数据, 等接收完数据后再重新释放SCL, 一遍另一方继续发送数据 这种方式称为<strong>I2C时钟延展</strong></p>
+<p>但如果通信双方有其中一方没有处理这种情况则可能会导致SCL死锁</p>
+<p><img src="/../images/I2C%E6%AD%BB%E9%94%81/0.png" alt="0"></p>
+<p>[^STM32F403RCT6与MLX90640进行I2C通信]: D0为SCL时钟线, D1为SDA数据线</p>
+<p>可分为四段来看, 前三段推测是一次性通信数据过大造成的死锁情况, 第四段则是正常分两段数据发送的情况(其实是两个两段数据, 共四组数据):</p>
+<ul>
+<li>这里SDA死锁时位于高电平还是低电平影响因素过多, 这里先理解为随机</li>
+<li>接收数据FIFO满时 主动拉低SCL, 然后SDA等待下一个SCL高电平(下一个时钟)</li>
+</ul>
+<p>这里实测就算模拟I2C的SCL信号也不能使从机继续发送数据, 但是能使SDA数据线重新回到高电平</p>
+<p>可以通过主机拉高SCL所以结论是主机的问题, 进一步推测是主机FIFO满导致</p>
+<p>死锁时SDA位于高电平时查看主机的<code>I2C_SR1</code>寄存器, 值为0x40(发送寄存器空), <code>I2C_SR2</code>寄存器值为0x3(总线busy, 主机位于发送模式)</p>
+<p>死锁时SDA位于低电平时两个寄存器值为0x0, 0x2(总线busy)</p>
+<p><strong>具体问题触发原因不明, 欢迎交流</strong></p>
+<h2 id="如何避免-解决I2C死锁"><a href="#如何避免-解决I2C死锁" class="headerlink" title="如何避免&#x2F;解决I2C死锁"></a>如何避免&#x2F;解决I2C死锁</h2><h3 id="SDA死锁-1"><a href="#SDA死锁-1" class="headerlink" title="SDA死锁"></a>SDA死锁</h3><ul>
+<li>当主机识别到I2C死锁时, 直接复位从机</li>
+<li>选择带有看门狗复位的I2C器件, 自动复位</li>
+<li>主机识别到I2C死锁后, 将SCL&#x2F;SDA引脚配置为GPIO模式, SCL输出信号模拟I2C时钟, 一边SDA读取电平, 一旦SDA读取到高电平就控制SCL模拟结束信号, 该方式称为**”最多发送9clock恢复I2C总线”, 常用**(为什么是9clock, 因为8个数据位+一个ack位刚好9位)</li>
+</ul>
+<h3 id="SCL死锁-1"><a href="#SCL死锁-1" class="headerlink" title="SCL死锁"></a>SCL死锁</h3><ul>
+<li><strong>唯一且有效的方法就是复位从机</strong></li>
+</ul>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献:"></a>参考文献:</h2><p>​		<a target="_blank" rel="noopener" href="https://www.eet-china.com/mp/a344299.html">IIC死锁分析与解锁方案</a></p>
+
     </div>
 
     
@@ -218,17 +261,20 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" rel="tag"># 学习笔记</a>
+          </div>
 
         
 
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2025/03/10/%E5%A6%82%E6%9E%9C%E6%89%BE%E4%B8%8D%E5%88%B0binsh%E5%AD%97%E7%AC%A6%E4%B8%B2,%E4%BD%95%E5%B0%9D%E4%B8%8D%E8%AF%95%E8%AF%95fflush%E7%9A%84%E2%80%9Csh%E2%80%9D/" rel="next" title="fflu'sh'">
-      fflu'sh' <i class="fa fa-chevron-right"></i>
+    <a href="/2025/12/17/FreeRTOS(%E4%BA%94)-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86/" rel="prev" title="FreeRTOS学习笔记(五) 资源管理">
+      <i class="fa fa-chevron-left"></i> FreeRTOS学习笔记(五) 资源管理
     </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -288,6 +334,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFI2C%E6%AD%BB%E9%94%81"><span class="nav-number">1.</span> <span class="nav-text">什么是I2C死锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%BC%9A%E5%8F%91%E7%94%9FI2C%E6%AD%BB%E9%94%81"><span class="nav-number">2.</span> <span class="nav-text">什么时候会发生I2C死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E4%BC%9A%E5%8F%91%E7%94%9FI2C%E6%AD%BB%E9%94%81%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">2.1.</span> <span class="nav-text">不会发生I2C死锁的情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E8%83%BD%E4%BC%9A%E5%8F%91%E7%94%9FI2C%E6%AD%BB%E9%94%81%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">2.2.</span> <span class="nav-text">可能会发生I2C死锁的情况</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%8F%91%E7%94%9FI2C%E6%AD%BB%E9%94%81"><span class="nav-number">3.</span> <span class="nav-text">为什么会发生I2C死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SDA%E6%AD%BB%E9%94%81"><span class="nav-number">3.1.</span> <span class="nav-text">SDA死锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SCL%E6%AD%BB%E9%94%81"><span class="nav-number">3.2.</span> <span class="nav-text">SCL死锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D-%E8%A7%A3%E5%86%B3I2C%E6%AD%BB%E9%94%81"><span class="nav-number">4.</span> <span class="nav-text">如何避免&#x2F;解决I2C死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SDA%E6%AD%BB%E9%94%81-1"><span class="nav-number">4.1.</span> <span class="nav-text">SDA死锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SCL%E6%AD%BB%E9%94%81-1"><span class="nav-number">4.2.</span> <span class="nav-text">SCL死锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">5.</span> <span class="nav-text">参考文献:</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -445,7 +492,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'MyBlogGitalk',
       owner       : 'PMexeggcute',
       admin       : ['PMexeggcute'],
-      id          : 'c84813f61cf66b5f64ed4efaed157f63',
+      id          : '5f03b06332b731201dcbf3a75a1eb7e0',
         language: 'zh-CN',
       distractionFreeMode: true
     });

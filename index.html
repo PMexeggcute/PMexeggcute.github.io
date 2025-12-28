@@ -154,6 +154,119 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/27/I2C%E6%AD%BB%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/12/27/I2C%E6%AD%BB%E9%94%81/" class="post-title-link" itemprop="url">I2C死锁成因及解决方法</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-12-27 23:06:09" itemprop="dateCreated datePublished" datetime="2025-12-27T23:06:09+08:00">2025-12-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-12-28 16:10:18" itemprop="dateModified" datetime="2025-12-28T16:10:18+08:00">2025-12-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="什么是I2C死锁"><a href="#什么是I2C死锁" class="headerlink" title="什么是I2C死锁"></a>什么是I2C死锁</h2><p>一种I2C通讯停止工作的现象</p>
+<p>具体表现为SDA数据线一直处于低电平状态</p>
+<h2 id="什么时候会发生I2C死锁"><a href="#什么时候会发生I2C死锁" class="headerlink" title="什么时候会发生I2C死锁"></a>什么时候会发生I2C死锁</h2><h3 id="不会发生I2C死锁的情况"><a href="#不会发生I2C死锁的情况" class="headerlink" title="不会发生I2C死锁的情况"></a>不会发生I2C死锁的情况</h3><p>SCL时钟线, SDA数据线完全交由主机控制时, 通常不会发生I2C死锁</p>
+<h3 id="可能会发生I2C死锁的情况"><a href="#可能会发生I2C死锁的情况" class="headerlink" title="可能会发生I2C死锁的情况"></a>可能会发生I2C死锁的情况</h3><p>既然主机操控SDA时不会发生死锁(SCL由主机控制), 那么发生死锁的情况只能是从机导致的</p>
+<p>如果从机错误的操纵SDA数据线则可能造成I2C死锁(SDA死锁)</p>
+<p>如果从机(特定情况下从机也会操纵SCL时钟线, 详见下文)或主机错误的操纵SCL时钟线也可能造成I2C死锁(SCL死锁)</p>
+<h2 id="为什么会发生I2C死锁"><a href="#为什么会发生I2C死锁" class="headerlink" title="为什么会发生I2C死锁"></a>为什么会发生I2C死锁</h2><h3 id="SDA死锁"><a href="#SDA死锁" class="headerlink" title="SDA死锁"></a>SDA死锁</h3><p>从机拉低SDA数据线有以下两种情况:</p>
+<ul>
+<li>发送bit0</li>
+<li>应答ACK</li>
+</ul>
+<p>I2C有规定: 在SCL位于高电平期间, SDA是不能进行更改的</p>
+<p><strong>如果在SCL位于高电平期间, 从机拉低SDA时, 主机意外复位或断电重启</strong></p>
+<p><strong>此时从机识别到SCL时钟线一直为高电平, 就会一直拉低SDA数据线</strong></p>
+<p><strong>而主机I2C硬件识别到SDA数据线一直处于低电平状态, 会认为I2C总线一直处于busy状态, 就会一直不拉低SCL时钟线(死等)</strong></p>
+<p>因此造成SDA死锁</p>
+<p><em>而如果是SDA位于高电平时主机意外复位或断电重启则不会进入死锁, 只是这一帧的数据会出错(主机都复位或重启了 你不出错谁出错…)</em></p>
+<h3 id="SCL死锁"><a href="#SCL死锁" class="headerlink" title="SCL死锁"></a>SCL死锁</h3><p>通常主机和从机通信过程中, 会通过<strong>接收数据FIFO</strong>来接收数据, 如果该FIFO满时, 则会主动拉低SCL总线(从机也会拉低SCL, 即使该SCl是由主机操控)来通知另一方停止发送数据, 等接收完数据后再重新释放SCL, 一遍另一方继续发送数据 这种方式称为<strong>I2C时钟延展</strong></p>
+<p>但如果通信双方有其中一方没有处理这种情况则可能会导致SCL死锁</p>
+<p><img src="/../images/I2C%E6%AD%BB%E9%94%81/0.png" alt="0"></p>
+<p>[^STM32F403RCT6与MLX90640进行I2C通信]: D0为SCL时钟线, D1为SDA数据线</p>
+<p>可分为四段来看, 前三段推测是一次性通信数据过大造成的死锁情况, 第四段则是正常分两段数据发送的情况(其实是两个两段数据, 共四组数据):</p>
+<ul>
+<li>这里SDA死锁时位于高电平还是低电平影响因素过多, 这里先理解为随机</li>
+<li>接收数据FIFO满时 主动拉低SCL, 然后SDA等待下一个SCL高电平(下一个时钟)</li>
+</ul>
+<p>这里实测就算模拟I2C的SCL信号也不能使从机继续发送数据, 但是能使SDA数据线重新回到高电平</p>
+<p>可以通过主机拉高SCL所以结论是主机的问题, 进一步推测是主机FIFO满导致</p>
+<p>死锁时SDA位于高电平时查看主机的<code>I2C_SR1</code>寄存器, 值为0x40(发送寄存器空), <code>I2C_SR2</code>寄存器值为0x3(总线busy, 主机位于发送模式)</p>
+<p>死锁时SDA位于低电平时两个寄存器值为0x0, 0x2(总线busy)</p>
+<p><strong>具体问题触发原因不明, 欢迎交流</strong></p>
+<h2 id="如何避免-解决I2C死锁"><a href="#如何避免-解决I2C死锁" class="headerlink" title="如何避免&#x2F;解决I2C死锁"></a>如何避免&#x2F;解决I2C死锁</h2><h3 id="SDA死锁-1"><a href="#SDA死锁-1" class="headerlink" title="SDA死锁"></a>SDA死锁</h3><ul>
+<li>当主机识别到I2C死锁时, 直接复位从机</li>
+<li>选择带有看门狗复位的I2C器件, 自动复位</li>
+<li>主机识别到I2C死锁后, 将SCL&#x2F;SDA引脚配置为GPIO模式, SCL输出信号模拟I2C时钟, 一边SDA读取电平, 一旦SDA读取到高电平就控制SCL模拟结束信号, 该方式称为**”最多发送9clock恢复I2C总线”, 常用**(为什么是9clock, 因为8个数据位+一个ack位刚好9位)</li>
+</ul>
+<h3 id="SCL死锁-1"><a href="#SCL死锁-1" class="headerlink" title="SCL死锁"></a>SCL死锁</h3><ul>
+<li><strong>唯一且有效的方法就是复位从机</strong></li>
+</ul>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献:"></a>参考文献:</h2><p>​		<a target="_blank" rel="noopener" href="https://www.eet-china.com/mp/a344299.html">IIC死锁分析与解锁方案</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/17/FreeRTOS(%E4%BA%94)-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -560,7 +673,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-12-16 22:44:37" itemprop="dateModified" datetime="2025-12-16T22:44:37+08:00">2025-12-16</time>
+                <time title="修改时间：2025-12-21 16:09:37" itemprop="dateModified" datetime="2025-12-21T16:09:37+08:00">2025-12-21</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -596,6 +709,10 @@
 <p>因为定时器回调函数是由进程守护任务(RTOS daemon task)执行的</p>
 <p>进程守护任务具有和正常任务相同的优先级机制</p>
 <p>一旦定时器回调函数进入阻塞状态, 进程守护任务也会被阻塞, 这是不合法的</p>
+<p>mcu总是单线程的, 那么守护进程任务什么时候执行是由谁来维护的呢?</p>
+<p>还记得时间片结尾的中断吗?</p>
+<p>在这个中断的服务例程里会检查是否满足定时器的条件</p>
+<p>如果是, 则唤醒定时器, 紧跟着的就会执行定时器的处理任务了</p>
 <p>软件定时器分一次性定时器和自动重载定时器</p>
 <p>一次性定时器在运行完一次之后自动进入休眠(dormant)状态</p>
 <p>而自动重载定时器在执行完一次后会重新开始</p>
@@ -1103,10 +1220,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-11-27 22:44:33 / 修改时间：22:46:03" itemprop="dateCreated datePublished" datetime="2025-11-27T22:44:33+08:00">2025-11-27</time>
+              <time title="创建时间：2025-11-27 22:44:33" itemprop="dateCreated datePublished" datetime="2025-11-27T22:44:33+08:00">2025-11-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-12-21 15:03:25" itemprop="dateModified" datetime="2025-12-21T15:03:25+08:00">2025-12-21</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -1132,15 +1255,134 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          Here's something encrypted, password is required to continue reading.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/11/27/CAN%E6%80%BB%E7%BA%BF/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
+          <h2 id="协议规定"><a href="#协议规定" class="headerlink" title="协议规定"></a>协议规定</h2><p>差分信号</p>
+<p>差值为0为逻辑1(隐性电平)</p>
+<p>差值不为0为逻辑1(显性电平) (具体差值范围多少和高速\低速CAN协议有关)</p>
+<p>可记为电平拉开为0, 闭合为1</p>
+<p>异步半双工</p>
+<h2 id="帧格式"><a href="#帧格式" class="headerlink" title="帧格式"></a>帧格式</h2><p>数据帧 遥控帧 错误帧 过载帧 帧间隔</p>
+<p>EOF之后仍需3位显性电平的帧间隔才能进入下一个通信</p>
+<p><strong>位填充机制</strong>:兼容错误帧和过载帧 避免错位和防止被误认为是空闲</p>
+<h2 id="位同步"><a href="#位同步" class="headerlink" title="位同步"></a>位同步</h2><p>通过引入位时序</p>
+<p>解决时序起始位不同步-&gt;硬同步</p>
+<p>解决时序传输过程中的偏差-&gt;再同步</p>
+<p>can总线中码元指的是一个位时序, 波特率也因此由一个位时序所需时间决定</p>
+<h2 id="仲裁"><a href="#仲裁" class="headerlink" title="仲裁"></a>仲裁</h2><p>连续11个隐形电平-&gt;空闲状态</p>
+<p>两种仲裁机制护航:</p>
+<ol>
+<li>先到先得 只有当检测到空闲状态的情况下才尝试发送数据</li>
+<li>通过仲裁段进行仲裁</li>
+</ol>
+<p>ID + RTR 作为仲裁段</p>
+<p>线与特性: can总线拉开代表显性0, 当多个主机中任一主机拉开总线时 总线代表显性0 当所有主机都释放总线时 总线才代表隐性1</p>
+<p>回读机制: 每个主机在发送数据后都会读取总线的状态</p>
+<p>根据上述两个机制得到仲裁的特性</p>
+<p>当主机发出隐性1但是读回的确实显性0时, 说明当前有主机正在使用该主线发送数据 但是发送0的这个主机却不知道有另一个主机正在使用这条主线 </p>
+<p>这时发送1的主机仲裁失败, 回到读取状态</p>
+<p>这也决定了总是发送ID号小的帧的数据仲裁会成功</p>
+<p>Q: 位填充是否会影响到仲裁?</p>
+<p>A: 结论是不会, 假设位填充会影响到仲裁 那么位填充之前的位均为一样的, 这种情况显然不会影响,因为填充的那位也是相同的 如果位填充之前的位都不一样, 那更不可能了 如果只有一个主机产生位填充 那很明显前面5位绝不相同, 这点也毋庸置疑</p>
+<p>那么两个主机发送同一个ID号的数据帧和遥控帧的情况呢</p>
+<p>数据帧的RTR位为0, 遥控帧的RTR位为1</p>
+<p>发送遥控帧的主机会仲裁失败</p>
+<p>回到实际意义来讲, 发送遥控帧的主机获得的数据永远是最新的, 不会导致数据不同步的错误情况, 这点是符合实际项目要求的</p>
+<p>那么拓展格式的情况呢</p>
+<p>同样分标准数据帧和标准遥控帧来讨论, 拓展格式中数据帧和遥控帧和上面讨论情况相同</p>
+<p>先说标准数据帧</p>
+<p>拓展格式的SRR位(对应的就是标准格式的RTR位)为隐性1, 所以面对标准数据帧, 拓展格式是仲裁失利的</p>
+<p>那么标准遥控帧呢</p>
+<p>遥控帧的RTR位为1, 同时仲裁段也只是ID + RTR 这一段</p>
+<p>那么遥控帧就有了必胜的理由,那么我们接着看</p>
+<p>RTR位紧跟着的就是IDE位, 拓展格式的这一位规定置为隐性1, 所以必定会仲裁失败</p>
+<p>这里和前面帧格式为什么要这么定义形成逻辑闭环</p>
+<h2 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h2><p>5种错误: 位错误(回读), 填充错误, CRC错误, 格式错误(各种界定符错误), ACK错误</p>
+<p>错误状态机制与TEC(Transmit Error Counter), REC</p>
+<p>TEC和REC并不总是每次-1, 很大可能是一次-8, 但需要8次正确传输才能补救回来</p>
+<p><img src="/../images/CAN%E6%80%BB%E7%BA%BF/0.png" alt="0"></p>
+<p>Q: 为什么结束的EOF要给7个隐性1</p>
+<p>A: 一是7个隐性1 + ACK界定符(一位) + 3位帧间隔 刚好11位隐性1, 这之后满足进入空闲状态的要求</p>
+<p>二是留给错误处理置错误标志一段时间, 避免接收方还未意识到发送的数据错了就已经进入下一帧了</p>
+<p>Q: 在哪个区段里会产生位填充现象</p>
+<p>SOF到CRC校验之间的数据</p>
+<p>Q: 延迟传送的作用</p>
+<p>其中一个作用是使其处于仲裁失利, 避免易出错的设备优先去发送数据占用总线资源</p>
+<h2 id="位屏蔽机制"><a href="#位屏蔽机制" class="headerlink" title="位屏蔽机制"></a>位屏蔽机制</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//32位屏蔽#2</span></span><br><span class="line"><span class="comment">//这里如果不 | 0x04则会混入标准格式0x1xx的数据 具体分析见注释的二进制数</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;</span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;</span><br><span class="line"><span class="type">uint32_t</span> ID = (<span class="number">0x04000000u</span> &lt;&lt; <span class="number">3</span>);<span class="comment">//这里和0x100 &lt;&lt; 21效果相同		//0b 001 0000 0000 0000 0000 0000 0000 00 000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterIdHigh = ID &gt;&gt; <span class="number">16</span>;			<span class="comment">//0x10100000 0b 1 0000 0001 0000 0000 0000 0000 0000 000</span></span><br><span class="line">															<span class="comment">//0b 0 0100 0000 0000 0000 0000 0000 0000 000 0x04000000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterIdLow = ID;	<span class="comment">//uint32强转为uint16时会舍弃掉高4位</span></span><br><span class="line"><span class="type">uint32_t</span> Mask = (<span class="number">0x1C000000u</span> &lt;&lt; <span class="number">3</span>);<span class="comment">//这里和0x700 &lt;&lt; 21效果相同</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMaskIdHigh = Mask &gt;&gt; <span class="number">16</span>;		<span class="comment">//0b 111 0000 0000 0000 0000 0000 0000 00 000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMaskIdLow = Mask;				<span class="comment">//0b 1 1100 0000 0000 0000 0000 0000 0000 000</span></span><br><span class="line"></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;</span><br><span class="line">CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;</span><br><span class="line">CAN_FilterInit(&amp;CAN_FilterInitStructure);</span><br></pre></td></tr></table></figure>
+
+<h2 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h2><table>
+<thead>
+<tr>
+<th>中断宏</th>
+<th>含义</th>
+<th>触发时机</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CAN_IT_TME</td>
+<td>发送邮箱空</td>
+<td>可以发送下一帧</td>
+</tr>
+<tr>
+<td>CAN_IT_FMP0</td>
+<td>FIFO0 有消息</td>
+<td>接收到数据</td>
+</tr>
+<tr>
+<td>CAN_IT_FF0</td>
+<td>FIFO0 满</td>
+<td>3 条消息满了</td>
+</tr>
+<tr>
+<td>CAN_IT_FOV0</td>
+<td>FIFO0 溢出</td>
+<td>数据覆盖</td>
+</tr>
+<tr>
+<td>CAN_IT_FMP1</td>
+<td>FIFO1 有消息</td>
+<td>接收到数据</td>
+</tr>
+<tr>
+<td>CAN_IT_FF1</td>
+<td>FIFO1 满</td>
+<td></td>
+</tr>
+<tr>
+<td>CAN_IT_FOV1</td>
+<td>FIFO1 溢出</td>
+<td></td>
+</tr>
+<tr>
+<td>CAN_IT_EWG</td>
+<td>错误警告</td>
+<td>错误计数 &gt; 96</td>
+</tr>
+<tr>
+<td>CAN_IT_EPV</td>
+<td>错误被动</td>
+<td>错误计数 &gt;&#x3D; 128</td>
+</tr>
+<tr>
+<td>CAN_IT_LEC</td>
+<td>最后错误码变化</td>
+<td>出现新的错误</td>
+</tr>
+<tr>
+<td>CAN_IT_ERR</td>
+<td>任意错误事件</td>
+<td>CRC&#x2F;ACK&#x2F;stuff 等错误</td>
+</tr>
+<tr>
+<td>CAN_IT_WKU</td>
+<td>唤醒</td>
+<td>从 sleep→正常模式</td>
+</tr>
+<tr>
+<td>CAN_IT_SLK</td>
+<td>睡眠完成</td>
+<td></td>
+</tr>
+</tbody></table>
+
       
     </div>
 
@@ -1300,78 +1542,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/31/MIPS%E5%9F%BA%E7%A1%80/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/05/31/MIPS%E5%9F%BA%E7%A1%80/" class="post-title-link" itemprop="url">MIPS基础</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-05-31 13:37:27" itemprop="dateCreated datePublished" datetime="2025-05-31T13:37:27+08:00">2025-05-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-09-26 21:12:14" itemprop="dateModified" datetime="2025-09-26T21:12:14+08:00">2025-09-26</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          Here's something encrypted, password is required to continue reading.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/05/31/MIPS%E5%9F%BA%E7%A1%80/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1443,7 +1613,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">35</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
