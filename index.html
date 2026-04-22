@@ -154,6 +154,72 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/04/22/AI%E9%80%86%E5%90%91%E5%88%9D%E6%8E%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/04/22/AI%E9%80%86%E5%90%91%E5%88%9D%E6%8E%A2/" class="post-title-link" itemprop="url">AI逆向初探</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-04-22 16:38:46 / 修改时间：17:20:00" itemprop="dateCreated datePublished" datetime="2026-04-22T16:38:46+08:00">2026-04-22</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          Here's something encrypted, password is required to continue reading.
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/04/22/AI%E9%80%86%E5%90%91%E5%88%9D%E6%8E%A2/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/27/I2C%E6%AD%BB%E9%94%81/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -185,7 +251,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-12-28 16:10:18" itemprop="dateModified" datetime="2025-12-28T16:10:18+08:00">2025-12-28</time>
+                <time title="修改时间：2026-01-10 14:22:31" itemprop="dateModified" datetime="2026-01-10T14:22:31+08:00">2026-01-10</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -228,7 +294,7 @@
 <h3 id="SCL死锁"><a href="#SCL死锁" class="headerlink" title="SCL死锁"></a>SCL死锁</h3><p>通常主机和从机通信过程中, 会通过<strong>接收数据FIFO</strong>来接收数据, 如果该FIFO满时, 则会主动拉低SCL总线(从机也会拉低SCL, 即使该SCl是由主机操控)来通知另一方停止发送数据, 等接收完数据后再重新释放SCL, 一遍另一方继续发送数据 这种方式称为<strong>I2C时钟延展</strong></p>
 <p>但如果通信双方有其中一方没有处理这种情况则可能会导致SCL死锁</p>
 <p><img src="/../images/I2C%E6%AD%BB%E9%94%81/0.png" alt="0"></p>
-<p>[^STM32F403RCT6与MLX90640进行I2C通信]: D0为SCL时钟线, D1为SDA数据线</p>
+<p>[^STM32F401RCT6与MLX90640进行I2C通信]: D0为SCL时钟线, D1为SDA数据线</p>
 <p>可分为四段来看, 前三段推测是一次性通信数据过大造成的死锁情况, 第四段则是正常分两段数据发送的情况(其实是两个两段数据, 共四组数据):</p>
 <ul>
 <li>这里SDA死锁时位于高电平还是低电平影响因素过多, 这里先理解为随机</li>
@@ -1469,79 +1535,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/04/%E4%BB%8ED-Link_DIR815%E8%B7%AF%E7%94%B1%E5%99%A8%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E%E5%BC%80%E5%90%AFIOT%E4%B9%8B%E6%97%85/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/06/04/%E4%BB%8ED-Link_DIR815%E8%B7%AF%E7%94%B1%E5%99%A8%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E%E5%BC%80%E5%90%AFIOT%E4%B9%8B%E6%97%85/" class="post-title-link" itemprop="url">从D-Link_DIR815路由器经典漏洞开启IOT之旅</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-06-04 20:36:59" itemprop="dateCreated datePublished" datetime="2025-06-04T20:36:59+08:00">2025-06-04</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-06-08 21:04:49" itemprop="dateModified" datetime="2025-06-08T21:04:49+08:00">2025-06-08</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>个人感觉麻烦的点在于环境的搭建(又回到最初一瓶农夫山泉搁那配一天环境的日子,一个点没注意就出问题,甚至桌上的农夫山泉都换成了怡宝),本文着重记录下自己踩得坑,对于漏洞的详细分析可以看看参考文章.然后关于IOT通信还涉及到http协议和cgi,我也以我的理解简单介绍下</p>
-<p>还介绍了纯rop链和shellcode两种漏洞利用方法,提到shellcode来getshell时出现的一些问题</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2025/06/04/%E4%BB%8ED-Link_DIR815%E8%B7%AF%E7%94%B1%E5%99%A8%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E%E5%BC%80%E5%90%AFIOT%E4%B9%8B%E6%97%85/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1613,7 +1606,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1626,7 +1619,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1662,7 +1655,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2025</span>
+  <span itemprop="copyrightYear">2026</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
