@@ -154,6 +154,1106 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/09/13/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/09/13/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97/" class="post-title-link" itemprop="url">交叉编译完全指南：从零到能落地</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-09-13 00:37:00 / 修改时间：00:39:06" itemprop="dateCreated datePublished" datetime="2026-09-13T00:37:00+08:00">2026-09-13</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="关于本文"><a href="#关于本文" class="headerlink" title="关于本文"></a>关于本文</h2><p><strong>读者对象</strong>：写过 C&#x2F;C++，会基本的命令行，但没系统做过交叉编译，对 CMake 只停留在”抄过 <code>CMakeLists.txt</code>“的程度。</p>
+<p><strong>前置要求</strong>：无。需要用到的编译原理、库知识、CMake 基础，本文第 0 部分会补齐。</p>
+<p><strong>怎么读</strong>：</p>
+<ul>
+<li>完全零基础 → 从第 0 部分顺序读。</li>
+<li>只想知道”为什么编出来的东西跑不起来” → 直接看 §4.2 和 §6。</li>
+<li>只想动手 → 跳到第 2 部分，五个实验按顺序做，每个都能独立跑通。</li>
+</ul>
+<p><strong>实验环境约定</strong>：宿主是 x86_64 的 Linux（含 WSL2），目标是 aarch64。工具链用 Ubuntu&#x2F;Debian 的 <code>gcc-aarch64-linux-gnu</code>。命令在别的发行版上需要微调包名，原理完全一样。</p>
+<p><strong>记号约定</strong>：<code>$</code> 开头是你要敲的命令，下面紧跟的是真实输出。<code>★</code> 标记的是全文最关键的几处。</p>
+<hr>
+<h1 id="第-0-部分：预备知识"><a href="#第-0-部分：预备知识" class="headerlink" title="第 0 部分：预备知识"></a>第 0 部分：预备知识</h1><p>如果你已经清楚编译流程、动态库、CMake 是什么，可以跳到<a href="#%E7%AC%AC-1-%E9%83%A8%E5%88%86%E5%8E%9F%E7%90%86%E5%9B%9B%E4%B8%AA%E6%A0%B9%E6%9C%AC%E9%97%AE%E9%A2%98">第 1 部分</a>。但建议至少扫一眼 §0.3 和 §0.5 —— 后面反复用到。</p>
+<h2 id="0-1-一次编译到底发生了什么"><a href="#0-1-一次编译到底发生了什么" class="headerlink" title="0.1 一次编译到底发生了什么"></a>0.1 一次编译到底发生了什么</h2><p>把 <code>main.c</code> 变成可执行文件，实际是<strong>四步</strong>，只是平时被 <code>gcc</code> 一条命令藏起来了：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>工具</th>
+<th>输入 → 输出</th>
+<th>做什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>预处理</td>
+<td><code>cpp</code></td>
+<td><code>.c</code> → <code>.i</code></td>
+<td>展开 <code>#include</code>、<code>#define</code>，删注释</td>
+</tr>
+<tr>
+<td>编译</td>
+<td><code>cc1</code></td>
+<td><code>.i</code> → <code>.s</code></td>
+<td>把 C 代码翻译成汇编</td>
+</tr>
+<tr>
+<td>汇编</td>
+<td><code>as</code></td>
+<td><code>.s</code> → <code>.o</code></td>
+<td>把汇编翻译成机器码（<strong>目标文件</strong>）</td>
+</tr>
+<tr>
+<td><strong>链接</strong></td>
+<td><code>ld</code></td>
+<td><code>.o</code> + 库 → 可执行文件</td>
+<td>把多个 <code>.o</code> 和库拼成一个程序</td>
+</tr>
+</tbody></table>
+<p>可以手动分步看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -E main.c -o main.i      <span class="comment"># 只做预处理</span></span><br><span class="line">$ gcc -S main.i -o main.s      <span class="comment"># 只做编译</span></span><br><span class="line">$ gcc -c main.s -o main.o      <span class="comment"># 只做汇编</span></span><br><span class="line">$ gcc main.o -o main           <span class="comment"># 只做链接</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么这件事对交叉编译很重要？</strong></p>
+<p>因为这四步里，<strong>每一步都可能需要目标架构的特定东西</strong>：</p>
+<ul>
+<li>预处理要目标机的头文件（<code>stdio.h</code> 里可能有架构相关的宏）</li>
+<li>编译要目标架构的编译器</li>
+<li>汇编要目标架构的汇编器</li>
+<li><strong>链接要目标机的库</strong>（这是最容易出问题的一步）</li>
+</ul>
+<p><code>gcc</code> 命令其实是”驱动程序”（driver），它根据参数去调用上面这些工具。<code>aarch64-linux-gnu-gcc</code> 就是一套配置好指向 aarch64 版本工具的驱动程序。</p>
+<blockquote>
+<p>想看 <code>gcc</code> 到底调用了什么？加 <code>-###</code>（注意是三个井号）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -### main.c -o main 2&gt;&amp;1 | <span class="built_in">head</span> -20</span><br></pre></td></tr></table></figure>
+<p>它会打印出每一步实际执行的命令。<strong>排查交叉编译问题时，这是最有用的命令之一。</strong></p>
+</blockquote>
+<h2 id="0-2-静态库与动态库"><a href="#0-2-静态库与动态库" class="headerlink" title="0.2 静态库与动态库"></a>0.2 静态库与动态库</h2><p>多个 <code>.o</code> 打包起来就是<strong>库</strong>。两种：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>静态库</th>
+<th>动态库</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>文件名</td>
+<td><code>libfoo.a</code></td>
+<td><code>libfoo.so</code></td>
+</tr>
+<tr>
+<td>链接时机</td>
+<td>编译时</td>
+<td>运行时</td>
+</tr>
+<tr>
+<td>代码在哪</td>
+<td><strong>复制进</strong>可执行文件</td>
+<td>单独一个文件，运行时加载</td>
+</tr>
+<tr>
+<td>可执行文件大小</td>
+<td>大</td>
+<td>小</td>
+</tr>
+<tr>
+<td>改库要不要重编程序</td>
+<td>要</td>
+<td>不要</td>
+</tr>
+</tbody></table>
+<p><strong>Linux 的动态库版本管理：一个文件，三个符号链接。</strong></p>
+<p>假设有一个 libfoo 版本 1.2.3，装到系统里是这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libfoo.so       → libfoo.so.1        （链接时用，由 -dev 包提供）</span><br><span class="line">libfoo.so.1     → libfoo.so.1.2.3    （运行时用，SONAME）</span><br><span class="line">libfoo.so.1.2.3                       （真正的文件）</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>libfoo.so.1.2.3</code></strong> —— 真实文件。</li>
+<li><strong><code>libfoo.so.1</code></strong> —— 主版本号。<strong>并存的多个版本靠它区分</strong>：<code>libfoo.so.1</code> 和 <code>libfoo.so.2</code> 可以同时装。</li>
+<li><strong><code>libfoo.so</code></strong> —— 只在你<strong>编译</strong>时有用（<code>-lfoo</code> 找的就是它），运行时不看它。</li>
+</ul>
+<p><strong>这里埋了一个巨大的坑，见 §0.4 和 §10.5：符号链接一旦被破坏，整套机制就崩了。</strong></p>
+<blockquote>
+<p>为什么不把 <code>libfoo.so</code> 也做成真实文件？因为那样就没法”同时存在多个版本”了 —— 一个目录下只能有一个叫 <code>libfoo.so</code> 的文件。</p>
+</blockquote>
+<h2 id="0-3-符号与”未定义符号”"><a href="#0-3-符号与”未定义符号”" class="headerlink" title="0.3 符号与”未定义符号”"></a>0.3 符号与”未定义符号”</h2><p><strong>符号（symbol）</strong> 就是函数名和变量名。目标文件里有两个方向的符号：</p>
+<ul>
+<li><strong>定义（defined）</strong> —— 我这里有这个函数的实现</li>
+<li><strong>未定义（undefined）</strong> —— 我需要这个函数，但不在我这，链接时你得给我找到</li>
+</ul>
+<p>看一个 <code>.o</code> 的符号表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># U = undefined（需要别人提供）</span></span><br><span class="line"><span class="comment"># T = 在代码段有定义（我提供了）</span></span><br><span class="line">$ nm main.o</span><br><span class="line">                 U <span class="built_in">printf</span></span><br><span class="line">                 U sqrt</span><br><span class="line">0000000000000000 T main</span><br></pre></td></tr></table></figure>
+
+<p><code>main</code> 是 <code>T</code>（本文件定义了它），<code>printf</code> 和 <code>sqrt</code> 是 <code>U</code>（本文件只调用，没实现）。</p>
+<p><strong>链接器的工作，就是把所有 <code>U</code> 都找到对应的 <code>T</code>。</strong> 找不到就报：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">undefined reference to `sqrt&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><strong>“未定义符号”这个指标贯穿全文。</strong> 后文 §14 会用它做验收判据 —— 一个交叉编译产物如果还有未定义符号，说明依赖没找齐。</p>
+<h2 id="0-4-CMake-是什么"><a href="#0-4-CMake-是什么" class="headerlink" title="0.4 CMake 是什么"></a>0.4 CMake 是什么</h2><h3 id="先看不用-CMake-的痛"><a href="#先看不用-CMake-的痛" class="headerlink" title="先看不用 CMake 的痛"></a>先看不用 CMake 的痛</h3><p>一个稍大的 C++ 项目，手写 <code>Makefile</code> 会遇到：</p>
+<ul>
+<li><strong>跨平台</strong>：Windows &#x2F; Linux &#x2F; macOS 的编译器和路径规则不同，要写三套</li>
+<li><strong>依赖管理</strong>：项目依赖 zlib，但 zlib 可能装在 <code>/usr/lib</code>、<code>/usr/local/lib</code>，也可能是自己编的，路径要能自动找到</li>
+<li><strong>可移植性</strong>：库的版本不同，要用不同的宏、不同的链接参数</li>
+<li><strong>构建配置</strong>：Debug &#x2F; Release 要产出不同的优化选项</li>
+</ul>
+<p><code>Makefile</code> 能解决，但会写得非常长且难以维护。</p>
+<h3 id="CMake-的定位"><a href="#CMake-的定位" class="headerlink" title="CMake 的定位"></a>CMake 的定位</h3><p><strong>CMake 不是编译器，也不是构建工具，它是”构建文件的生成器”。</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CMakeLists.txt  ──cmake──▶  Makefile / build.ninja  ──make/ninja──▶  可执行文件</span><br><span class="line">   （你写的）                （自动生成的）              （真正干活的）</span><br></pre></td></tr></table></figure>
+
+<p>你只需要写一份平台无关的 <code>CMakeLists.txt</code>，CMake 负责把它翻译成当前平台能用的构建文件。</p>
+<h3 id="最小的-CMakeLists-txt"><a href="#最小的-CMakeLists-txt" class="headerlink" title="最小的 CMakeLists.txt"></a>最小的 CMakeLists.txt</h3><figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.16</span>)   <span class="comment"># 声明需要的 CMake 版本</span></span><br><span class="line"><span class="keyword">project</span>(demo C)                        <span class="comment"># 项目名 + 语言</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">add_executable</span>(demo main.c)            <span class="comment"># 用 main.c 生成可执行文件 demo</span></span><br></pre></td></tr></table></figure>
+
+<p>三条命令就能跑：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ cmake -S . -B build          <span class="comment"># -S 源码目录  -B 构建目录</span></span><br><span class="line">$ cmake --build build          <span class="comment"># 执行构建</span></span><br><span class="line">$ ./build/demo</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>-S</code> &#x2F; <code>-B</code> 这种”源码目录和构建目录分开”的做法叫 <strong>out-of-source build</strong>。好处是构建产物不会污染源码目录，删掉 <code>build/</code> 就等于完全清理。<strong>交叉编译时这几乎是强制的</strong> —— 你经常需要为不同目标架构准备不同的构建目录。</p>
+</blockquote>
+<h3 id="链接库：target-link-libraries"><a href="#链接库：target-link-libraries" class="headerlink" title="链接库：target_link_libraries"></a>链接库：<code>target_link_libraries</code></h3><figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">add_executable</span>(demo main.c)</span><br><span class="line"><span class="keyword">target_link_libraries</span>(demo PRIVATE m)       <span class="comment"># 链接 libm（数学库）</span></span><br></pre></td></tr></table></figure>
+
+<p><code>m</code> 就是 <code>-lm</code> 里的那个名字（<code>lib</code> 前缀和 <code>.so</code> 后缀省略）。</p>
+<p><code>PRIVATE</code> 是”传递性”标记，简单理解为：这个库只有 <code>demo</code> 自己用，不会传染给依赖 <code>demo</code> 的其他目标。类似的还有 <code>PUBLIC</code>（自己用，也传下去）和 <code>INTERFACE</code>（自己不用，只传下去）。暂时不用深究。</p>
+<h3 id="找第三方库：find-package"><a href="#找第三方库：find-package" class="headerlink" title="找第三方库：find_package"></a>找第三方库：<code>find_package</code></h3><p>真实项目不会手写 <code>target_link_libraries(demo PRIVATE zlib)</code> 就完事，因为需要知道头文件在哪、库在哪、有什么编译选项。这时用 <code>find_package</code>：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">find_package</span>(ZLIB REQUIRED)                          <span class="comment"># 找 zlib，找不到就报错</span></span><br><span class="line"><span class="keyword">target_link_libraries</span>(demo PRIVATE ZLIB::ZLIB)       <span class="comment"># 用它提供的&quot;目标&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>ZLIB::ZLIB</code> 这种带 <code>::</code> 的东西叫 <strong>导入目标（imported target）</strong>。它像一个”包装好的依赖”，里面打包了头文件路径、库路径、编译选项等所有信息。链接时写一个 <code>ZLIB::ZLIB</code> 就够了。</p>
+<h3 id="★-find-package-的两种模式"><a href="#★-find-package-的两种模式" class="headerlink" title="★ find_package 的两种模式"></a>★ <code>find_package</code> 的两种模式</h3><p><strong>这个概念是理解交叉编译的关键，务必看懂。</strong></p>
+<p><code>find_package(XXX)</code> 有两种工作方式：</p>
+<p><strong>Module 模式</strong> —— CMake 自带（或项目提供）一个叫 <code>FindXXX.cmake</code> 的文件。它里面通常是这样写的：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">find_path</span>(ZLIB_INCLUDE_DIR zlib.h)             <span class="comment"># 去找头文件</span></span><br><span class="line"><span class="keyword">find_library</span>(ZLIB_LIBRARY NAMES z libz)        <span class="comment"># 去找库文件</span></span><br></pre></td></tr></table></figure>
+
+<p>这种写法<strong>会</strong>被交叉编译的重定向规则影响（下文 §5.1），所以交叉编译友好。</p>
+<p><strong>Config 模式</strong> —— 库自己在安装时提供一个叫 <code>XXXConfig.cmake</code> 的文件。这个文件里写的是<strong>库作者打包时确定的信息</strong>，通常是绝对路径：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 库安装时生成的 XXXTargets.cmake</span></span><br><span class="line"><span class="keyword">set_target_properties</span>(XXX::xxx PROPERTIES</span><br><span class="line">  IMPORTED_LOCATION <span class="string">&quot;/usr/lib/x86_64-linux-gnu/libxxx.so&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>里面的绝对路径是写死的，不会被任何重定向规则改写。</strong></p>
+<p>怎么区分？看 <code>find_package</code> 的实际行为，或者直接找文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ find / -name <span class="string">&quot;FindZLIB.cmake&quot;</span>       <span class="comment"># Module 模式</span></span><br><span class="line">$ find / -name <span class="string">&quot;ZLIBConfig.cmake&quot;</span>     <span class="comment"># Config 模式</span></span><br></pre></td></tr></table></figure>
+
+<p>现代 C++ 库（尤其是用 CMake 构建并导出的）<strong>绝大多数用 Config 模式</strong>。这就是交叉编译问题的高发区 —— <strong>第 4 节的坑、第 6 节的坑，根源都在这里。</strong></p>
+<h2 id="0-5-工具箱"><a href="#0-5-工具箱" class="headerlink" title="0.5 工具箱"></a>0.5 工具箱</h2><p>交叉编译排查问题，靠的是这五个命令。<strong>每个都建议实际敲一遍</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>回答什么问题</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>file</code></td>
+<td>这个文件是什么架构？</td>
+<td><code>file demo</code></td>
+</tr>
+<tr>
+<td><code>readelf -h</code></td>
+<td>ELF 文件头：架构、位宽、类型</td>
+<td><code>readelf -h demo</code></td>
+</tr>
+<tr>
+<td><code>readelf -d</code></td>
+<td>动态段：需要哪些库、有没有 RPATH</td>
+<td><code>readelf -d demo</code></td>
+</tr>
+<tr>
+<td><code>readelf -l</code></td>
+<td>程序段：解释器（动态加载器）是谁</td>
+<td><code>readelf -l demo | grep interpreter</code></td>
+</tr>
+<tr>
+<td><code>nm</code></td>
+<td>符号表：定义了啥、缺啥</td>
+<td><code>nm -D demo</code></td>
+</tr>
+</tbody></table>
+<p>再加一个交叉编译专用的：</p>
+<p>| <code>aarch64-linux-gnu-nm</code> | 目标架构版的 nm | <code>aarch64-linux-gnu-nm -D -u demo</code> |</p>
+<blockquote>
+<p>⚠️ <strong><code>ldd</code> 在交叉编译产物上不可信。</strong> <code>ldd</code> 的原理是让系统的动态加载器去解析依赖，用的是<strong>宿主</strong>的加载器。你拿它查一个 aarch64 的可执行文件，得到的结论是无效的（通常会报 “not a dynamic executable” 或干脆输出宿主的结果）。</p>
+<p>查依赖请用 <strong><code>readelf -d</code></strong>。</p>
+</blockquote>
+<p><strong>记住这些命令的输出长什么样：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ file demo</span><br><span class="line">demo: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (GNU/Linux), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, ...</span><br><span class="line"></span><br><span class="line">$ readelf -h demo | grep -E <span class="string">&quot;Class|Machine|Type&quot;</span></span><br><span class="line">  Class:                             ELF64</span><br><span class="line">  Type:                              DYN (Shared object file)</span><br><span class="line">  Machine:                           AArch64</span><br></pre></td></tr></table></figure>
+
+<p><code>Machine: AArch64</code> 是你要看到的关键字。看到 <code>Advanced Micro Devices X86-64</code> 就说明编错了。</p>
+<hr>
+<h1 id="第-1-部分：原理——四个根本问题"><a href="#第-1-部分：原理——四个根本问题" class="headerlink" title="第 1 部分：原理——四个根本问题"></a>第 1 部分：原理——四个根本问题</h1><h2 id="1-什么是交叉编译"><a href="#1-什么是交叉编译" class="headerlink" title="1. 什么是交叉编译"></a>1. 什么是交叉编译</h2><p><strong>在 A 类机器上编译出能在 B 类机器上运行的程序。</strong></p>
+<ul>
+<li><strong>宿主 &#x2F; 构建机（host）</strong>：执行编译的地方</li>
+<li><strong>目标机（target）</strong>：运行产物的地方</li>
+</ul>
+<blockquote>
+<p>术语提示：autoconf 体系里有 build &#x2F; host &#x2F; target 三个词，容易混淆。在”不构建编译器本身”的场景下，<code>build == host == 你的编译机</code>，<code>target == 目标机</code>。本文统一用”宿主”和”目标”。</p>
+</blockquote>
+<p><strong>为什么需要它？</strong></p>
+<ol>
+<li><strong>算力</strong>：嵌入式设备编译一个稍大的项目要几十分钟到几小时，x86 服务器几分钟就够。</li>
+<li><strong>环境</strong>：目标机通常没有完整的 <code>gcc</code>&#x2F;<code>cmake</code>&#x2F;开发库。</li>
+<li><strong>一致性</strong>：CI 跑在 x86 服务器上，不可能为每个架构准备一台原生构建机。</li>
+</ol>
+<p><strong>为什么它难？</strong></p>
+<p>因为整个工具链的默认行为都建立在**”我在本机”**这个假设上：编译器去 <code>/usr/include</code> 找头文件、链接器去 <code>/usr/lib</code> 找库、<code>pkg-config</code> 读本机的配置、CMake 按本机架构做判断。</p>
+<p><strong>交叉编译的本质，就是系统性地打破这个假设。</strong></p>
+<h2 id="2-四个根本问题"><a href="#2-四个根本问题" class="headerlink" title="2. 四个根本问题"></a>2. 四个根本问题</h2><p>任何交叉编译方案，无论用什么构建系统，都必须回答四个问题。这是全文的骨架：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问题</th>
+<th>手段</th>
+<th>决定什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Q1</strong></td>
+<td>用谁的<strong>编译器</strong>？</td>
+<td>工具链前缀 &#x2F; <code>CMAKE_TOOLCHAIN_FILE</code></td>
+<td>产物的<strong>架构</strong></td>
+</tr>
+<tr>
+<td><strong>Q2</strong></td>
+<td>用谁的<strong>头文件和库</strong>？</td>
+<td><code>sysroot</code></td>
+<td>编译能否<strong>通过</strong></td>
+</tr>
+<tr>
+<td><strong>Q3</strong></td>
+<td>怎么保证找依赖时<strong>不跑到宿主上</strong>？</td>
+<td><code>CMAKE_FIND_ROOT_PATH_MODE_*</code> &#x2F; <code>PKG_CONFIG_*</code></td>
+<td>依赖是否正确</td>
+</tr>
+<tr>
+<td><strong>Q4</strong></td>
+<td><strong>运行时</strong>怎么找到 <code>.so</code>？</td>
+<td><code>SONAME</code> &#x2F; <code>RPATH</code> &#x2F; <code>LD_LIBRARY_PATH</code></td>
+<td>产物能否<strong>跑起来</strong></td>
+</tr>
+</tbody></table>
+<h3 id="★-最重要的一句话"><a href="#★-最重要的一句话" class="headerlink" title="★ 最重要的一句话"></a>★ 最重要的一句话</h3><blockquote>
+<p><strong>Q1–Q3 决定”能不能编译出来”，Q4 决定”编译出来的东西能不能跑”。这两件事完全独立。</strong></p>
+</blockquote>
+<p>一个交叉编译产物可以做到：架构 100% 正确、编译零警告、链接零错误、所有常规检查全绿 —— <strong>然后在目标机上启动即失败</strong>。</p>
+<p>因为 Q1–Q3 只管到”链接完成”这一刻。而 <code>.so</code> 是<strong>运行时</strong>才加载的，那一刻发生在目标机上，跟你的构建环境已经没关系了。</p>
+<p><strong>这是交叉编译里最容易被忽略、也最难发现的一类问题。第 3 部分的坑四专门讲它。</strong></p>
+<h2 id="3-Q1：用谁的编译器"><a href="#3-Q1：用谁的编译器" class="headerlink" title="3. Q1：用谁的编译器"></a>3. Q1：用谁的编译器</h2><h3 id="3-1-命名规则"><a href="#3-1-命名规则" class="headerlink" title="3.1 命名规则"></a>3.1 命名规则</h3><p>GNU 工具链的命名是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;arch&gt;-&lt;vendor&gt;-&lt;os&gt;-&lt;abi&gt;-&lt;tool&gt;</span><br></pre></td></tr></table></figure>
+
+<p>例：<code>aarch64-linux-gnu-gcc</code></p>
+<table>
+<thead>
+<tr>
+<th>段</th>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>arch</td>
+<td><code>aarch64</code></td>
+<td>目标 CPU 架构（ARM 64 位）</td>
+</tr>
+<tr>
+<td>vendor</td>
+<td><code>linux</code></td>
+<td>厂商，通常是 <code>linux</code> 或 <code>none</code></td>
+</tr>
+<tr>
+<td>os</td>
+<td><code>gnu</code></td>
+<td>目标 OS&#x2F;ABI 是 glibc</td>
+</tr>
+<tr>
+<td>tool</td>
+<td><code>gcc</code></td>
+<td>工具本身</td>
+</tr>
+</tbody></table>
+<p><code>aarch64-linux-gnu-</code> 这一段叫 <strong>prefix（前缀）</strong>。装好工具链后会得到一整套：<code>-gcc</code>、<code>-g++</code>、<code>-ld</code>、<code>-as</code>、<code>-objdump</code>、<code>-nm</code>、<code>-readelf</code>……</p>
+<p><strong>常见困惑解决</strong>：<code>aarch64</code> 和 <code>arm64</code> 是同一个东西。前者是 GNU 的叫法，后者是 Apple&#x2F;LLVM 的叫法。Ubuntu 的 <code>dpkg --print-architecture</code> 在 ARM64 上输出 <code>arm64</code>，而 <code>uname -m</code> 输出 <code>aarch64</code>。<strong>这俩对不上不是错误。</strong></p>
+<h3 id="3-2-为什么不能只改-CC"><a href="#3-2-为什么不能只改-CC" class="headerlink" title="3.2 为什么不能只改 CC"></a>3.2 为什么不能只改 <code>CC</code></h3><p>最朴素的想法是 <code>CC=aarch64-linux-gnu-gcc cmake ..</code>。</p>
+<p><strong>实测结果是：对一个玩具项目，这居然能work。</strong> 下面是真实输出（<code>project(demo C)</code> + 一个 <code>main.c</code>）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">########## A. 只换编译器 ##########</span><br><span class="line">  -- CMAKE_SYSTEM_PROCESSOR = x86_64        ← 错！</span><br><span class="line">  -- CMAKE_CROSSCOMPILING   = FALSE         ← 错！</span><br><span class="line">  -- CMAKE_SYSTEM_NAME      = Linux</span><br><span class="line">  -- ==&gt; CMake 以为自己在做本机构建 !!!      ← 错！</span><br><span class="line">  -- ==&gt; 架构判断: 走了非 aarch64 分支 (错误!)</span><br><span class="line"></span><br><span class="line">########## B. 用 toolchain file ##########</span><br><span class="line">  -- CMAKE_SYSTEM_PROCESSOR = aarch64       ← 对</span><br><span class="line">  -- CMAKE_CROSSCOMPILING   = TRUE          ← 对</span><br><span class="line">  -- ==&gt; CMake 知道自己在交叉编译           ← 对</span><br><span class="line">  -- ==&gt; 架构判断: 走了 aarch64 分支 (正确)</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意 A 的情况有多危险：CMake 全程以为自己在做本机构建，而产物却是 aarch64。</strong></p>
+<p>玩具项目里这没关系（无非就是编个 <code>main.c</code>）。但真实项目里，所有依赖 <code>CMAKE_SYSTEM_PROCESSOR</code> 或 <code>CMAKE_CROSSCOMPILING</code> 的逻辑<strong>全部走错分支，而且不报任何错</strong> —— 条件编译选错源文件、特性探测得出错误结论、<code>find_package</code> 用错误的策略……直到运行时才炸。</p>
+<p>比”编译失败”危险得多：<strong>编译失败你立刻知道；这个你什么都不知道。</strong></p>
+<p>具体会碎在四个地方：</p>
+<ol>
+<li><strong>架构判断错</strong> —— 上面已经演示。</li>
+<li><strong><code>try_run()</code> 会失败</strong> —— CMake 大量用”编译并运行一小段代码看结果”来探测特性。aarch64 的可执行文件在 x86_64 宿主上根本执行不了。<code>CMAKE_CROSSCOMPILING=TRUE</code> 时 CMake 会自动跳过实际执行，<code>FALSE</code> 时它会去执行然后得到垃圾结果或报错。</li>
+<li><strong>库搜索路径没变</strong> —— <code>find_library()</code> 照样去宿主的 <code>/usr/lib/x86_64-linux-gnu</code> 找，拿到 x86_64 的 <code>.so</code>。</li>
+<li><strong><code>pkg-config</code> 没变</strong> —— 照样读宿主的 <code>.pc</code> 文件，吐出一堆宿主路径。</li>
+</ol>
+<p>所以需要一个<strong>在 <code>project()</code> 之前就把这些探测结果全部钉死</strong>的机制。</p>
+<h3 id="3-3-CMAKE-TOOLCHAIN-FILE"><a href="#3-3-CMAKE-TOOLCHAIN-FILE" class="headerlink" title="3.3 CMAKE_TOOLCHAIN_FILE"></a>3.3 <code>CMAKE_TOOLCHAIN_FILE</code></h3><p>CMake 保证：<code>-DCMAKE_TOOLCHAIN_FILE=xxx.cmake</code> 指定的文件，会在<strong>任何 <code>project()</code> &#x2F; <code>enable_language()</code> 之前</strong>被 <code>include()</code>，且只执行一次。</p>
+<p>这给了我们”抢在探测之前设好答案”的机会：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># toolchain.cmake</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_SYSTEM_NAME Linux)        <span class="comment"># ★ 最关键的一行</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_SYSTEM_PROCESSOR aarch64)</span><br><span class="line"><span class="keyword">set</span>(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)</span><br><span class="line"><span class="keyword">set</span>(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)</span><br></pre></td></tr></table></figure>
+
+<p>用法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-4-★-CMAKE-SYSTEM-NAME-是开关"><a href="#3-4-★-CMAKE-SYSTEM-NAME-是开关" class="headerlink" title="3.4 ★ CMAKE_SYSTEM_NAME 是开关"></a>3.4 ★ <code>CMAKE_SYSTEM_NAME</code> 是开关</h3><p><strong><code>CMAKE_SYSTEM_NAME</code> 比”设置编译器”重要得多。</strong></p>
+<p>CMake 内部有个变量 <code>CMAKE_CROSSCOMPILING</code>，表示”当前是否在交叉编译”。而这个变量<strong>只有在 toolchain file 里设置了 <code>CMAKE_SYSTEM_NAME</code> 才会变成 <code>TRUE</code></strong>。</p>
+<p>一旦为 <code>TRUE</code>，CMake 会自动：</p>
+<ul>
+<li>跳过 <code>try_run()</code> 的实际执行（改为只编译不运行）</li>
+<li>激活下文的 <code>CMAKE_FIND_ROOT_PATH</code> 重定向规则</li>
+<li>改变一系列默认行为</li>
+</ul>
+<p><strong>很多人第一次写 toolchain file 只设了编译器，然后困惑于”为什么还是不对”—— 就卡在这一行。</strong></p>
+<h2 id="4-Q2：用谁的编译产物依赖"><a href="#4-Q2：用谁的编译产物依赖" class="headerlink" title="4. Q2：用谁的编译产物依赖"></a>4. Q2：用谁的编译产物依赖</h2><h3 id="4-1-sysroot-是什么"><a href="#4-1-sysroot-是什么" class="headerlink" title="4.1 sysroot 是什么"></a>4.1 sysroot 是什么</h3><p>交叉编译有个危险：编译器默认去 <code>/usr/include</code> 找头文件。这会让你把<strong>宿主的</strong>头文件和 <code>.so</code> 编进目标架构的程序。</p>
+<p><strong>sysroot 的思路：准备一整套目标机的根文件系统，放在宿主的一个目录里，告诉编译器”把这里当成目标的 <code>/</code>“。</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sysroots/</span><br><span class="line">└── target-rootfs/          ← 这就是 sysroot</span><br><span class="line">    ├── usr/include/        ← 目标机的头文件</span><br><span class="line">    ├── usr/lib/            ← 目标机的库</span><br><span class="line">    ├── lib/</span><br><span class="line">    └── opt/</span><br></pre></td></tr></table></figure>
+
+<p>设了之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">你写的路径             编译器实际打开的</span><br><span class="line">/usr/include/stdio.h   →  $SYSROOT/usr/include/stdio.h</span><br><span class="line">/usr/lib/libz.so       →  $SYSROOT/usr/lib/libz.so</span><br></pre></td></tr></table></figure>
+
+<p>传递方式是 <code>--sysroot=&lt;path&gt;</code>，gcc 会把它同时传给预处理器、编译器和链接器。</p>
+<p>在 CMake 里通过 <code>CMAKE_SYSROOT</code> 传递：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ cmake -S . -B build \</span><br><span class="line">    -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \</span><br><span class="line">    -DCMAKE_SYSROOT=/path/to/target-rootfs</span><br></pre></td></tr></table></figure>
+
+<p>toolchain file 里通常会校验它：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="keyword">NOT</span> <span class="keyword">DEFINED</span> CMAKE_SYSROOT <span class="keyword">OR</span> CMAKE_SYSROOT <span class="keyword">STREQUAL</span> <span class="string">&quot;&quot;</span>)</span><br><span class="line">    <span class="keyword">message</span>(FATAL_ERROR <span class="string">&quot;CMAKE_SYSROOT 必须指向目标 sysroot&quot;</span>)</span><br><span class="line"><span class="keyword">endif</span>()</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>这个防御非常值得学。</strong> 没有 sysroot 的交叉编译会”成功”地链接出一堆宿主库，产物直到上机才炸。<strong>早失败远好于晚失败。</strong></p>
+</blockquote>
+<h3 id="4-2-★★-sysroot-不重写绝对路径"><a href="#4-2-★★-sysroot-不重写绝对路径" class="headerlink" title="4.2 ★★ --sysroot 不重写绝对路径"></a>4.2 ★★ <code>--sysroot</code> 不重写绝对路径</h3><p><strong>这是全文最重要的一条规则，请务必理解透。</strong></p>
+<blockquote>
+<p><strong><code>--sysroot</code> 只影响 <code>-L</code> 搜索路径和默认搜索目录，不会重写显式写在命令行上的绝对路径。</strong></p>
+</blockquote>
+<p>对比这两种写法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 写法一：-L 是&quot;搜索路径&quot;，ld 会在它前面加上 sysroot</span></span><br><span class="line">$ aarch64-linux-gnu-gcc --sysroot=/sys -L/usr/lib -lz main.c</span><br><span class="line"></span><br><span class="line"><span class="comment"># 写法二：这是&quot;显式的输入文件参数&quot;，ld 原样打开</span></span><br><span class="line">$ aarch64-linux-gnu-gcc --sysroot=/sys /usr/lib/libz.so main.c</span><br></pre></td></tr></table></figure>
+
+<p>写法一里 <code>-L/usr/lib</code> 会被改写成 <code>/sys/usr/lib</code>；写法二里 <code>/usr/lib/libz.so</code> <strong>原样使用</strong> —— ld 打开的是<strong>宿主的</strong>那个文件。</p>
+<p>这个规则的后果：</p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>宿主文件是<strong>错误架构</strong></td>
+<td>ld 报 <code>file in wrong format</code> &#x2F; <code>incompatible target</code> —— <strong>失败，你立刻知道</strong></td>
+</tr>
+<tr>
+<td>宿主文件<strong>恰好是正确架构</strong></td>
+<td>ld <strong>静默链接成功</strong> —— 产物里记下这个名字，目标机上未必有它</td>
+</tr>
+</tbody></table>
+<p><strong>第二种情况是灾难性的：不报错、不警告，只在部署时炸。</strong> 第 3 部分的坑四就是它。</p>
+<p><strong>命令行的对照见 §9（实验二），那里有可复现的完整输出。</strong></p>
+<h3 id="4-3-sysroot-从哪来"><a href="#4-3-sysroot-从哪来" class="headerlink" title="4.3 sysroot 从哪来"></a>4.3 sysroot 从哪来</h3><p>三种来源：</p>
+<ol>
+<li><strong>从目标机直接拷贝</strong> —— <code>rsync</code> 或 <code>tar</code> 整个 <code>/</code>（排除 <code>/proc</code> <code>/sys</code> <code>/dev</code>）。最真实，但体积大。</li>
+<li><strong>芯片厂商的 SDK&#x2F;BSP 提供</strong> —— 通常是预打包好的。</li>
+<li><strong>从 deb 包解出</strong> —— <code>dpkg -x</code> 或 <code>apt-get download</code> 后解压，只取需要的部分。适合补齐缺失的文件。</li>
+</ol>
+<blockquote>
+<p>⚠️ 用第 1 种方式时，<strong>必须用能保留符号链接的工具</strong>。见 §10.5。</p>
+</blockquote>
+<h2 id="5-Q3：怎么保证找依赖时不跑到宿主上"><a href="#5-Q3：怎么保证找依赖时不跑到宿主上" class="headerlink" title="5. Q3：怎么保证找依赖时不跑到宿主上"></a>5. Q3：怎么保证找依赖时不跑到宿主上</h2><p>有了编译器和 sysroot，还剩一个问题：构建系统里的 <code>find_package()</code> &#x2F; <code>find_library()</code> &#x2F; <code>pkg-config</code> 怎么知道该去哪找？</p>
+<h3 id="5-1-CMAKE-FIND-ROOT-PATH-与四个-MODE"><a href="#5-1-CMAKE-FIND-ROOT-PATH-与四个-MODE" class="headerlink" title="5.1 CMAKE_FIND_ROOT_PATH 与四个 MODE"></a>5.1 <code>CMAKE_FIND_ROOT_PATH</code> 与四个 MODE</h3><p>CMake 提供了一套”查找根目录”机制。<code>CMAKE_FIND_ROOT_PATH</code> 是一个<strong>前缀列表</strong>，<code>find_*</code> 命令会在每个前缀下再搜一遍。</p>
+<p>但只有前缀不够 —— <code>find_program</code> 和 <code>find_library</code> 的需求是<strong>相反</strong>的：</p>
+<ul>
+<li><code>find_program</code>（找可执行程序）：要<strong>宿主</strong>的。构建过程中要运行 <code>cmake</code>、<code>python3</code>、各种代码生成器，这些必须是宿主原生的，否则根本执行不了。</li>
+<li><code>find_library</code>（找库）：要<strong>目标</strong>的。</li>
+</ul>
+<p>所以 CMake 给了四个独立开关：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)  <span class="comment"># 程序：只在宿主找</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)   <span class="comment"># 库：只在 sysroot 找</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)   <span class="comment"># 头文件：只在 sysroot 找</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)   <span class="comment"># 包配置：两边都找</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>NEVER</code></td>
+<td>忽略 <code>CMAKE_FIND_ROOT_PATH</code>，按正常路径找</td>
+</tr>
+<tr>
+<td><code>ONLY</code></td>
+<td>只在 <code>CMAKE_FIND_ROOT_PATH</code> 下找</td>
+</tr>
+<tr>
+<td><code>BOTH</code></td>
+<td>先按正常路径找，再在 <code>CMAKE_FIND_ROOT_PATH</code> 下找</td>
+</tr>
+</tbody></table>
+<p><strong><code>MODE_PROGRAM=NEVER</code> 是必须的。</strong> 另外三个按项目需要配。</p>
+<p><strong><code>MODE_PACKAGE=BOTH</code> 是一个有意的取舍</strong>：它让 Config 模式的 <code>find_package()</code> 能搜到宿主上的包。有些库只装在宿主的 <code>/usr/local</code> 下（比如手动编译安装的），设成 <code>ONLY</code> 就找不到了。但代价是 —— <strong>宿主上找到的 Config 文件里那些绝对路径，会成为静默的链接错误来源</strong>（§4.2 + 坑四）。</p>
+<h3 id="5-2-回顾：find-package-的两种模式"><a href="#5-2-回顾：find-package-的两种模式" class="headerlink" title="5.2 回顾：find_package 的两种模式"></a>5.2 回顾：<code>find_package</code> 的两种模式</h3><p>回到 §0.4 讲过的：</p>
+<ul>
+<li><strong>Module 模式</strong>（<code>FindXXX.cmake</code>）：内部用 <code>find_library()</code> &#x2F; <code>find_path()</code>，<strong>会</strong>被上面的 MODE 重定向。交叉编译友好。</li>
+<li><strong>Config 模式</strong>（<code>XXXConfig.cmake</code>）：内部是<strong>打包时写死的绝对路径</strong>，<strong>不会</strong>被重定向。</li>
+</ul>
+<p><strong>所以 <code>MODE_LIBRARY=ONLY</code> 拦不住 Config 模式的包。</strong> 它只管 <code>find_library()</code>，管不到已经在配置文件里写好的绝对路径。</p>
+<h3 id="5-3-pkg-config"><a href="#5-3-pkg-config" class="headerlink" title="5.3 pkg-config"></a>5.3 <code>pkg-config</code></h3><p><code>pkg-config</code> 从 <code>.pc</code> 文件里读 <code>-I</code> &#x2F; <code>-L</code> &#x2F; <code>-l</code> 并拼成编译参数。默认它读宿主 <code>/usr/lib/pkgconfig</code>，交叉编译必须干预：</p>
+<table>
+<thead>
+<tr>
+<th>环境变量</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PKG_CONFIG_SYSROOT_DIR</code></td>
+<td>给输出的 <code>-I</code>&#x2F;<code>-L</code> 路径<strong>加上前缀</strong></td>
+</tr>
+<tr>
+<td><code>PKG_CONFIG_LIBDIR</code></td>
+<td><strong>替换</strong>（而非追加）<code>.pc</code> 文件的搜索路径</td>
+</tr>
+</tbody></table>
+<p><strong>两个都要设。</strong> 只设前者，<code>.pc</code> 文件本身还是从宿主读的，版本可能不对；只设后者，路径里不带 sysroot 前缀，<code>-I/usr/include</code> 依然指向宿主。</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>(ENV&#123;PKG_CONFIG_SYSROOT_DIR&#125; <span class="string">&quot;$&#123;CMAKE_SYSROOT&#125;&quot;</span>)</span><br><span class="line"><span class="keyword">set</span>(ENV&#123;PKG_CONFIG_LIBDIR&#125;</span><br><span class="line">    <span class="string">&quot;$&#123;CMAKE_SYSROOT&#125;/usr/lib/pkgconfig:$&#123;CMAKE_SYSROOT&#125;/usr/share/pkgconfig&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意是 <code>set(ENV&#123;...&#125;)</code> 不是 <code>set(...)</code>。这俩是<strong>环境变量</strong>，必须真的写进子进程的环境里。写成 <code>set(PKG_CONFIG_LIBDIR ...)</code> 只是定义了一个 CMake 变量，<code>pkg-config</code> 根本看不到。</p>
+</blockquote>
+<h2 id="6-Q4：运行时怎么找到-so"><a href="#6-Q4：运行时怎么找到-so" class="headerlink" title="6. Q4：运行时怎么找到 .so"></a>6. Q4：运行时怎么找到 <code>.so</code></h2><p>到这里程序已经能编译、能链接、能产出正确架构的 ELF 了。<strong>但能不能跑起来，是另一个独立问题。</strong></p>
+<h3 id="6-1-SONAME-与-DT-NEEDED"><a href="#6-1-SONAME-与-DT-NEEDED" class="headerlink" title="6.1 SONAME 与 DT_NEEDED"></a>6.1 <code>SONAME</code> 与 <code>DT_NEEDED</code></h3><p>动态库有个字段叫 <strong>SONAME</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -d libfoo.so.1.2.3 | grep SONAME</span><br><span class="line"> 0x000000000000000e (SONAME)  Library soname: [libfoo.so.1]</span><br></pre></td></tr></table></figure>
+
+<p>链接时，ld 把 <strong>SONAME</strong>（如果存在）写进可执行文件的 <code>DT_NEEDED</code>，<strong>而不是</strong>你传给它的文件名。</p>
+<p><strong>所以会出现这个经典困惑</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">磁盘上的文件：   libfoo.so.1.2.3</span><br><span class="line">SONAME：        libfoo.so.1</span><br><span class="line">DT_NEEDED 里：   libfoo.so.1        ← 运行时按这个名字找</span><br></pre></td></tr></table></figure>
+
+<p>“我明明链接的是 <code>.1.2.3</code>，为什么报错说找不到 <code>libfoo.so.1</code>？” —— 就是这个原因。</p>
+<p><strong>完整实验见 §11。</strong></p>
+<h3 id="6-2-动态加载器的搜索顺序"><a href="#6-2-动态加载器的搜索顺序" class="headerlink" title="6.2 动态加载器的搜索顺序"></a>6.2 动态加载器的搜索顺序</h3><p>运行时，<code>ld.so</code>（动态加载器，也叫 program interpreter）按<strong>固定顺序</strong>查找 <code>DT_NEEDED</code> 里的库：</p>
+<ol>
+<li><code>DT_RPATH</code>（已废弃；<strong>仅当没有 <code>DT_RUNPATH</code> 时</strong>才生效）</li>
+<li>环境变量 <code>LD_LIBRARY_PATH</code></li>
+<li><code>DT_RUNPATH</code></li>
+<li><code>/etc/ld.so.cache</code>（由 <code>ldconfig</code> 生成）</li>
+<li>默认目录 <code>/lib</code>、<code>/usr/lib</code>（以及多架构的 <code>/lib/&lt;triple&gt;</code> 等）</li>
+</ol>
+<p>前三个是你可以控制的。<strong>默认目录和 cache 由目标机决定，你在构建期无法影响。</strong></p>
+<h3 id="6-3-RPATH-RUNPATH-ORIGIN"><a href="#6-3-RPATH-RUNPATH-ORIGIN" class="headerlink" title="6.3 RPATH &#x2F; RUNPATH &#x2F; $ORIGIN"></a>6.3 RPATH &#x2F; RUNPATH &#x2F; <code>$ORIGIN</code></h3><p>用 <code>-Wl,-rpath,&lt;dir&gt;</code> 把搜索路径<strong>写进产物</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc main.c -L. -lfoo -o main -Wl,-rpath,<span class="string">&#x27;$ORIGIN&#x27;</span></span><br><span class="line">$ readelf -d main | grep -E <span class="string">&quot;RPATH|RUNPATH&quot;</span></span><br><span class="line"> 0x000000000000001d (RUNPATH)  Library runpath: [<span class="variable">$ORIGIN</span>]</span><br></pre></td></tr></table></figure>
+
+<p><code>$ORIGIN</code> 是<strong>产物自身所在的目录</strong>。用它做”相对自身定位”是发布包最常用的手法：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 程序在 bin/，库在 ../lib/</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_INSTALL_RPATH <span class="string">&quot;$ORIGIN/../lib&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这样整个目录树可以随便挪位置、随便复制到别的机器，不需要设 <code>LD_LIBRARY_PATH</code>。</p>
+<blockquote>
+<p><strong><code>RPATH</code> 和 <code>RUNPATH</code> 的区别</strong>：<code>RPATH</code> 是旧机制，优先级<strong>高于</strong> <code>LD_LIBRARY_PATH</code>；<code>RUNPATH</code> 是新机制（<code>--enable-new-dtags</code>，现代工具链默认），优先级<strong>低于</strong> <code>LD_LIBRARY_PATH</code>。</p>
+<p>实践上：<strong>用 <code>RUNPATH</code></strong>。它允许用户用 <code>LD_LIBRARY_PATH</code> 覆盖，调试时方便得多。</p>
+</blockquote>
+<p><strong>如果一个产物既没有 RPATH 也没有 RUNPATH，它在目标机上就完全依赖 <code>LD_LIBRARY_PATH</code> 和系统默认路径。</strong> 这是坑四的直接原因之一。</p>
+<h3 id="6-4-rpath-link-和-rpath-不是一回事"><a href="#6-4-rpath-link-和-rpath-不是一回事" class="headerlink" title="6.4 -rpath-link 和 -rpath 不是一回事"></a>6.4 <code>-rpath-link</code> 和 <code>-rpath</code> 不是一回事</h3><p>链接一个可执行文件时，ld 需要解析<strong>直接依赖</strong>。但如果直接依赖的 <code>.so</code> 自己还有依赖（<strong>间接依赖</strong>），ld 也需要能找到它们才能完成符号解析。</p>
+<p><code>-Wl,-rpath-link,&lt;dir&gt;</code> 就是告诉 ld 去这些目录找间接依赖：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>(CMAKE_EXE_LINKER_FLAGS_INIT</span><br><span class="line">    <span class="string">&quot;-Wl,-rpath-link,$&#123;CMAKE_SYSROOT&#125;/usr/lib&quot;</span></span><br><span class="line">    <span class="string">&quot;-Wl,-rpath-link,$&#123;CMAKE_SYSROOT&#125;/opt/ros/lib&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>-rpath</code></th>
+<th><code>-rpath-link</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>生效时机</td>
+<td><strong>运行时</strong></td>
+<td><strong>链接时</strong></td>
+</tr>
+<tr>
+<td>是否写进产物</td>
+<td>是（<code>DT_RPATH</code>&#x2F;<code>DT_RUNPATH</code>）</td>
+<td><strong>否</strong></td>
+</tr>
+<tr>
+<td>解决什么</td>
+<td>运行时找不到库</td>
+<td>链接时找不到间接依赖</td>
+</tr>
+</tbody></table>
+<p><strong><code>-rpath-link</code> 有个边界：它只对”以合法 ELF 存在的文件”有效。</strong> 如果被 <code>NEEDED</code> 的是个文本文件，ld 照样抓瞎，而且会报一个跟 rpath-link 看起来毫无关系的错误。这就是 §10.5 那个坑。</p>
+<hr>
+<h1 id="第-2-部分：实践——五个实验"><a href="#第-2-部分：实践——五个实验" class="headerlink" title="第 2 部分：实践——五个实验"></a>第 2 部分：实践——五个实验</h1><p>每个实验都可以独立跑通。<strong>建议按顺序做，并且亲手敲一遍、亲眼看一遍输出</strong> —— 交叉编译的很多东西，看一眼真实报错比读十段文字管用。</p>
+<h2 id="7-准备环境"><a href="#7-准备环境" class="headerlink" title="7. 准备环境"></a>7. 准备环境</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 交叉工具链</span></span><br><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证</span></span><br><span class="line">$ aarch64-linux-gnu-gcc --version</span><br><span class="line">aarch64-linux-gnu-gcc (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可选：装 qemu 用户态模拟器，能在宿主上直接跑 aarch64 程序看效果</span></span><br><span class="line"><span class="built_in">sudo</span> apt install -y qemu-user-static</span><br></pre></td></tr></table></figure>
+
+<p>再准备 CMake（实验四用）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ cmake --version</span><br><span class="line">cmake version 3.16.3</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>版本不必完全一致。<code>cmake_minimum_required(VERSION 3.16)</code> 意味着 3.16 及以上都行。</p>
+</blockquote>
+<p><strong>建一个工作目录，后面所有实验都在里面做：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p ~/xc-lab &amp;&amp; <span class="built_in">cd</span> ~/xc-lab</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-实验一：交叉编译一个-hello-world"><a href="#8-实验一：交叉编译一个-hello-world" class="headerlink" title="8. 实验一：交叉编译一个 hello world"></a>8. 实验一：交叉编译一个 hello world</h2><p><strong>目的</strong>：建立最基本的认知 —— 产物是什么样、怎么验证、在宿主上跑会怎样。</p>
+<h3 id="8-1-写代码"><a href="#8-1-写代码" class="headerlink" title="8.1 写代码"></a>8.1 写代码</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cat</span> &gt; hello.c &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line">int main(void) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hello from aarch64\n&quot;</span>);</span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-交叉编译"><a href="#8-2-交叉编译" class="headerlink" title="8.2 交叉编译"></a>8.2 交叉编译</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc hello.c -o hello</span><br></pre></td></tr></table></figure>
+
+<p><strong>先关注一件事：<code>aarch64-linux-gnu-gcc</code> 能直接工作，不需要任何 <code>--sysroot</code>。</strong> 因为 Debian&#x2F;Ubuntu 的 <code>gcc-aarch64-linux-gnu</code> 包已经自带了一套最小的 aarch64 sysroot（提供 <code>libc</code>、启动文件等），装在 <code>/usr/aarch64-linux-gnu/</code>。</p>
+<blockquote>
+<p>这也是为什么”只换 CC 也能编出玩具项目”（§3.2）—— 编译器自带的那套最小 sysroot 够用了。<strong>一旦项目需要额外的第三方库，就必须自己提供 sysroot。</strong></p>
+</blockquote>
+<h3 id="8-3-验证产物"><a href="#8-3-验证产物" class="headerlink" title="8.3 验证产物"></a>8.3 验证产物</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ file hello</span><br><span class="line">hello: ELF 64-bit LSB shared object, ARM aarch64, version 1 (SYSV), dynamically</span><br><span class="line">linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=2419659b..., </span><br><span class="line"><span class="keyword">for</span> GNU/Linux 3.7.0, not stripped</span><br></pre></td></tr></table></figure>
+
+<p>拆开看几个关键词：</p>
+<table>
+<thead>
+<tr>
+<th>输出片段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ELF 64-bit</code></td>
+<td>64 位 ELF 格式</td>
+</tr>
+<tr>
+<td><code>ARM aarch64</code></td>
+<td><strong>★ 目标架构正确</strong></td>
+</tr>
+<tr>
+<td><code>shared object</code></td>
+<td>是 PIE 可执行文件（现代默认，不是错误）</td>
+</tr>
+<tr>
+<td><code>interpreter /lib/ld-linux-aarch64.so.1</code></td>
+<td><strong>★ 运行时用的动态加载器是目标机的</strong></td>
+</tr>
+</tbody></table>
+<p>再看 ELF 头：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -h hello | grep -E <span class="string">&quot;Class|Machine|Type&quot;</span></span><br><span class="line">  Class:                             ELF64</span><br><span class="line">  Type:                              DYN (Shared object file)</span><br><span class="line">  Machine:                           AArch64</span><br></pre></td></tr></table></figure>
+
+<p>看解释器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -l hello | grep -o <span class="string">&quot;/lib/ld-linux[^]]*&quot;</span> | <span class="built_in">head</span> -1</span><br><span class="line">/lib/ld-linux-aarch64.so.1</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>小知识：<code>Type</code> 是 <code>DYN</code> 而不是 <code>EXEC</code>，是因为现代 GCC 默认生成 <strong>PIE</strong>（位置无关可执行文件）。这是正常现象，不是”编成库了”。<code>file</code> 命令会把它识别成 <code>pie executable</code> 或 <code>shared object</code>，两种描述指的是同一个东西。</p>
+</blockquote>
+<h3 id="8-4-在宿主上直接运行会怎样"><a href="#8-4-在宿主上直接运行会怎样" class="headerlink" title="8.4 在宿主上直接运行会怎样"></a>8.4 在宿主上直接运行会怎样</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ./hello</span><br><span class="line">bash: ./hello: cannot execute binary file: Exec format error</span><br></pre></td></tr></table></figure>
+
+<p><strong>这个报错是好事，它证明产物确实是异架构的。</strong></p>
+<blockquote>
+<p>如果你装了 <code>qemu-user-static</code> 并且注册了 binfmt_misc，可能会看到不一样的报错，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aarch64-binfmt-P: Could not open &#x27;/lib/ld-linux-aarch64.so.1&#x27;: No such file or directory</span><br></pre></td></tr></table></figure>
+<p>这个信息量更大 —— 内核已经尝试用 qemu 启动它了，只是找不到 aarch64 的动态加载器。<strong>它同样证明产物是异架构的。</strong></p>
+</blockquote>
+<h3 id="8-5-（可选）用-qemu-真的跑起来"><a href="#8-5-（可选）用-qemu-真的跑起来" class="headerlink" title="8.5 （可选）用 qemu 真的跑起来"></a>8.5 （可选）用 qemu 真的跑起来</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ qemu-aarch64-static -L /usr/aarch64-linux-gnu ./hello</span><br><span class="line">hello from aarch64</span><br></pre></td></tr></table></figure>
+
+<p><code>-L</code> 告诉 qemu 去哪找目标机的动态库（因为宿主上没有 <code>/lib/ld-linux-aarch64.so.1</code>）。</p>
+<p><strong>做到这一步，你已经完成了一次完整的交叉编译。</strong> 但真正的项目远不止于此 —— 接下来看 sysroot。</p>
+<h2 id="9-实验二-★：sysroot-的两种行为"><a href="#9-实验二-★：sysroot-的两种行为" class="headerlink" title="9. 实验二 ★：sysroot 的两种行为"></a>9. 实验二 ★：sysroot 的两种行为</h2><p><strong>目的</strong>：用可复现的实验，坐实 §4.2 那条规则 —— <strong><code>-L</code> 会被前缀化，显式绝对路径不会。</strong></p>
+<p>这个实验是全文的核心。<strong>请务必亲手做一遍。</strong></p>
+<h3 id="9-1-造一个假-sysroot"><a href="#9-1-造一个假-sysroot" class="headerlink" title="9.1 造一个假 sysroot"></a>9.1 造一个假 sysroot</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ W=/tmp/xc-lab</span><br><span class="line">$ <span class="built_in">mkdir</span> -p <span class="variable">$W</span>/fakesys/usr/lib <span class="variable">$W</span>/fakesys/lib <span class="variable">$W</span>/fakesys/usr/include</span><br><span class="line">$ <span class="built_in">cd</span> <span class="variable">$W</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 拿一个宿主 x86_64 的 ELF 当素材，伪装成 libfoo.so 放进假 sysroot</span></span><br><span class="line">$ <span class="built_in">cp</span> /lib/x86_64-linux-gnu/libc.so.6 <span class="variable">$W</span>/fakesys/usr/lib/libfoo.so</span><br><span class="line"></span><br><span class="line">$ file <span class="variable">$W</span>/fakesys/usr/lib/libfoo.so</span><br><span class="line">/tmp/xc-lab/fakesys/usr/lib/libfoo.so: ELF 64-bit LSB shared object, x86-64, ...</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意这里的关键设置</strong>：<code>libfoo.so</code> 只存在于假 sysroot 里，<strong>宿主的 <code>/usr/lib/libfoo.so</code> 不存在</strong>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> /usr/lib/libfoo.so</span><br><span class="line"><span class="built_in">ls</span>: cannot access <span class="string">&#x27;/usr/lib/libfoo.so&#x27;</span>: No such file or directory</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">ls</span> <span class="variable">$W</span>/fakesys/usr/lib/libfoo.so</span><br><span class="line">/tmp/xc-lab/fakesys/usr/lib/libfoo.so</span><br></pre></td></tr></table></figure>
+
+<p>这样，<strong>ld 报错信息里出现的路径，就能直接告诉我们它到底去了哪找。</strong></p>
+<h3 id="9-2-实验-2A：-L-会被-sysroot-前缀化"><a href="#9-2-实验-2A：-L-会被-sysroot-前缀化" class="headerlink" title="9.2 实验 2A：-L 会被 sysroot 前缀化"></a>9.2 实验 2A：<code>-L</code> 会被 sysroot 前缀化</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc -c hello.c -o hello.o</span><br><span class="line">$ aarch64-linux-gnu-gcc hello.o -o /dev/null --sysroot=<span class="variable">$W</span>/fakesys -L/usr/lib -lfoo</span><br></pre></td></tr></table></figure>
+
+<p>真实输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ld: skipping incompatible /tmp/xc-lab/fakesys/usr/lib/../lib/libfoo.so when searching for -lfoo</span><br><span class="line">ld: skipping incompatible /tmp/xc-lab/fakesys/usr/lib/libfoo.so when searching for -lfoo</span><br><span class="line">ld: skipping incompatible /tmp/xc-lab/fakesys/usr/lib/libfoo.so when searching for -lfoo</span><br><span class="line">ld: cannot find -lfoo</span><br></pre></td></tr></table></figure>
+
+<p><strong>看明白发生了什么：</strong></p>
+<ol>
+<li>我写的是 <code>-L/usr/lib</code>，但 ld 去的是 <strong><code>/tmp/xc-lab/fakesys/usr/lib</code></strong> —— <strong><code>-L</code> 被加上了 sysroot 前缀</strong>。★</li>
+<li>ld 找到了那个文件，发现它是 x86_64 的，于是 “skipping incompatible”。</li>
+<li>它还顺便试了 <code>/tmp/xc-lab/fakesys/usr/lib/../lib/</code>（也就是 <code>$SYS/lib</code>），这是 ld 的默认行为。</li>
+<li>最后找不到可用的，报 <code>cannot find -lfoo</code>。</li>
+</ol>
+<p><strong>报错信息里那个 <code>/tmp/xc-lab/fakesys/...</code> 路径，就是证据。</strong></p>
+<h3 id="9-3-实验-2B：对照组-——-不加-sysroot"><a href="#9-3-实验-2B：对照组-——-不加-sysroot" class="headerlink" title="9.3 实验 2B：对照组 —— 不加 --sysroot"></a>9.3 实验 2B：对照组 —— 不加 <code>--sysroot</code></h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc hello.o -o /dev/null -L/usr/lib -lfoo</span><br><span class="line">ld: cannot find -lfoo</span><br><span class="line">collect2: error: ld returned 1 <span class="built_in">exit</span> status</span><br></pre></td></tr></table></figure>
+
+<p><strong>只有干巴巴一句 <code>cannot find</code> —— 没有任何路径。</strong> 因为这次 <code>-L/usr/lib</code> 就是宿主真实的 <code>/usr/lib</code>，里面没有 <code>libfoo.so</code>。</p>
+<p>对照 2A 和 2B，<code>-L</code> 被前缀化这件事一目了然。</p>
+<h3 id="9-4-实验-2C-★★：显式绝对路径不会被前缀化"><a href="#9-4-实验-2C-★★：显式绝对路径不会被前缀化" class="headerlink" title="9.4 实验 2C ★★：显式绝对路径不会被前缀化"></a>9.4 实验 2C ★★：显式绝对路径<strong>不会</strong>被前缀化</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc hello.o -o /dev/null --sysroot=<span class="variable">$W</span>/fakesys <span class="variable">$W</span>/fakesys/usr/lib/libfoo.so</span><br><span class="line">ld: /tmp/xc-lab/fakesys/usr/lib/libfoo.so: error adding symbols: file <span class="keyword">in</span> wrong format</span><br><span class="line">collect2: error: ld returned 1 <span class="built_in">exit</span> status</span><br></pre></td></tr></table></figure>
+
+<p><strong>路径是原样使用的。</strong> <code>--sysroot</code> 对它毫无作用。</p>
+<p>这个例子里是”好事”（路径本来就是对的），但换成下面这个写法就是灾难：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 传入一个宿主的 x86_64 库</span></span><br><span class="line">$ aarch64-linux-gnu-gcc hello.o -o /dev/null --sysroot=<span class="variable">$W</span>/fakesys /lib/x86_64-linux-gnu/libz.so.1</span><br><span class="line">ld: /lib/x86_64-linux-gnu/libz.so.1: error adding symbols: file <span class="keyword">in</span> wrong format</span><br></pre></td></tr></table></figure>
+
+<p>ld 打开了<strong>宿主的</strong> <code>/lib/x86_64-linux-gnu/libz.so.1</code> —— 注意 sysroot 是 <code>$W/fakesys</code>，但 ld 根本没去 <code>$W/fakesys/lib/x86_64-linux-gnu/</code> 找。</p>
+<p><strong>这个例子还算幸运：因为架构不匹配，ld 报错了。</strong></p>
+<h3 id="9-5-★-最危险的情况"><a href="#9-5-★-最危险的情况" class="headerlink" title="9.5 ★ 最危险的情况"></a>9.5 ★ 最危险的情况</h3><p>现在把 9.4 的素材换成一个<strong>同架构</strong>的库。假设宿主上某个路径下的库恰好是 aarch64 的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc hello.o -o prog --sysroot=<span class="variable">$W</span>/fakesys /some/host/path/libortools.so.9.8.3296</span><br><span class="line">$ file prog</span><br><span class="line">prog: ELF 64-bit LSB executable, ARM aarch64, ...      ← 链接成功！</span><br></pre></td></tr></table></figure>
+
+<p><strong>没有任何报错。产物的架构也是对的。所有常规检查全绿。</strong></p>
+<p>但 <code>prog</code> 的 <code>DT_NEEDED</code> 里记下了 <code>libortools.so.9</code>，而这个库：</p>
+<ul>
+<li>不在 sysroot 里</li>
+<li>不在你的发布包里</li>
+<li>目标机上可能根本没有</li>
+</ul>
+<p><strong>部署到目标机，启动即失败：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error while loading shared libraries: libortools.so.9: cannot open shared object file</span><br></pre></td></tr></table></figure>
+
+<p><strong>这就是 §4.2 表格里那第二种情况，也是第 3 部分坑四的完整机制。</strong> 所以：</p>
+<blockquote>
+<p><strong>看到链接命令里有绝对路径，就要警惕。</strong> 尤其是来自第三方库 Config 文件的绝对路径。</p>
+</blockquote>
+<h3 id="9-6-补充证据：gcc-到底怎么传参"><a href="#9-6-补充证据：gcc-到底怎么传参" class="headerlink" title="9.6 补充证据：gcc 到底怎么传参"></a>9.6 补充证据：gcc 到底怎么传参</h3><p>用 <code>-###</code> 看 gcc 实际执行的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc hello.c -o /dev/null --sysroot=/usr/aarch64-linux-gnu -L/usr/lib -### 2&gt;&amp;1 \</span><br><span class="line">    | <span class="built_in">tr</span> <span class="string">&#x27; &#x27;</span> <span class="string">&#x27;\n&#x27;</span> | grep -E <span class="string">&quot;^-L|sysroot&quot;</span></span><br><span class="line"><span class="string">&quot;--sysroot=/usr/aarch64-linux-gnu&quot;</span></span><br><span class="line">-L/usr/lib</span><br></pre></td></tr></table></figure>
+
+<p><strong>看清楚了：gcc 把 <code>-L/usr/lib</code> 原样传给 ld，同时给了 <code>--sysroot</code>。前缀化是 ld 干的。</strong></p>
+<p>再用 <code>-Wl,--verbose</code> 看 ld 的搜索目录列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc hello.c -o /dev/null --sysroot=/usr/aarch64-linux-gnu -L/usr/lib -Wl,--verbose 2&gt;&amp;1 \</span><br><span class="line">    | grep -oE <span class="string">&#x27;SEARCH_DIR\(&quot;[^&quot;]*&quot;\)&#x27;</span></span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/usr/local/lib/aarch64-linux-gnu&quot;</span>)</span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/lib/aarch64-linux-gnu&quot;</span>)</span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/usr/lib/aarch64-linux-gnu&quot;</span>)</span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/usr/local/lib&quot;</span>)</span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/lib&quot;</span>)</span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/usr/lib&quot;</span>)</span><br><span class="line">SEARCH_DIR(<span class="string">&quot;=/usr/aarch64-linux-gnu/lib&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>=</code> 开头的含义是”相对于 sysroot”。</strong> 所以 <code>=/usr/lib</code> 在 <code>--sysroot=/usr/aarch64-linux-gnu</code> 下实际指向 <code>/usr/aarch64-linux-gnu/usr/lib</code>。</p>
+<h2 id="10-实验三：动态库、SONAME-与-RPATH"><a href="#10-实验三：动态库、SONAME-与-RPATH" class="headerlink" title="10. 实验三：动态库、SONAME 与 RPATH"></a>10. 实验三：动态库、SONAME 与 RPATH</h2><p><strong>目的</strong>：亲手验证 §6.1 和 §6.3 —— 为什么”链接的名字”和”文件的名字”不是一回事。</p>
+<h3 id="10-1-做一个库和一个程序"><a href="#10-1-做一个库和一个程序" class="headerlink" title="10.1 做一个库和一个程序"></a>10.1 做一个库和一个程序</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /tmp/xc-lab</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">cat</span> &gt; add.c &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">int add(int a, int b) &#123; <span class="built_in">return</span> a + b; &#125;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">cat</span> &gt; main.c &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line">int add(int, int);</span><br><span class="line">int main(void) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;2+3=%d\n&quot;</span>, add(2, 3));</span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译成动态库，并指定 SONAME</span></span><br><span class="line">$ aarch64-linux-gnu-gcc -shared -fPIC add.c -o libadd.so.1.0 -Wl,-soname,libadd.so.1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 建立链接用的符号链接</span></span><br><span class="line">$ <span class="built_in">ln</span> -sf libadd.so.1.0 libadd.so</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译主程序，链接这个库</span></span><br><span class="line">$ aarch64-linux-gnu-gcc main.c -L. -ladd -o main</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-2-看-SONAME"><a href="#10-2-看-SONAME" class="headerlink" title="10.2 看 SONAME"></a>10.2 看 SONAME</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -d libadd.so.1.0 | grep SONAME</span><br><span class="line"> 0x000000000000000e (SONAME)             Library soname: [libadd.so.1]</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-3-★-看可执行文件里记下的名字"><a href="#10-3-★-看可执行文件里记下的名字" class="headerlink" title="10.3 ★ 看可执行文件里记下的名字"></a>10.3 ★ 看可执行文件里记下的名字</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -d main | grep NEEDED</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libadd.so.1]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键点：我链接时用的是 <code>-ladd</code>（也就是 <code>libadd.so</code>），但 <code>DT_NEEDED</code> 里记的是 <code>libadd.so.1</code>。</strong></p>
+<p><strong>因为 SONAME 优先于文件名。</strong> 这就是”找不到 <code>libfoo.so.1</code>“这类报错的来源。</p>
+<h3 id="10-4-看-RPATH"><a href="#10-4-看-RPATH" class="headerlink" title="10.4 看 RPATH"></a>10.4 看 RPATH</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -d main | grep -E <span class="string">&quot;RPATH|RUNPATH&quot;</span></span><br><span class="line">（无输出）</span><br></pre></td></tr></table></figure>
+
+<p><strong>这个可执行文件没有任何 RPATH&#x2F;RUNPATH。</strong> 它在目标机上只能靠 <code>LD_LIBRARY_PATH</code> 或系统默认路径找到 <code>libadd.so.1</code>。</p>
+<p>加上 RPATH 试试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ aarch64-linux-gnu-gcc main.c -L. -ladd -o main_rpath -Wl,-rpath,<span class="string">&#x27;$ORIGIN&#x27;</span></span><br><span class="line">$ readelf -d main_rpath | grep -E <span class="string">&quot;RPATH|RUNPATH&quot;</span></span><br><span class="line"> 0x000000000000001d (RUNPATH)             Library runpath: [<span class="variable">$ORIGIN</span>]</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意生成的是 <code>RUNPATH</code> 而不是 <code>RPATH</code></strong> —— 现代工具链默认用新的 dtags。<code>$ORIGIN</code> 表示”程序自己所在的目录”，把库和程序放一起就能直接跑。</p>
+<h3 id="10-5-关键推论：为什么符号链接被破坏是灾难"><a href="#10-5-关键推论：为什么符号链接被破坏是灾难" class="headerlink" title="10.5 关键推论：为什么符号链接被破坏是灾难"></a>10.5 关键推论：为什么符号链接被破坏是灾难</h3><p>回来看看 §0.2 那三个符号链接。<strong>如果 <code>libadd.so.1</code> 这个软链坏了会怎样？</strong></p>
+<ul>
+<li>链接时：<code>-ladd</code> 找的是 <code>libadd.so</code>，可能还能工作</li>
+<li><strong>运行时</strong>：<code>ld.so</code> 按 <code>DT_NEEDED</code> 里的 <code>libadd.so.1</code> 去找 —— <strong>找不到，程序起不来</strong></li>
+</ul>
+<p>而 Windows 解压 Linux rootfs 时，恰恰会把符号链接变成<strong>文本文件</strong>。<strong>这时候文件”存在”，但内容是错的。</strong> 验证方法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">mkdir</span> -p demo/lib</span><br><span class="line">$ <span class="built_in">echo</span> <span class="string">&quot;libadd.so.1.0&quot;</span> &gt; demo/lib/libadd.so     <span class="comment"># 模拟被拍平的软链</span></span><br><span class="line"></span><br><span class="line">$ file demo/lib/libadd.so</span><br><span class="line">demo/lib/libadd.so: ASCII text                  ← 本该是 <span class="string">&quot;ELF ... symbolic link&quot;</span></span><br><span class="line"></span><br><span class="line">$ readelf -h demo/lib/libadd.so</span><br><span class="line">readelf: Error: demo/lib/libadd.so: Failed to <span class="built_in">read</span> file header</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>file</code> 说它是 <code>ASCII text</code> —— 这一条就足以判定它是被拍平的软链。</strong></p>
+<p>判据整理（可以直接拿去写脚本）：</p>
+<blockquote>
+<p>一个文件是”被拍平的符号链接”，当且仅当：</p>
+<ol>
+<li>是普通文件（不是符号链接）</li>
+<li>大小很小（比如 ≤ 1KB）</li>
+<li>内容不含换行符</li>
+<li>不是 ELF magic（开头不是 <code>\x7fELF</code>）</li>
+<li>内容是合法 UTF-8、不含空格</li>
+<li>把内容当作路径解析，<strong>指向一个真实存在的文件</strong></li>
+</ol>
+</blockquote>
+<p>第 6 条最关键 —— 它排除了误判。满足全部六条，基本可以确定。</p>
+<p><strong>修复</strong>：在<strong>目标机侧</strong>（或任何 Linux 环境）用 <code>tar</code> 重新打包再解压，或按内容重建软链：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ln</span> -sf <span class="string">&quot;<span class="subst">$(cat broken_link)</span>&quot;</span> broken_link</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>根因预防</strong>：传输 sysroot 时用能保留符号链接的工具。在 Windows 上，用 WSL 里的 <code>tar</code>&#x2F;<code>rsync</code>，或者以管理员权限运行支持符号链接的解压工具。<strong>用普通 Windows 解压软件处理 Linux rootfs，出现这个问题是必然的。</strong></p>
+</blockquote>
+<h2 id="11-实验四：用-CMake-做交叉编译"><a href="#11-实验四：用-CMake-做交叉编译" class="headerlink" title="11. 实验四：用 CMake 做交叉编译"></a>11. 实验四：用 CMake 做交叉编译</h2><p><strong>目的</strong>：把前面的知识串起来，做一个完整的 CMake 交叉编译工程。</p>
+<h3 id="11-1-建工程"><a href="#11-1-建工程" class="headerlink" title="11.1 建工程"></a>11.1 建工程</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">mkdir</span> -p /tmp/xc-cmake &amp;&amp; <span class="built_in">cd</span> /tmp/xc-cmake</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">cat</span> &gt; main.c &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line"><span class="comment">#include &lt;math.h&gt;</span></span><br><span class="line">int main(void) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;sqrt(2) = %f\n&quot;</span>, sqrt(2.0));</span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">cat</span> &gt; CMakeLists.txt &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">cmake_minimum_required(VERSION 3.16)</span><br><span class="line">project(demo C)</span><br><span class="line"></span><br><span class="line">add_executable(demo main.c)</span><br><span class="line">target_link_libraries(demo PRIVATE m)</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-2-步骤-1：什么都不做"><a href="#11-2-步骤-1：什么都不做" class="headerlink" title="11.2 步骤 1：什么都不做"></a>11.2 步骤 1：什么都不做</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ cmake -S . -B b1</span><br><span class="line">$ cmake --build b1</span><br><span class="line">$ file b1/demo</span><br><span class="line">b1/demo: ELF 64-bit LSB shared object, x86-64, ...</span><br></pre></td></tr></table></figure>
+
+<p><strong>编出来是 x86_64 —— 宿主的架构。</strong> 这是默认行为。</p>
+<h3 id="11-3-步骤-2：只换编译器"><a href="#11-3-步骤-2：只换编译器" class="headerlink" title="11.3 步骤 2：只换编译器"></a>11.3 步骤 2：只换编译器</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ cmake -S . -B b2 -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc</span><br><span class="line">$ cmake --build b2</span><br><span class="line">$ file b2/demo</span><br><span class="line">b2/demo: ELF 64-bit LSB shared object, ARM aarch64, ...</span><br></pre></td></tr></table></figure>
+
+<p><strong>居然成功了 —— 产物是正确的 aarch64。</strong></p>
+<p><strong>这正是危险所在。</strong> 产物对了，但 CMake 的自我认知是错的。加几行诊断代码看看：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 加到 CMakeLists.txt 里</span></span><br><span class="line"><span class="keyword">message</span>(STATUS <span class="string">&quot;CMAKE_SYSTEM_PROCESSOR = $&#123;CMAKE_SYSTEM_PROCESSOR&#125;&quot;</span>)</span><br><span class="line"><span class="keyword">message</span>(STATUS <span class="string">&quot;CMAKE_CROSSCOMPILING   = $&#123;CMAKE_CROSSCOMPILING&#125;&quot;</span>)</span><br><span class="line"><span class="keyword">if</span>(CMAKE_CROSSCOMPILING)</span><br><span class="line">  <span class="keyword">message</span>(STATUS <span class="string">&quot;==&gt; CMake 知道自己在交叉编译&quot;</span>)</span><br><span class="line"><span class="keyword">else</span>()</span><br><span class="line">  <span class="keyword">message</span>(STATUS <span class="string">&quot;==&gt; CMake 以为自己在做本机构建 !!!&quot;</span>)</span><br><span class="line"><span class="keyword">endif</span>()</span><br><span class="line"><span class="keyword">if</span>(CMAKE_SYSTEM_PROCESSOR <span class="keyword">STREQUAL</span> <span class="string">&quot;aarch64&quot;</span>)</span><br><span class="line">  <span class="keyword">message</span>(STATUS <span class="string">&quot;==&gt; 架构判断: 走了 aarch64 分支 (正确)&quot;</span>)</span><br><span class="line"><span class="keyword">else</span>()</span><br><span class="line">  <span class="keyword">message</span>(STATUS <span class="string">&quot;==&gt; 架构判断: 走了非 aarch64 分支 (错误!)&quot;</span>)</span><br><span class="line"><span class="keyword">endif</span>()</span><br></pre></td></tr></table></figure>
+
+<p>真实输出（只换编译器）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-- CMAKE_SYSTEM_PROCESSOR = x86_64</span><br><span class="line">-- CMAKE_CROSSCOMPILING   = FALSE</span><br><span class="line">-- CMAKE_SYSTEM_NAME      = Linux</span><br><span class="line">-- ==&gt; CMake 以为自己在做本机构建 !!!</span><br><span class="line">-- ==&gt; 架构判断: 走了非 aarch64 分支 (错误!)</span><br></pre></td></tr></table></figure>
+
+<p><strong>产物是 aarch64，但 CMake 认为它在为 x86_64 构建。</strong> 所有依赖这两个变量的逻辑都会走错，而且<strong>不会报任何错</strong>。</p>
+<p>对比用 toolchain file 的输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-- CMAKE_SYSTEM_PROCESSOR = aarch64</span><br><span class="line">-- CMAKE_CROSSCOMPILING   = TRUE</span><br><span class="line">-- ==&gt; CMake 知道自己在交叉编译</span><br><span class="line">-- ==&gt; 架构判断: 走了 aarch64 分支 (正确)</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-4-步骤-3：写-toolchain-file"><a href="#11-4-步骤-3：写-toolchain-file" class="headerlink" title="11.4 步骤 3：写 toolchain file"></a>11.4 步骤 3：写 toolchain file</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cat</span> &gt; toolchain.cmake &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line"><span class="comment"># 目标系统</span></span><br><span class="line"><span class="built_in">set</span>(CMAKE_SYSTEM_NAME Linux)</span><br><span class="line"><span class="built_in">set</span>(CMAKE_SYSTEM_PROCESSOR aarch64)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译器</span></span><br><span class="line"><span class="built_in">set</span>(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)</span><br><span class="line"><span class="built_in">set</span>(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 告诉 CMake 多架构库目录的后缀</span></span><br><span class="line"><span class="built_in">set</span>(CMAKE_LIBRARY_ARCHITECTURE aarch64-linux-gnu)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查找根路径</span></span><br><span class="line"><span class="built_in">set</span>(CMAKE_FIND_ROOT_PATH /usr/aarch64-linux-gnu)</span><br><span class="line"><span class="built_in">set</span>(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)</span><br><span class="line"><span class="built_in">set</span>(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)</span><br><span class="line"><span class="built_in">set</span>(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)</span><br><span class="line"><span class="built_in">set</span>(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ cmake -S . -B b3 -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake</span><br><span class="line">$ cmake --build b3</span><br><span class="line">$ file b3/demo</span><br><span class="line">b3/demo: ELF 64-bit LSB shared object, ARM aarch64, ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-5-三个构建目录的对比"><a href="#11-5-三个构建目录的对比" class="headerlink" title="11.5 三个构建目录的对比"></a>11.5 三个构建目录的对比</h3><table>
+<thead>
+<tr>
+<th>构建目录</th>
+<th>用的方式</th>
+<th>产物架构</th>
+<th>CMake 的自我认知</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>b1</code></td>
+<td>什么都不做</td>
+<td>x86-64</td>
+<td>正确（本机构建）</td>
+</tr>
+<tr>
+<td><code>b2</code></td>
+<td>只换 <code>CC</code></td>
+<td><strong>ARM aarch64</strong></td>
+<td><strong>错误</strong> ← 最危险</td>
+</tr>
+<tr>
+<td><code>b3</code></td>
+<td>toolchain file</td>
+<td>ARM aarch64</td>
+<td>正确</td>
+</tr>
+</tbody></table>
+<p><strong><code>b2</code> 那一行是全文最值得记住的对比。</strong> “产物架构对了”绝不等于”构建配置对了”。</p>
+<h3 id="11-6-CMAKE-LIBRARY-ARCHITECTURE-是干什么的"><a href="#11-6-CMAKE-LIBRARY-ARCHITECTURE-是干什么的" class="headerlink" title="11.6 CMAKE_LIBRARY_ARCHITECTURE 是干什么的"></a>11.6 <code>CMAKE_LIBRARY_ARCHITECTURE</code> 是干什么的</h3><figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>(CMAKE_LIBRARY_ARCHITECTURE aarch64-linux-gnu)</span><br></pre></td></tr></table></figure>
+
+<p>它告诉 CMake：多架构库目录的后缀是 <code>aarch64-linux-gnu</code>，于是 <code>$&#123;prefix&#125;/lib/aarch64-linux-gnu</code> 会被自动加入搜索路径。</p>
+<p><strong>这一行如果设错或者漏了，会表现为”明明 sysroot 里有这个库，CMake 却说找不到”</strong> —— 因为 CMake 只去 <code>$&#123;prefix&#125;/lib</code> 找，没去 <code>$&#123;prefix&#125;/lib/aarch64-linux-gnu</code>。</p>
+<h2 id="12-实验五：依赖探测工程"><a href="#12-实验五：依赖探测工程" class="headerlink" title="12. 实验五：依赖探测工程"></a>12. 实验五：依赖探测工程</h2><p><strong>目的</strong>：学会用一个最小工程，快速验证”交叉编译环境是否真的配好了”。</p>
+<p><strong>做法</strong>：写一个 <code>CMakeLists.txt</code>，把你项目用到的<strong>所有</strong>库都列进去，<strong>不写任何业务代码</strong>，只做 <code>find_package</code> + <code>target_link_libraries</code>。</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.16</span>)</span><br><span class="line"><span class="keyword">project</span>(deps_probe CXX)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 把项目里用到的库都列上</span></span><br><span class="line"><span class="keyword">find_package</span>(ZLIB REQUIRED)</span><br><span class="line"><span class="keyword">find_package</span>(OpenSSL REQUIRED)</span><br><span class="line"><span class="keyword">find_package</span>(SQLite3 REQUIRED)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_executable</span>(probe probe.cpp)</span><br><span class="line"><span class="keyword">target_link_libraries</span>(probe PRIVATE</span><br><span class="line">    ZLIB::ZLIB</span><br><span class="line">    OpenSSL::SSL</span><br><span class="line">    SQLite::SQLite3</span><br><span class="line">    curl</span><br><span class="line">    xml2</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><code>probe.cpp</code> 里甚至可以什么都不做：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="number">0</span>; &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>然后看构建结果。</strong> 判据不是”有没有报错”，而是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 看产物还有没有未定义符号</span></span><br><span class="line">$ aarch64-linux-gnu-nm -D -u build/probe | <span class="built_in">wc</span> -l</span><br><span class="line">0</span><br></pre></td></tr></table></figure>
+
+<p><strong>未定义符号为 0，才叫”依赖全部找齐了”。</strong></p>
+<p>为什么这个指标比日志可靠？因为日志只告诉你”某一步有没有报错”，而<strong>未定义符号数量直接衡量”链接器是否真的把所有符号都解析了”</strong>。有些依赖问题是静默的（比如找到了错误架构的库但恰好没用到它的符号），日志上看不出来。</p>
+<p>这个工程建好之后，每次改动 sysroot 或工具链，跑一遍就知道环境有没有退化。</p>
+<hr>
+<h1 id="第-3-部分：验收与避坑"><a href="#第-3-部分：验收与避坑" class="headerlink" title="第 3 部分：验收与避坑"></a>第 3 部分：验收与避坑</h1><h2 id="13-三层验收法"><a href="#13-三层验收法" class="headerlink" title="13. 三层验收法"></a>13. 三层验收法</h2><p>交叉编译的验收<strong>不能只看”构建成功”</strong>。按下面三层做：</p>
+<h3 id="第一层：架构正确性"><a href="#第一层：架构正确性" class="headerlink" title="第一层：架构正确性"></a>第一层：架构正确性</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 统计产物里各架构的文件数</span></span><br><span class="line">$ find build -<span class="built_in">type</span> f \( -name <span class="string">&#x27;*.so*&#x27;</span> -o -perm -u+x \) -<span class="built_in">exec</span> file &#123;&#125; + \</span><br><span class="line">    | grep -c <span class="string">&#x27;x86-64&#x27;</span></span><br><span class="line">0                                        ← 必须是 0</span><br><span class="line"></span><br><span class="line">$ find build -<span class="built_in">type</span> f \( -name <span class="string">&#x27;*.so*&#x27;</span> -o -perm -u+x \) -<span class="built_in">exec</span> file &#123;&#125; + \</span><br><span class="line">    | grep -c <span class="string">&#x27;ARM aarch64&#x27;</span></span><br><span class="line">46                                       ← 数量应该对得上</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可执行文件的解释器</span></span><br><span class="line">$ readelf -l build/demo | grep -o <span class="string">&#x27;/lib/ld-linux[^]]*&#x27;</span></span><br><span class="line">/lib/ld-linux-aarch64.so.1               ← 必须是目标机的</span><br></pre></td></tr></table></figure>
+
+<p><strong>这一层能查出”编错了架构”，但查不出别的问题。</strong></p>
+<h3 id="第二层：依赖可解析性（★-最关键）"><a href="#第二层：依赖可解析性（★-最关键）" class="headerlink" title="第二层：依赖可解析性（★ 最关键）"></a>第二层：依赖可解析性（★ 最关键）</h3><p>用 §12 的依赖探测工程，看<strong>未定义符号数量</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">修复前：336 个未定义符号</span><br><span class="line">修复后：0 个</span><br></pre></td></tr></table></figure>
+
+<h3 id="第三层：部署可得性"><a href="#第三层：部署可得性" class="headerlink" title="第三层：部署可得性"></a>第三层：部署可得性</h3><p><strong>这是最容易被跳过、也最容易出事的一层。</strong></p>
+<p>对每个产物的<strong>非系统</strong> <code>DT_NEEDED</code>，逐个确认它在目标机上可得：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 列出所有非系统依赖</span></span><br><span class="line">$ <span class="keyword">for</span> f <span class="keyword">in</span> build/lib/*/mynode; <span class="keyword">do</span></span><br><span class="line">    readelf -d <span class="string">&quot;<span class="variable">$f</span>&quot;</span> | grep NEEDED | sed <span class="string">&#x27;s/.*\[\(.*\)\]/\1/&#x27;</span></span><br><span class="line">  <span class="keyword">done</span> | <span class="built_in">sort</span> -u \</span><br><span class="line">    | grep -Ev <span class="string">&#x27;^(libc|libm|libgcc_s|libstdc\+\+|libpthread|libdl|librt|ld-linux)&#x27;</span></span><br><span class="line">libcurl.so.4</span><br><span class="line">libssl.so.1.1</span><br><span class="line">libortools.so.9          ← 重点关注这种：不在 sysroot 里</span><br><span class="line">libxml2.so.2</span><br><span class="line">libsqlite3.so.0</span><br></pre></td></tr></table></figure>
+
+<p>对每一个，回答两个问题：</p>
+<ol>
+<li><strong>目标机上有吗？</strong> —— 查你的参考 rootfs，或 <code>ssh</code> 上去 <code>ldconfig -p | grep &lt;名字&gt;</code></li>
+<li><strong>发布包里带了吗？</strong> —— 查打包目录</li>
+</ol>
+<p><strong>两个都是”没有” ⇒ 部署一定失败。</strong></p>
+<p>可以写成一个检查脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env bash</span></span><br><span class="line"><span class="comment"># 逐条核对部署可得性</span></span><br><span class="line"><span class="keyword">for</span> f <span class="keyword">in</span> <span class="string">&quot;<span class="variable">$@</span>&quot;</span>; <span class="keyword">do</span></span><br><span class="line">    readelf -d <span class="string">&quot;<span class="variable">$f</span>&quot;</span> 2&gt;/dev/null | grep NEEDED | sed <span class="string">&#x27;s/.*\[\(.*\)\]/\1/&#x27;</span></span><br><span class="line"><span class="keyword">done</span> | <span class="built_in">sort</span> -u \</span><br><span class="line">  | grep -Ev <span class="string">&#x27;^(libc|libm|libgcc_s|libstdc\+\+|libpthread|libdl|librt|ld-linux)&#x27;</span> \</span><br><span class="line">  | <span class="keyword">while</span> <span class="built_in">read</span> -r lib; <span class="keyword">do</span></span><br><span class="line">      on_target=$(ssh <span class="string">&quot;<span class="variable">$TARGET</span>&quot;</span> <span class="string">&quot;ldconfig -p | grep -c &#x27;<span class="variable">$lib</span>&#x27;&quot;</span> 2&gt;/dev/null || <span class="built_in">echo</span> 0)</span><br><span class="line">      in_pkg=$(find <span class="string">&quot;<span class="variable">$PKG_DIR</span>&quot;</span> -name <span class="string">&quot;<span class="variable">$lib</span>&quot;</span> | <span class="built_in">head</span> -1)</span><br><span class="line">      <span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$on_target</span>&quot;</span> = <span class="string">&quot;0&quot;</span> ] &amp;&amp; [ -z <span class="string">&quot;<span class="variable">$in_pkg</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">          <span class="built_in">echo</span> <span class="string">&quot;缺失: <span class="variable">$lib</span>&quot;</span></span><br><span class="line">      <span class="keyword">fi</span></span><br><span class="line">  <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>第 3 部分的坑四，就是被这一层查出来的。前两层全绿。</strong></p>
+<h2 id="14-四个经典坑"><a href="#14-四个经典坑" class="headerlink" title="14. 四个经典坑"></a>14. 四个经典坑</h2><p>这四个坑覆盖了交叉编译最常见的四类问题，<strong>每一个都对应四个根本问题中的某一个</strong>。</p>
+<h3 id="坑一：sysroot-不完整，报错点离根因十万八千里"><a href="#坑一：sysroot-不完整，报错点离根因十万八千里" class="headerlink" title="坑一：sysroot 不完整，报错点离根因十万八千里"></a>坑一：sysroot 不完整，报错点离根因十万八千里</h3><p><strong>现象</strong>：<code>find_package(spdlog REQUIRED)</code> 失败，报找不到包。但 <code>spdlogConfig.cmake</code> 明明在 sysroot 里躺着。</p>
+<p><strong>根因</strong>：那个 config 文件 <code>include()</code> 的某个依赖文件里，引用了一个 sysroot 中不存在的路径，触发了校验宏的 <code>FATAL_ERROR</code>。<strong>报错信息指向的是那个引用，不是缺失的目录。</strong></p>
+<p><strong>对应</strong>：Q2（sysroot）</p>
+<p><strong>教训</strong>：sysroot 不完整时，<strong>报错点往往离根因很远</strong>。</p>
+<p>「<code>find_package</code> 失败」不一定等于「包没装」，可能是：</p>
+<ul>
+<li>包在，但它依赖的某个 cmake 文件引用的路径不存在</li>
+<li>包在，但版本不匹配</li>
+<li>包在，但它的 Config 文件里的路径是宿主的</li>
+</ul>
+<blockquote>
+<p><strong>一个有用的信号</strong>：很多库的 config 文件里都有类似 <code>set_and_check()</code> 的宏 —— 它的作用就是”检查这个路径存在，不存在就报错”。看到它报错，第一反应应该是”某个路径不存在”，而不是”这个库有问题”。</p>
+</blockquote>
+<h3 id="坑二：符号链接被拍平成文本文件"><a href="#坑二：符号链接被拍平成文本文件" class="headerlink" title="坑二：符号链接被拍平成文本文件"></a>坑二：符号链接被拍平成文本文件</h3><p><strong>现象</strong>：链接时报 <code>file format not recognized</code>，或运行时报找不到库。</p>
+<p><strong>对应</strong>：Q2（sysroot）</p>
+<p><strong>根因</strong>：Linux 动态库用符号链接做版本管理（§0.2），而 Windows 文件系统 API 和很多解压工具不支持 Linux 符号链接，会把它变成一个<strong>内容是目标路径的文本文件</strong>。</p>
+<p><strong>验证</strong>（见 §10.5）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ file sysroot/usr/lib/aarch64-linux-gnu/libfoo.so</span><br><span class="line">sysroot/usr/lib/aarch64-linux-gnu/libfoo.so: ASCII text</span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么这个坑特别隐蔽</strong>：<code>-rpath-link</code> 也会去打开这个文件，读到文本而非 ELF，然后报一个跟 rpath-link 看起来毫无关系的错。</p>
+<p><strong>教训</strong>：<strong>sysroot 必须用能保留符号链接的工具传输。</strong> 用 WSL 里的 <code>tar</code>&#x2F;<code>rsync</code>，或者管理员权限的解压工具。</p>
+<h3 id="坑三：Config-文件里的宿主绝对路径"><a href="#坑三：Config-文件里的宿主绝对路径" class="headerlink" title="坑三：Config 文件里的宿主绝对路径"></a>坑三：Config 文件里的宿主绝对路径</h3><p><strong>现象</strong>：链接时报 <code>cannot find /usr/lib/x86_64-linux-gnu/libfoo.so</code> —— 一个 x86_64 路径出现在 aarch64 的链接命令里。</p>
+<p><strong>对应</strong>：Q3（依赖重定向）</p>
+<p><strong>根因</strong>：<code>*Targets.cmake</code> 里的 <code>IMPORTED_LOCATION</code> 是打包时确定的绝对路径，<strong>CMake 不会对它应用 <code>CMAKE_FIND_ROOT_PATH</code></strong>。</p>
+<p><strong>修复</strong>：把 sysroot 内所有 cmake 配置里的绝对路径前缀化：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 先 dry-run 看清楚要改哪些行！</span></span><br><span class="line">$ grep -rn <span class="string">&#x27;IMPORTED_LOCATION&#x27;</span> sysroot/usr/lib/cmake/ | <span class="built_in">head</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 确认无误后再改</span></span><br><span class="line">$ find sysroot -name <span class="string">&#x27;*Targets*.cmake&#x27;</span> -o -name <span class="string">&#x27;*Config*.cmake&#x27;</span> | <span class="keyword">while</span> <span class="built_in">read</span> -r f; <span class="keyword">do</span></span><br><span class="line">    sed -i -E <span class="string">&#x27;s#&quot;(/(usr|opt|lib))#&quot;$&#123;CMAKE_SYSROOT&#125;\1#g&#x27;</span> <span class="string">&quot;<span class="variable">$f</span>&quot;</span></span><br><span class="line">  <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么用 <code>$&#123;CMAKE_SYSROOT&#125;</code> 而不是写死路径？</strong> 因为 toolchain file 在顶层作用域被 <code>include()</code>，这个变量对所有被 include 的 cmake 文件都可见。sysroot 换位置时不用重新改一遍；而且它为空时表达式退化成原值，不会更糟。</p>
+<p><strong>这个替换极容易误伤。必须遵守两条纪律：</strong></p>
+<ol>
+<li><strong>先 dry-run</strong>，把将要改动的行打印出来人工确认</li>
+<li><strong>跳过已经正确的形式</strong></li>
+</ol>
+<p>第 2 条尤其重要。下面这些形式<strong>已经是对的</strong>，再替换就坏了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$&#123;CMAKE_SYSROOT&#125;/usr        ← 前面是 &#x27;&#125;&#x27;</span><br><span class="line">$&#123;SOME_PREFIX&#125;//usr         ← 前面是 &#x27;&#125;&#x27;</span><br><span class="line">$&lt;INSTALL_PREFIX&gt;/usr       ← 前面是 &#x27;&gt;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>所以匹配模式要写成 <code>([&quot;;:( ])</code> 这种”排除掉 <code>&#125;</code> 和 <code>&gt;</code>“的形式，而不是简单的 <code>(^|/)</code>。</p>
+<h3 id="坑四-★：库”链接成功”但产物里没有"><a href="#坑四-★：库”链接成功”但产物里没有" class="headerlink" title="坑四 ★：库”链接成功”但产物里没有"></a>坑四 ★：库”链接成功”但产物里没有</h3><p><strong>现象</strong>：交叉编译全部通过，产物架构验证 100% 干净。拿到目标机上启动即失败：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error while loading shared libraries: libortools.so.9</span><br></pre></td></tr></table></figure>
+
+<p><strong>对应</strong>：Q4（运行时）—— 但根因在 Q3</p>
+<p><strong>排查过程</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 产物需要什么？</span></span><br><span class="line">$ readelf -d install/lib/mynode | grep NEEDED</span><br><span class="line">  (NEEDED)  Shared library: [libortools.so.9]</span><br><span class="line">  (NEEDED)  Shared library: [libcurl.so.4]</span><br><span class="line">  (NEEDED)  Shared library: [libssl.so.1.1]</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 有没有 RPATH 兜底？</span></span><br><span class="line">$ readelf -d install/lib/mynode | grep -E <span class="string">&#x27;RPATH|RUNPATH&#x27;</span></span><br><span class="line">  (空)                                   ← 没有</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 这个库在 sysroot 里有吗？</span></span><br><span class="line">$ find sysroot -name <span class="string">&#x27;libortools*&#x27;</span> | <span class="built_in">wc</span> -l</span><br><span class="line">0                                        ← 没有</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 在发布包里吗？</span></span><br><span class="line">$ find package/ -name <span class="string">&#x27;libortools*&#x27;</span> | <span class="built_in">wc</span> -l</span><br><span class="line">0                                        ← 没有</span><br></pre></td></tr></table></figure>
+
+<p><strong>根因（完整的因果链）</strong>：</p>
+<ol>
+<li>某个第三方库用 <strong>Config 模式</strong> 导出（§0.4）</li>
+<li>它的 <code>Targets.cmake</code> 里写的是 <code>$&#123;_IMPORT_PREFIX&#125;/lib64/libxxx.so.9.8.3296</code> 这样的<strong>绝对路径</strong></li>
+<li><code>_IMPORT_PREFIX</code> 由配置文件位置推算，最终指向宿主上的某个真实路径</li>
+<li>链接命令里就出现了这个绝对路径</li>
+<li><strong><code>--sysroot</code> 不重写显式绝对路径</strong>（§4.2），ld 打开了<strong>宿主上的</strong>那个文件</li>
+<li>宿主上的这个文件<strong>恰好是正确架构</strong>，于是<strong>静默链接成功</strong></li>
+<li>产物的 <code>DT_NEEDED</code> 记下了 <code>libxxx.so.9</code>，但没有 RPATH</li>
+<li>sysroot 里没有、发布包里没有、目标机上也没有 ⇒ <strong>启动失败</strong></li>
+</ol>
+<p><strong>为什么 <code>MODE_LIBRARY=ONLY</code> 没拦住？</strong> 因为它只管 <code>find_library()</code>。这里的路径来自 Config 模式的 imported target，走的是 <code>MODE_PACKAGE</code>，而它通常是 <code>BOTH</code>。</p>
+<p><strong>为什么所有常规检查都是绿的？</strong></p>
+<table>
+<thead>
+<tr>
+<th>检查</th>
+<th>结果</th>
+<th>为什么漏掉</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>架构验证</td>
+<td>46 个 aarch64，0 个 x86_64</td>
+<td>产物确实是 aarch64，没问题</td>
+</tr>
+<tr>
+<td>构建日志</td>
+<td>无错误无警告</td>
+<td>ld 确实成功打开了文件</td>
+</tr>
+<tr>
+<td>链接</td>
+<td>成功</td>
+<td>文件架构匹配</td>
+</tr>
+<tr>
+<td><code>readelf -d</code></td>
+<td>有 <code>DT_NEEDED</code></td>
+<td>只说明”需要它”，不说明”有它”</td>
+</tr>
+</tbody></table>
+<p><strong>没有任何自动化检查会告诉你”你链接了一个宿主上的库”。</strong></p>
+<p><strong>教训</strong>：</p>
+<ol>
+<li><strong>“编译通过”和”能运行”是两件独立的事</strong>（§2）。</li>
+<li><strong>必须做第三层验收</strong>（§13）：把 <code>DT_NEEDED</code> 逐条列出来，对着目标机一个一个核。</li>
+<li><strong>绝对路径链接是静默的。</strong> 它不警告，不失败，只在部署时炸。</li>
+</ol>
+<p><strong>处理方向</strong>（取决于目标机是否已装该库）：</p>
+<ul>
+<li><strong>A. 随包下发</strong> —— 把这个 <code>.so</code> 放进发布包，并把它的目录加进运行时的 <code>LD_LIBRARY_PATH</code></li>
+<li><strong>B. 目标机预装</strong> —— 在目标机上装好这个库</li>
+</ul>
+<p>选哪条取决于库的体积和部署方式。大的库（几十 MB）随包下发会显著增加发布包体积。</p>
+<h2 id="15-速查表"><a href="#15-速查表" class="headerlink" title="15. 速查表"></a>15. 速查表</h2><h3 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h3><table>
+<thead>
+<tr>
+<th>目的</th>
+<th>命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>看文件架构</td>
+<td><code>file &lt;f&gt;</code></td>
+</tr>
+<tr>
+<td>看 ELF 头</td>
+<td><code>readelf -h &lt;f&gt;</code></td>
+</tr>
+<tr>
+<td>看依赖&#x2F;RPATH&#x2F;SONAME</td>
+<td><code>readelf -d &lt;f&gt;</code></td>
+</tr>
+<tr>
+<td>看程序解释器</td>
+<td><code>readelf -l &lt;f&gt; | grep interpreter</code></td>
+</tr>
+<tr>
+<td>看符号</td>
+<td><code>nm -D &lt;f&gt;</code> &#x2F; <code>nm -D -u &lt;f&gt;</code></td>
+</tr>
+<tr>
+<td>看 gcc 实际执行的命令</td>
+<td><code>gcc -### ... 2&gt;&amp;1</code></td>
+</tr>
+<tr>
+<td>看 ld 的搜索目录</td>
+<td><code>gcc ... -Wl,--verbose 2&gt;&amp;1 | grep SEARCH_DIR</code></td>
+</tr>
+<tr>
+<td>目标架构版工具</td>
+<td><code>aarch64-linux-gnu-nm</code> &#x2F; <code>-objdump</code> &#x2F; <code>-readelf</code></td>
+</tr>
+<tr>
+<td>在宿主上跑目标程序</td>
+<td><code>qemu-aarch64-static -L &lt;sysroot&gt; ./prog</code></td>
+</tr>
+</tbody></table>
+<p><strong>不要用 <code>ldd</code> 查交叉编译产物的依赖</strong> —— 它用宿主的加载器，结论无效。</p>
+<h3 id="改动后的处理矩阵"><a href="#改动后的处理矩阵" class="headerlink" title="改动后的处理矩阵"></a>改动后的处理矩阵</h3><table>
+<thead>
+<tr>
+<th>改了什么</th>
+<th>要做什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>业务代码</td>
+<td>增量编译即可</td>
+</tr>
+<tr>
+<td><code>CMakeLists.txt</code></td>
+<td>增量即可，构建系统会重新 cmake</td>
+</tr>
+<tr>
+<td><strong>工具链文件 &#x2F; <code>CMAKE_SYSROOT</code></strong></td>
+<td><strong>必须全量重建</strong> —— CMake 不跟踪 toolchain 文件内容变化</td>
+</tr>
+<tr>
+<td><strong>sysroot 内容</strong>（补目录、修软链）</td>
+<td><strong>必须全量重建</strong> —— 旧 <code>CMakeCache.txt</code> 里存着上次的查找结果</td>
+</tr>
+<tr>
+<td>源码根路径</td>
+<td>删掉对应的 <code>build/&lt;pkg&gt;</code>（<code>CMakeCache.txt</code> 记录了源码目录）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>这条矩阵很实用。<strong>“改了 sysroot 但没清 cache”是一个高频的自我欺骗来源</strong> —— 看起来重新编译了，其实用的还是旧的查找结果。</p>
+</blockquote>
+<h3 id="完整检查清单"><a href="#完整检查清单" class="headerlink" title="完整检查清单"></a>完整检查清单</h3><p><strong>编译前</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 交叉工具链在 <code>PATH</code> 里（<code>aarch64-linux-gnu-gcc --version</code>）</li>
+<li><input disabled="" type="checkbox"> sysroot 完整：头文件、<code>.so</code>、<code>cmake/</code>、<code>pkgconfig/</code> 都在</li>
+<li><input disabled="" type="checkbox"> sysroot 里的符号链接<strong>是符号链接</strong>，不是文本文件（§10.5 的判据）</li>
+<li><input disabled="" type="checkbox"> 没有遗留的宿主 <code>CMakeCache.txt</code></li>
+<li><input disabled="" type="checkbox"> 工具链文件里设了 <code>CMAKE_SYSTEM_NAME</code>（§3.4）</li>
+</ul>
+<p><strong>编译后</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 产物架构正确（0 个 x86_64，解释器是 <code>/lib/ld-linux-aarch64.so.1</code>）</li>
+<li><input disabled="" type="checkbox"> 依赖探测工程未定义符号为 0（§12）</li>
+<li><input disabled="" type="checkbox"> <strong><code>DT_NEEDED</code> 逐条核对目标机可得性（§13 第三层）</strong></li>
+</ul>
+<p><strong>部署前</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 非系统依赖要么目标机自带、要么随包</li>
+<li><input disabled="" type="checkbox"> 运行脚本的 <code>LD_LIBRARY_PATH</code> 覆盖了所有随包库</li>
+<li><input disabled="" type="checkbox"> 产物没有 RPATH 时，确认运行方式会设置 <code>LD_LIBRARY_PATH</code></li>
+</ul>
+<h2 id="16-结语"><a href="#16-结语" class="headerlink" title="16. 结语"></a>16. 结语</h2><p>回头看，四个坑各对应一个问题，但<strong>难点的性质完全不同</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>坑</th>
+<th>对应</th>
+<th>难在哪</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一：sysroot 不完整</td>
+<td>Q2</td>
+<td><strong>难在排查</strong> —— 报错点离根因很远</td>
+</tr>
+<tr>
+<td>二：符号链接被拍平</td>
+<td>Q2</td>
+<td><strong>难在环境</strong> —— 伪装成编译错误</td>
+</tr>
+<tr>
+<td>三：Config 里的宿主路径</td>
+<td>Q3</td>
+<td><strong>难在排查</strong> —— 路径看起来”很正常”</td>
+</tr>
+<tr>
+<td>四：链接成功但库不在</td>
+<td>Q4</td>
+<td><strong>难在发现</strong> —— 不报错，常规检查全绿</td>
+</tr>
+</tbody></table>
+<p>如果只能记住一句话：</p>
+<blockquote>
+<p><strong>交叉编译里，Q1 &#x2F; Q2 是入门</strong> —— 配好 toolchain file 就能跑通大多数项目。<br><strong>Q3 是进阶</strong> —— 决定大型项目能不能编出来。<br><strong>Q4 最容易漏</strong> —— 它不影响编译成功与否，只影响产物能不能跑。</p>
+</blockquote>
+<p>而 Q4 恰恰是最难在构建阶段发现的，因为<strong>没有任何自动化检查会告诉你”你链接了一个宿主上的库”</strong>。</p>
+<p>唯一的办法是老老实实做第三层验收：</p>
+<blockquote>
+<p><strong>把 <code>DT_NEEDED</code> 逐条列出来，对着目标机一个一个核。</strong></p>
+</blockquote>
+<hr>
+<h2 id="附录：本文实验索引"><a href="#附录：本文实验索引" class="headerlink" title="附录：本文实验索引"></a>附录：本文实验索引</h2><table>
+<thead>
+<tr>
+<th>实验</th>
+<th>位置</th>
+<th>验证了什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一：hello world</td>
+<td>§8</td>
+<td>产物形态、架构验证、异架构执行</td>
+</tr>
+<tr>
+<td>二：sysroot 两种行为</td>
+<td>§9</td>
+<td>★ <code>-L</code> 被前缀化，绝对路径不被重写</td>
+</tr>
+<tr>
+<td>三：SONAME 与 RPATH</td>
+<td>§10</td>
+<td><code>DT_NEEDED</code> 用 SONAME、RPATH 写法、软链判据</td>
+</tr>
+<tr>
+<td>四：CMake 三步走</td>
+<td>§11</td>
+<td><code>CMAKE_CROSSCOMPILING</code> 陷阱、toolchain file</td>
+</tr>
+<tr>
+<td>五：依赖探测工程</td>
+<td>§12</td>
+<td>用未定义符号数量验收</td>
+</tr>
+</tbody></table>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2026/04/24/%E7%AC%AC%E4%B8%89%E6%96%B9%E8%BD%AF%E4%BB%B6QQ%E7%99%BB%E5%BD%95%E6%97%B6%E7%9A%84%E7%AD%BE%E5%90%8D%E6%A0%A1%E9%AA%8C%E5%8F%8A%E7%BB%95%E8%BF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1359,210 +2459,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/27/CAN%E6%80%BB%E7%BA%BF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/11/27/CAN%E6%80%BB%E7%BA%BF/" class="post-title-link" itemprop="url">CAN总线学习笔记</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-11-27 22:44:33" itemprop="dateCreated datePublished" datetime="2025-11-27T22:44:33+08:00">2025-11-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-04-22 16:44:11" itemprop="dateModified" datetime="2026-04-22T16:44:11+08:00">2026-04-22</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CAN/" itemprop="url" rel="index"><span itemprop="name">CAN</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="协议规定"><a href="#协议规定" class="headerlink" title="协议规定"></a>协议规定</h2><p>差分信号</p>
-<p>差值为0为逻辑1(隐性电平)</p>
-<p>差值不为0为逻辑1(显性电平) (具体差值范围多少和高速\低速CAN协议有关)</p>
-<p>可记为电平拉开为0, 闭合为1</p>
-<p>异步半双工</p>
-<h2 id="帧格式"><a href="#帧格式" class="headerlink" title="帧格式"></a>帧格式</h2><p>数据帧 遥控帧 错误帧 过载帧 帧间隔</p>
-<p>EOF之后仍需3位显性电平的帧间隔才能进入下一个通信</p>
-<p><strong>位填充机制</strong>:兼容错误帧和过载帧 避免错位和防止被误认为是空闲</p>
-<h2 id="位同步"><a href="#位同步" class="headerlink" title="位同步"></a>位同步</h2><p>通过引入位时序</p>
-<p>解决时序起始位不同步-&gt;硬同步</p>
-<p>解决时序传输过程中的偏差-&gt;再同步</p>
-<p>can总线中码元指的是一个位时序, 波特率也因此由一个位时序所需时间决定</p>
-<h2 id="仲裁"><a href="#仲裁" class="headerlink" title="仲裁"></a>仲裁</h2><p>连续11个隐形电平-&gt;空闲状态</p>
-<p>两种仲裁机制护航:</p>
-<ol>
-<li>先到先得 只有当检测到空闲状态的情况下才尝试发送数据</li>
-<li>通过仲裁段进行仲裁</li>
-</ol>
-<p>ID + RTR 作为仲裁段</p>
-<p>线与特性: can总线拉开代表显性0, 当多个主机中任一主机拉开总线时 总线代表显性0 当所有主机都释放总线时 总线才代表隐性1</p>
-<p>回读机制: 每个主机在发送数据后都会读取总线的状态</p>
-<p>根据上述两个机制得到仲裁的特性</p>
-<p>当主机发出隐性1但是读回的确实显性0时, 说明当前有主机正在使用该主线发送数据 但是发送0的这个主机却不知道有另一个主机正在使用这条主线 </p>
-<p>这时发送1的主机仲裁失败, 回到读取状态</p>
-<p>这也决定了总是发送ID号小的帧的数据仲裁会成功</p>
-<p>Q: 位填充是否会影响到仲裁?</p>
-<p>A: 结论是不会, 假设位填充会影响到仲裁 那么位填充之前的位均为一样的, 这种情况显然不会影响,因为填充的那位也是相同的 如果位填充之前的位都不一样, 那更不可能了 如果只有一个主机产生位填充 那很明显前面5位绝不相同, 这点也毋庸置疑</p>
-<p>那么两个主机发送同一个ID号的数据帧和遥控帧的情况呢</p>
-<p>数据帧的RTR位为0, 遥控帧的RTR位为1</p>
-<p>发送遥控帧的主机会仲裁失败</p>
-<p>回到实际意义来讲, 发送遥控帧的主机获得的数据永远是最新的, 不会导致数据不同步的错误情况, 这点是符合实际项目要求的</p>
-<p>那么拓展格式的情况呢</p>
-<p>同样分标准数据帧和标准遥控帧来讨论, 拓展格式中数据帧和遥控帧和上面讨论情况相同</p>
-<p>先说标准数据帧</p>
-<p>拓展格式的SRR位(对应的就是标准格式的RTR位)为隐性1, 所以面对标准数据帧, 拓展格式是仲裁失利的</p>
-<p>那么标准遥控帧呢</p>
-<p>遥控帧的RTR位为1, 同时仲裁段也只是ID + RTR 这一段</p>
-<p>那么遥控帧就有了必胜的理由,那么我们接着看</p>
-<p>RTR位紧跟着的就是IDE位, 拓展格式的这一位规定置为隐性1, 所以必定会仲裁失败</p>
-<p>这里和前面帧格式为什么要这么定义形成逻辑闭环</p>
-<h2 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h2><p>5种错误: 位错误(回读), 填充错误, CRC错误, 格式错误(各种界定符错误), ACK错误</p>
-<p>错误状态机制与TEC(Transmit Error Counter), REC</p>
-<p>TEC和REC并不总是每次-1, 很大可能是一次-8, 但需要8次正确传输才能补救回来</p>
-<p><img src="/../images/CAN%E6%80%BB%E7%BA%BF/0.png" alt="0"></p>
-<p>Q: 为什么结束的EOF要给7个隐性1</p>
-<p>A: 一是7个隐性1 + ACK界定符(一位) + 3位帧间隔 刚好11位隐性1, 这之后满足进入空闲状态的要求</p>
-<p>二是留给错误处理置错误标志一段时间, 避免接收方还未意识到发送的数据错了就已经进入下一帧了</p>
-<p>Q: 在哪个区段里会产生位填充现象</p>
-<p>SOF到CRC校验之间的数据</p>
-<p>Q: 延迟传送的作用</p>
-<p>其中一个作用是使其处于仲裁失利, 避免易出错的设备优先去发送数据占用总线资源</p>
-<h2 id="位屏蔽机制"><a href="#位屏蔽机制" class="headerlink" title="位屏蔽机制"></a>位屏蔽机制</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//32位屏蔽#2</span></span><br><span class="line"><span class="comment">//这里如果不 | 0x04则会混入标准格式0x1xx的数据 具体分析见注释的二进制数</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;</span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;</span><br><span class="line"><span class="type">uint32_t</span> ID = (<span class="number">0x04000000u</span> &lt;&lt; <span class="number">3</span>);<span class="comment">//这里和0x100 &lt;&lt; 21效果相同		//0b 001 0000 0000 0000 0000 0000 0000 00 000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterIdHigh = ID &gt;&gt; <span class="number">16</span>;			<span class="comment">//0x10100000 0b 1 0000 0001 0000 0000 0000 0000 0000 000</span></span><br><span class="line">															<span class="comment">//0b 0 0100 0000 0000 0000 0000 0000 0000 000 0x04000000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterIdLow = ID;	<span class="comment">//uint32强转为uint16时会舍弃掉高4位</span></span><br><span class="line"><span class="type">uint32_t</span> Mask = (<span class="number">0x1C000000u</span> &lt;&lt; <span class="number">3</span>);<span class="comment">//这里和0x700 &lt;&lt; 21效果相同</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMaskIdHigh = Mask &gt;&gt; <span class="number">16</span>;		<span class="comment">//0b 111 0000 0000 0000 0000 0000 0000 00 000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMaskIdLow = Mask;				<span class="comment">//0b 1 1100 0000 0000 0000 0000 0000 0000 000</span></span><br><span class="line"></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;</span><br><span class="line">CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;</span><br><span class="line">CAN_FilterInit(&amp;CAN_FilterInitStructure);</span><br></pre></td></tr></table></figure>
-
-<h2 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h2><table>
-<thead>
-<tr>
-<th>中断宏</th>
-<th>含义</th>
-<th>触发时机</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>CAN_IT_TME</td>
-<td>发送邮箱空</td>
-<td>可以发送下一帧</td>
-</tr>
-<tr>
-<td>CAN_IT_FMP0</td>
-<td>FIFO0 有消息</td>
-<td>接收到数据</td>
-</tr>
-<tr>
-<td>CAN_IT_FF0</td>
-<td>FIFO0 满</td>
-<td>3 条消息满了</td>
-</tr>
-<tr>
-<td>CAN_IT_FOV0</td>
-<td>FIFO0 溢出</td>
-<td>数据覆盖</td>
-</tr>
-<tr>
-<td>CAN_IT_FMP1</td>
-<td>FIFO1 有消息</td>
-<td>接收到数据</td>
-</tr>
-<tr>
-<td>CAN_IT_FF1</td>
-<td>FIFO1 满</td>
-<td></td>
-</tr>
-<tr>
-<td>CAN_IT_FOV1</td>
-<td>FIFO1 溢出</td>
-<td></td>
-</tr>
-<tr>
-<td>CAN_IT_EWG</td>
-<td>错误警告</td>
-<td>错误计数 &gt; 96</td>
-</tr>
-<tr>
-<td>CAN_IT_EPV</td>
-<td>错误被动</td>
-<td>错误计数 &gt;&#x3D; 128</td>
-</tr>
-<tr>
-<td>CAN_IT_LEC</td>
-<td>最后错误码变化</td>
-<td>出现新的错误</td>
-</tr>
-<tr>
-<td>CAN_IT_ERR</td>
-<td>任意错误事件</td>
-<td>CRC&#x2F;ACK&#x2F;stuff 等错误</td>
-</tr>
-<tr>
-<td>CAN_IT_WKU</td>
-<td>唤醒</td>
-<td>从 sleep→正常模式</td>
-</tr>
-<tr>
-<td>CAN_IT_SLK</td>
-<td>睡眠完成</td>
-<td></td>
-</tr>
-</tbody></table>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1634,7 +2530,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">37</span>
+          <span class="site-state-item-count">38</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1647,7 +2543,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

@@ -154,6 +154,210 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/27/CAN%E6%80%BB%E7%BA%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="Sn0r1ax">
+      <meta itemprop="description" content="😘😘😘">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Sn0r1ax">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/11/27/CAN%E6%80%BB%E7%BA%BF/" class="post-title-link" itemprop="url">CAN总线学习笔记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-11-27 22:44:33" itemprop="dateCreated datePublished" datetime="2025-11-27T22:44:33+08:00">2025-11-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-04-22 16:44:11" itemprop="dateModified" datetime="2026-04-22T16:44:11+08:00">2026-04-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CAN/" itemprop="url" rel="index"><span itemprop="name">CAN</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="协议规定"><a href="#协议规定" class="headerlink" title="协议规定"></a>协议规定</h2><p>差分信号</p>
+<p>差值为0为逻辑1(隐性电平)</p>
+<p>差值不为0为逻辑1(显性电平) (具体差值范围多少和高速\低速CAN协议有关)</p>
+<p>可记为电平拉开为0, 闭合为1</p>
+<p>异步半双工</p>
+<h2 id="帧格式"><a href="#帧格式" class="headerlink" title="帧格式"></a>帧格式</h2><p>数据帧 遥控帧 错误帧 过载帧 帧间隔</p>
+<p>EOF之后仍需3位显性电平的帧间隔才能进入下一个通信</p>
+<p><strong>位填充机制</strong>:兼容错误帧和过载帧 避免错位和防止被误认为是空闲</p>
+<h2 id="位同步"><a href="#位同步" class="headerlink" title="位同步"></a>位同步</h2><p>通过引入位时序</p>
+<p>解决时序起始位不同步-&gt;硬同步</p>
+<p>解决时序传输过程中的偏差-&gt;再同步</p>
+<p>can总线中码元指的是一个位时序, 波特率也因此由一个位时序所需时间决定</p>
+<h2 id="仲裁"><a href="#仲裁" class="headerlink" title="仲裁"></a>仲裁</h2><p>连续11个隐形电平-&gt;空闲状态</p>
+<p>两种仲裁机制护航:</p>
+<ol>
+<li>先到先得 只有当检测到空闲状态的情况下才尝试发送数据</li>
+<li>通过仲裁段进行仲裁</li>
+</ol>
+<p>ID + RTR 作为仲裁段</p>
+<p>线与特性: can总线拉开代表显性0, 当多个主机中任一主机拉开总线时 总线代表显性0 当所有主机都释放总线时 总线才代表隐性1</p>
+<p>回读机制: 每个主机在发送数据后都会读取总线的状态</p>
+<p>根据上述两个机制得到仲裁的特性</p>
+<p>当主机发出隐性1但是读回的确实显性0时, 说明当前有主机正在使用该主线发送数据 但是发送0的这个主机却不知道有另一个主机正在使用这条主线 </p>
+<p>这时发送1的主机仲裁失败, 回到读取状态</p>
+<p>这也决定了总是发送ID号小的帧的数据仲裁会成功</p>
+<p>Q: 位填充是否会影响到仲裁?</p>
+<p>A: 结论是不会, 假设位填充会影响到仲裁 那么位填充之前的位均为一样的, 这种情况显然不会影响,因为填充的那位也是相同的 如果位填充之前的位都不一样, 那更不可能了 如果只有一个主机产生位填充 那很明显前面5位绝不相同, 这点也毋庸置疑</p>
+<p>那么两个主机发送同一个ID号的数据帧和遥控帧的情况呢</p>
+<p>数据帧的RTR位为0, 遥控帧的RTR位为1</p>
+<p>发送遥控帧的主机会仲裁失败</p>
+<p>回到实际意义来讲, 发送遥控帧的主机获得的数据永远是最新的, 不会导致数据不同步的错误情况, 这点是符合实际项目要求的</p>
+<p>那么拓展格式的情况呢</p>
+<p>同样分标准数据帧和标准遥控帧来讨论, 拓展格式中数据帧和遥控帧和上面讨论情况相同</p>
+<p>先说标准数据帧</p>
+<p>拓展格式的SRR位(对应的就是标准格式的RTR位)为隐性1, 所以面对标准数据帧, 拓展格式是仲裁失利的</p>
+<p>那么标准遥控帧呢</p>
+<p>遥控帧的RTR位为1, 同时仲裁段也只是ID + RTR 这一段</p>
+<p>那么遥控帧就有了必胜的理由,那么我们接着看</p>
+<p>RTR位紧跟着的就是IDE位, 拓展格式的这一位规定置为隐性1, 所以必定会仲裁失败</p>
+<p>这里和前面帧格式为什么要这么定义形成逻辑闭环</p>
+<h2 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h2><p>5种错误: 位错误(回读), 填充错误, CRC错误, 格式错误(各种界定符错误), ACK错误</p>
+<p>错误状态机制与TEC(Transmit Error Counter), REC</p>
+<p>TEC和REC并不总是每次-1, 很大可能是一次-8, 但需要8次正确传输才能补救回来</p>
+<p><img src="/../images/CAN%E6%80%BB%E7%BA%BF/0.png" alt="0"></p>
+<p>Q: 为什么结束的EOF要给7个隐性1</p>
+<p>A: 一是7个隐性1 + ACK界定符(一位) + 3位帧间隔 刚好11位隐性1, 这之后满足进入空闲状态的要求</p>
+<p>二是留给错误处理置错误标志一段时间, 避免接收方还未意识到发送的数据错了就已经进入下一帧了</p>
+<p>Q: 在哪个区段里会产生位填充现象</p>
+<p>SOF到CRC校验之间的数据</p>
+<p>Q: 延迟传送的作用</p>
+<p>其中一个作用是使其处于仲裁失利, 避免易出错的设备优先去发送数据占用总线资源</p>
+<h2 id="位屏蔽机制"><a href="#位屏蔽机制" class="headerlink" title="位屏蔽机制"></a>位屏蔽机制</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//32位屏蔽#2</span></span><br><span class="line"><span class="comment">//这里如果不 | 0x04则会混入标准格式0x1xx的数据 具体分析见注释的二进制数</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;</span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;</span><br><span class="line"><span class="type">uint32_t</span> ID = (<span class="number">0x04000000u</span> &lt;&lt; <span class="number">3</span>);<span class="comment">//这里和0x100 &lt;&lt; 21效果相同		//0b 001 0000 0000 0000 0000 0000 0000 00 000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterIdHigh = ID &gt;&gt; <span class="number">16</span>;			<span class="comment">//0x10100000 0b 1 0000 0001 0000 0000 0000 0000 0000 000</span></span><br><span class="line">															<span class="comment">//0b 0 0100 0000 0000 0000 0000 0000 0000 000 0x04000000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterIdLow = ID;	<span class="comment">//uint32强转为uint16时会舍弃掉高4位</span></span><br><span class="line"><span class="type">uint32_t</span> Mask = (<span class="number">0x1C000000u</span> &lt;&lt; <span class="number">3</span>);<span class="comment">//这里和0x700 &lt;&lt; 21效果相同</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMaskIdHigh = Mask &gt;&gt; <span class="number">16</span>;		<span class="comment">//0b 111 0000 0000 0000 0000 0000 0000 00 000</span></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterMaskIdLow = Mask;				<span class="comment">//0b 1 1100 0000 0000 0000 0000 0000 0000 000</span></span><br><span class="line"></span><br><span class="line">CAN_FilterInitStructure.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;</span><br><span class="line">CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;</span><br><span class="line">CAN_FilterInit(&amp;CAN_FilterInitStructure);</span><br></pre></td></tr></table></figure>
+
+<h2 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h2><table>
+<thead>
+<tr>
+<th>中断宏</th>
+<th>含义</th>
+<th>触发时机</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CAN_IT_TME</td>
+<td>发送邮箱空</td>
+<td>可以发送下一帧</td>
+</tr>
+<tr>
+<td>CAN_IT_FMP0</td>
+<td>FIFO0 有消息</td>
+<td>接收到数据</td>
+</tr>
+<tr>
+<td>CAN_IT_FF0</td>
+<td>FIFO0 满</td>
+<td>3 条消息满了</td>
+</tr>
+<tr>
+<td>CAN_IT_FOV0</td>
+<td>FIFO0 溢出</td>
+<td>数据覆盖</td>
+</tr>
+<tr>
+<td>CAN_IT_FMP1</td>
+<td>FIFO1 有消息</td>
+<td>接收到数据</td>
+</tr>
+<tr>
+<td>CAN_IT_FF1</td>
+<td>FIFO1 满</td>
+<td></td>
+</tr>
+<tr>
+<td>CAN_IT_FOV1</td>
+<td>FIFO1 溢出</td>
+<td></td>
+</tr>
+<tr>
+<td>CAN_IT_EWG</td>
+<td>错误警告</td>
+<td>错误计数 &gt; 96</td>
+</tr>
+<tr>
+<td>CAN_IT_EPV</td>
+<td>错误被动</td>
+<td>错误计数 &gt;&#x3D; 128</td>
+</tr>
+<tr>
+<td>CAN_IT_LEC</td>
+<td>最后错误码变化</td>
+<td>出现新的错误</td>
+</tr>
+<tr>
+<td>CAN_IT_ERR</td>
+<td>任意错误事件</td>
+<td>CRC&#x2F;ACK&#x2F;stuff 等错误</td>
+</tr>
+<tr>
+<td>CAN_IT_WKU</td>
+<td>唤醒</td>
+<td>从 sleep→正常模式</td>
+</tr>
+<tr>
+<td>CAN_IT_SLK</td>
+<td>睡眠完成</td>
+<td></td>
+</tr>
+</tbody></table>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2025/07/15/l3hcf2025-wp/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -827,104 +1031,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/15/%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="Sn0r1ax">
-      <meta itemprop="description" content="😘😘😘">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Sn0r1ax">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2025/05/15/%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/" class="post-title-link" itemprop="url">代码恢复</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2025-05-15 10:16:28" itemprop="dateCreated datePublished" datetime="2025-05-15T10:16:28+08:00">2025-05-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-05-27 19:49:30" itemprop="dateModified" datetime="2025-05-27T19:49:30+08:00">2025-05-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="如何去除"><a href="#如何去除" class="headerlink" title="如何去除"></a>如何去除</h1><p>对于一个程序,我们可以通过strip来去除其符号表,表现如下:</p>
-<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/0.png" alt="0"></p>
-<p>去除前</p>
-<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/5.png" alt="5"></p>
-<p>去除后</p>
-<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/4.png" alt="4"></p>
-<h1 id="如何恢复"><a href="#如何恢复" class="headerlink" title="如何恢复"></a>如何恢复</h1><h2 id="IDA-flair"><a href="#IDA-flair" class="headerlink" title="IDA flair"></a>IDA flair</h2><p>通过加载相应的签名文件来恢复符号表</p>
-<h3 id="操作方法"><a href="#操作方法" class="headerlink" title="操作方法"></a>操作方法</h3><p>在ida中用快捷键<code>shift+f5</code>进入签名界面,右键<code>apply new signature</code>选择要加载的签名文件即可,通过<code>ctrl+z</code>撤销上一步操作</p>
-<p>ida9.0自带的签名较少可以从<a target="_blank" rel="noopener" href="https://github.com/push0ebp/sig-database">sig-database</a>中获取</p>
-<h2 id="ida-finger插件"><a href="#ida-finger插件" class="headerlink" title="ida finger插件"></a>ida finger插件</h2><p>Finger是阿里云·云安全技术实验室推出的一款二进制函数符号识别引擎，可以识别二进制程序中的库函数与常见的第三方函数，快速定位恶意代码，提高样本分析效率</p>
-<h3 id="操作方法-1"><a href="#操作方法-1" class="headerlink" title="操作方法"></a>操作方法</h3><p>先<code>pip install finger_sdk</code>安装finger_sdk库</p>
-<p>注意安装Finger的python的版本要与IDAPython的版本一致</p>
-<p>然后从<a target="_blank" rel="noopener" href="https://github.com/aliyunav/Finger">finger</a>这个项目中下载<code>finger_plugin.py</code>,由于原项目年久失修,可以根据这个<a target="_blank" rel="noopener" href="https://github.com/aliyunav/Finger/issues/12">issue</a>方法进行patch</p>
-<p>将<code>finger_plugin.py</code>复制到IDA插件目录<code>IDAx.x\plugins</code>中</p>
-<p>重启ida,即可在顶栏看见<code>finger</code>了</p>
-<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/3.png" alt="3"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我现在用的是这两个,另外还有<code>iscan</code>可以自动检测静态二进制程序使用的libc版本,可以自行google下</p>
-<h1 id="恢复效果"><a href="#恢复效果" class="headerlink" title="恢复效果"></a>恢复效果</h1><p>恢复前</p>
-<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/2.png" alt="2"></p>
-<p>恢复后</p>
-<p><img src="/../images/ida%E4%BB%A3%E7%A0%81%E6%81%A2%E5%A4%8D/1.png" alt="1"></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -996,7 +1102,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">37</span>
+          <span class="site-state-item-count">38</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1009,7 +1115,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
